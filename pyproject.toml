@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "pynight"
+version = "0.1.0"
+description = "My Python utility library."
+authors = ["NightMachinary <rudiwillalwaysloveyou@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+brish = "^0.3.3"
+dnspython = "^2.1.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["setuptools", "poetry_core>=1.0"]
+build-backend = "poetry.core.masonry.api"
