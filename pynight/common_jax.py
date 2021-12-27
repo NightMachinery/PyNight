@@ -3,6 +3,8 @@ import jax.numpy as jnp
 import jax.random as jrnd
 
 from brish import z
+import os
+import sys
 ##
 def tree_save(out_dir: str, state, flat_array=False) -> None:
     z('mkdir -p {out_dir}').assert_zero
