@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 import jax.random as jrnd
 
+import numpy as np
 from brish import z
 import os
 import sys
