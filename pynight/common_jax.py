@@ -5,6 +5,7 @@ import jax.random as jrnd
 from brish import z
 import os
 import sys
+import pickle
 ##
 def tree_save(out_dir: str, state, flat_array=False) -> None:
     z('mkdir -p {out_dir}').assert_zero
