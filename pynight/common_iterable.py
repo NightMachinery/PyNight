@@ -5,8 +5,8 @@ def iterable_chunk(lst, n):
         yield lst[i:i + n]
 ##
 def get_or_none(lst, n):
-    if n in lst:
+    try:
         return lst[n]
-    else:
+    except:
         return None
 ##
