@@ -10,3 +10,18 @@ def get_or_none(lst, n):
     except:
         return None
 ##
+def grep(lst, regex):
+    return list(filter(lambda x: re.search(regex, x), lst))
+
+rg = grep
+
+
+def dir_grep(obj, regex):
+    return grep(dir(obj), regex)
+
+dg = dir_grep
+##
+def list_mv(lst, item, final_index=0):
+    lst.insert(final_index, lst.pop(lst.index(item)))
+    return lst
+##
