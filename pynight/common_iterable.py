@@ -25,3 +25,16 @@ def list_mv(lst, item, final_index=0):
     lst.insert(final_index, lst.pop(lst.index(item)))
     return lst
 ##
+def params_cartesian_gen(parameters):
+    if not parameters:
+        yield dict()
+    else:
+        key_to_iterate = list(parameters.keys())[0]
+        next_round_parameters = {p : parameters[p]
+                    for p in parameters if p != key_to_iterate}
+        for val in parameters[key_to_iterate]:
+            for pars in params_cartesian_gen(next_round_parameters):
+                temp_res = pars
+                temp_res[key_to_iterate] = val
+                yield temp_res
+##
