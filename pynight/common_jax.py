@@ -7,9 +7,10 @@ from brish import z
 import os
 import sys
 import pickle
+
 ##
 def tree_save(out_dir: str, state, flat_array=False) -> None:
-    z('mkdir -p {out_dir}').assert_zero
+    z("mkdir -p {out_dir}").assert_zero
     with open(os.path.join(out_dir, "arrays.npy"), "wb") as f:
         if flat_array:
             np.save(f, state, allow_pickle=False)
@@ -35,4 +36,6 @@ def tree_restore(out_dir, flat_array=False):
         else:
             flat_state = [np.load(f) for _ in leaves]
             return jax.tree_unflatten(treedef, flat_state)
+
+
 ##

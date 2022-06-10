@@ -9,12 +9,18 @@ from fastapi import Request
 class FastAPISettings(BaseSettings):
     # disabling the docs
     openapi_url: str = ""  # "/openapi.json"
+
+
 ###
 def request_path_get(request: Request):
     return request.scope.get("path", "")
+
+
 ##
 class EndpointLoggingFilter1(logging.Filter):
-    def __init__(self, *args, isDbg=False, logger=None, skip_paths=(), **kwargs):
+    def __init__(
+        self, *args, isDbg=False, logger=None, skip_paths=(), **kwargs
+    ):
         self.isDbg = isDbg
         self.logger = logger
         self.skip_paths = skip_paths
@@ -47,13 +53,17 @@ class EndpointLoggingFilter1(logging.Filter):
                 self.logger.warning(res)
 
             return True
+
+
 ###
 seenIPs = None
+
 
 def seenIPs_init():
     global seenIPs
 
     seenIPs = {"127.0.0.1", my_ip_get()}
+
 
 def check_ip(request: Request, logger=None):
     if not seenIPs:
@@ -69,4 +79,6 @@ def check_ip(request: Request, logger=None):
         seenIPs.add(ip)
 
     return ip, first_seen
+
+
 ###
