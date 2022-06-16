@@ -2,28 +2,34 @@ import numpy
 
 np = numpy
 ##
-def partition_int_into_fixed(n, boxes):
-    "Partitions the integer 'n' into 'boxes' boxes, each box having at least one element. Order matters. Returns a 2D numpy array."
-
-    n -= boxes  #: give each box one
-    partition_0 = list(partition_int_into_fixed_0(n, boxes))
-    partition_0 = np.array(partition_0)
-    partition = partition_0 + 1
-    return partition
-
-
-def partition_int_into_fixed_0(n, boxes):
-    "Generates the partitions of the integer 'n' into 'boxes' boxes. Boxes can have zero elements. Order matters."
-
+def partition_int_into_fixed_gen(n, boxes, min=1):
+    "Partitions the integer 'n' into 'boxes' boxes, each box having at least 'min' elements. Order matters. Returns a generator."
     if boxes == 0:
-        yield []
+        if n == 0:
+            yield tuple()
+
+        return
+    elif boxes < 0:
+        return
     elif boxes == 1:
-        yield [n]
+        if n >= min:
+            yield (n,)
+
+        return
     else:
-        for first in range(n + 1):
-            partitions = partition_int_into_fixed_0(n - first, boxes - 1)
-            for partition in partitions:
-                yield [first] + partition
+        for i in range(min, n + 1):
+            for result in partition_int_into_fixed_gen(
+                n - i, boxes - 1, min
+            ):
+                yield (i,) + result
+
+
+def partition_int_into_fixed(n, boxes, min=1):
+    "Partitions the integer 'n' into 'boxes' boxes, each box having at least 'min' elements. Order matters. Returns a 2D numpy array."
+
+    partitions = list(partition_int_into_fixed_gen(n, boxes, min=min))
+    partitions = np.array(partitions, dtype=np.int64)
+    return partitions
 
 
 ##

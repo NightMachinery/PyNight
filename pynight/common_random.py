@@ -23,7 +23,7 @@ def uniform_from_rect(
     """
 
     if shape[-1] == -1:
-        shape = list(shape) #: tuples are immutable
+        shape = list(shape)  #: tuples are immutable
         shape[-1] = bounds_lower.shape[-1]
         shape = tuple(shape)
 
