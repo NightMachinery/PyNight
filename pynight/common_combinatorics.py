@@ -33,3 +33,22 @@ def partition_int_into_fixed(n, boxes, min=1):
 
 
 ##
+def permutations_gen(lst):
+    #: @todo optionally, remove duplicate permutations
+    #:
+    #: Tests:
+    #: `len(list(permutations_gen(range(5)))) == 120`
+    ##
+    l = len(lst)
+    if l <= 1:
+        yield lst
+        return
+    else:
+        for i in range(l):
+            last = lst[i]
+            for p in permutations_gen(list(lst[:i]) + list(lst[i + 1 :])):
+                p.append(last)
+                yield p
+
+
+##
