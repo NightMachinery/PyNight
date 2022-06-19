@@ -1,6 +1,7 @@
 import numpy
 
 np = numpy
+
 ##
 def partition_int_into_fixed_gen(n, boxes, min=1):
     "Partitions the integer 'n' into 'boxes' boxes, each box having at least 'min' elements. Order matters. Returns a generator."
@@ -33,22 +34,31 @@ def partition_int_into_fixed(n, boxes, min=1):
 
 
 ##
-def permutations_gen(lst):
-    #: @todo optionally, remove duplicate permutations
+def permutations_gen(lst, *args, **kwargs):
+    #: * @alts
+    #: ** @seeAlso =from itertools import permutations= (does not remove duplicate permutations)
+    #: ** @seeAlso =from sympy.utilities.iterables import multiset_permutations= which does NOT return duplicates.
     #:
     #: Tests:
     #: `len(list(permutations_gen(range(5)))) == 120`
     ##
-    l = len(lst)
-    if l <= 1:
-        yield lst
-        return
-    else:
-        for i in range(l):
-            last = lst[i]
-            for p in permutations_gen(list(lst[:i]) + list(lst[i + 1 :])):
-                p.append(last)
-                yield p
+    import sympy.utilities.iterables
+
+    return sympy.utilities.iterables.multiset_permutations(lst, *args, **kwargs)
+    ##
+    #: This algorithm will return duplicate permutations.
+    #
+    # l = len(lst)
+    # if l <= 1:
+    #     yield lst
+    #     return
+    # else:
+    #     for i in range(l):
+    #         last = lst[i]
+    #         for p in permutations_gen(list(lst[:i]) + list(lst[i + 1 :])):
+    #             p.append(last)
+    #             yield p
+    ##
 
 
 ##
