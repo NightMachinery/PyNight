@@ -1,3 +1,5 @@
+import re
+
 ##
 def iterable_chunk(lst, n):
     """Yield successive n-sized chunks from lst."""
