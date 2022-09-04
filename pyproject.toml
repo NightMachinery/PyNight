@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pynight"
-version = "0.1.0"
+version = "0.2.0"
 description = "My Python utility library."
 authors = ["NightMachinary <rudiwillalwaysloveyou@gmail.com>"]
 license = "MIT"
