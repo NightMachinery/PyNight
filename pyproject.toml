@@ -9,7 +9,10 @@ license = "MIT"
 python = "^3.7"
 brish = "^0.3.3"
 dnspython = "^2.1.0"
-executing = "^0.8.3"
+executing = "^1.2.0"
+pyperclip = "^1.8.2"
+openai = "^0.27.2"
+spacy = "^3.5.1"
 
 [tool.poetry.dev-dependencies]
 

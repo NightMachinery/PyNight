@@ -18,3 +18,13 @@ def mkdir(path):
 dir_ensure = mkdir
 ensure_dir = mkdir
 ##
+def sanitize_filename(some_str):
+    for x in (
+            '/',
+            '\\',
+            '~',
+            ):
+        some_str = some_str.replace(x, '_')
+
+    return some_str
+##
