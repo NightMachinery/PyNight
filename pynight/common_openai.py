@@ -24,6 +24,7 @@ def chatml_response_process(response, copy_mode='default'):
         {{"role": "user", "content": ''' '''}},"""
 
         if copy_mode == 'default':
+            pyperclip.copy(text)
             pyperclip.copy(text_m)
         elif copy_mode == 'text':
             pyperclip.copy(text)
