@@ -1,6 +1,7 @@
 import openai
 import os
 from brish import z, zp
+from .common_bells import bell_gpt
 
 # openai.api_key = os.environ["OPENAI_API_KEY"]
 openai.api_key = z('print -r -- "$openai_api_key"').outrs
@@ -62,14 +63,30 @@ def writegpt_process(messages_lst):
     pyperclip.copy(out)
     return out
 
-def openai_chat_complete(*args, **kwargs):
-    while True:
-        try:
-            return openai.ChatCompletion.create(*args, **kwargs)
-        except openai.error.RateLimitError:
-            print("OpenAI ratelimit encountered, sleeping ...", file=sys.stderr)
-            time.sleep(10) #: in seconds
-            pass
+def openai_chat_complete(*args,
+                         messages=None,
+                         interactive=False,
+                         copy_last_message=None,
+                         bell=None,
+                         **kwargs):
+    if interactive:
+        if copy_last_message is None:
+            copy_last_message = True
+        if bell is None:
+            bell = True
 
+    try:
+        while True:
+            if copy_last_message:
+                last_message = messages[-1]['content']
+                pyperclip.copy(last_message)
+
+            try:
+                return openai.ChatCompletion.create(*args, messages=messages, **kwargs)
+            except openai.error.RateLimitError:
+                print("OpenAI ratelimit encountered, sleeping ...", file=sys.stderr, flush=True)
+                time.sleep(10) #: in seconds
+    finally:
+        bell_gpt()
 
 ###
