@@ -26,7 +26,15 @@ def chatml_response_process(response, copy_mode='default'):
 
         if copy_mode == 'default':
             pyperclip.copy(text)
+
+            time.sleep(0.1)
+            #: to allow polling-based clipboard managers to capture the text
+
             pyperclip.copy(text_m)
+
+        elif copy_mode == 'chat':
+            pyperclip.copy(text_m)
+
         elif copy_mode == 'text':
             pyperclip.copy(text)
 
@@ -87,6 +95,7 @@ def openai_chat_complete(*args,
                 print("OpenAI ratelimit encountered, sleeping ...", file=sys.stderr, flush=True)
                 time.sleep(10) #: in seconds
     finally:
-        bell_gpt()
+        if bell:
+            bell_gpt()
 
 ###
