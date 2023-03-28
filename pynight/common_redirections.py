@@ -13,29 +13,30 @@ def fileno(file_or_fd):
 
 
 @contextmanager
-def stdout_redirected(to=os.devnull, stdout=None):
+def fd_redirected(to=os.devnull, original=None, open_mode="wb"):
     #: @forked from https://stackoverflow.com/questions/4675728/redirect-stdout-to-a-file-in-python
+    #:
+    #: * Redirect stdin:
+    #:   =with fd_redirected(to=sys.stderr, original=sys.stdin, open_mode='rb'):=
     ##
-    if stdout is None:
-        stdout = sys.stdout
+    if original is None:
+        original = sys.stdout
 
-    stdout_fd = fileno(stdout)
-    # copy stdout_fd before it is overwritten
+    original_fd = fileno(original)
+    # copy original_fd before it is overwritten
     # NOTE: `copied` is inheritable on Windows when duplicating a standard stream
-    with os.fdopen(os.dup(stdout_fd), "wb") as copied:
-        stdout.flush()  # flush library buffers that dup2 knows nothing about
+    with os.fdopen(os.dup(original_fd), open_mode) as copied:
+        original.flush()  # flush library buffers that dup2 knows nothing about
         try:
-            os.dup2(fileno(to), stdout_fd)  # $ exec >&to
+            os.dup2(fileno(to), original_fd)  # $ exec >&to
         except ValueError:  # filename
-            with open(to, "wb") as to_file:
-                os.dup2(to_file.fileno(), stdout_fd)  # $ exec > to
+            with open(to, open_mode) as to_file:
+                os.dup2(to_file.fileno(), original_fd)  # $ exec > to
         try:
-            yield stdout  # allow code to be run with the redirected stdout
+            yield original  # allow code to be run with the redirected original
         finally:
-            # restore stdout to its previous value
-            # NOTE: dup2 makes stdout_fd inheritable unconditionally
-            stdout.flush()
-            os.dup2(copied.fileno(), stdout_fd)  # $ exec >&copied
-
-
+            # restore original to its previous value
+            # NOTE: dup2 makes original_fd inheritable unconditionally
+            original.flush()
+            os.dup2(copied.fileno(), original_fd)  # $ exec >&copied
 ##
