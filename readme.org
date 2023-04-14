@@ -1,0 +1,12 @@
+#+TITLE: PyNight
+
+* Install
+#+begin_example zsh
+pip install -U pynight
+#+end_example
+
+Or install the latest version directly from git:
+#+begin_example zsh
+pip install git+https://github.com/NightMachinery/PyNight.git
+#+end_example
+
