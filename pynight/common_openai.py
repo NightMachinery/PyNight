@@ -1,3 +1,5 @@
+import tiktoken
+from types import SimpleNamespace
 import openai
 import os
 from brish import z, zp
@@ -72,6 +74,7 @@ def writegpt_process(messages_lst):
     return out
 
 def openai_chat_complete(*args,
+                         model="gpt-3.5-turbo",
                          messages=None,
                          interactive=False,
                          copy_last_message=None,
@@ -90,7 +93,7 @@ def openai_chat_complete(*args,
                 pyperclip.copy(last_message)
 
             try:
-                return openai.ChatCompletion.create(*args, messages=messages, **kwargs)
+                return openai.ChatCompletion.create(*args, model=model, messages=messages, **kwargs)
             except openai.error.RateLimitError:
                 print("OpenAI ratelimit encountered, sleeping ...", file=sys.stderr, flush=True)
                 time.sleep(10) #: in seconds
@@ -98,4 +101,26 @@ def openai_chat_complete(*args,
         if bell:
             bell_gpt()
 
+###
+def truncate_by_tokens(text, length=3500, model='gpt-3.5-turbo'):
+    encoder = tiktoken.encoding_for_model(model)
+
+    encoded = encoder.encode(text)
+
+    truncate_p = (len(encoded) > length)
+    encoded_rest = None
+    if truncate_p:
+        encoded_truncated = encoded[:length]
+        encoded_rest = encoded[length:]
+    else:
+        encoded_truncated = encoded
+
+    text_truncated = encoder.decode(encoded_truncated)
+    text_rest = None
+    if encoded_rest:
+        text_rest = encoder.decode(encoded_rest)
+
+    return SimpleNamespace(text=text_truncated,
+                           text_rest=text_rest,
+                           truncated_p=truncate_p,)
 ###

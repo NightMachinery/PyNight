@@ -12,6 +12,7 @@ dnspython = "^2.1.0"
 executing = "^1.2.0"
 pyperclip = "^1.8.2"
 openai = "^0.27.2"
+tiktoken = "^0.3.3"
 spacy = "^3.5.1"
 
 [tool.poetry.dev-dependencies]
