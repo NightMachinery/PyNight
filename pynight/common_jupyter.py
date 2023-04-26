@@ -1,3 +1,4 @@
+import json
 import uuid
 from IPython.display import display, display_javascript, HTML
 from .common_json import JSONEncoderWithFallback
@@ -5,6 +6,7 @@ from .common_json import JSONEncoderWithFallback
 def clipboard_copy_jupyter(obj, indent=4):
     json_encoder = JSONEncoderWithFallback(fallback_function=str, indent=indent)
     obj_json = json_encoder.encode(obj)
+    obj_text = str(json.loads(obj_json))
 
     button_id = f"copy-btn-{uuid.uuid4()}"
     html_code = f"""
@@ -50,4 +52,4 @@ def clipboard_copy_jupyter(obj, indent=4):
     display(HTML(html_code))
     display_javascript(js_code, raw=True)
 
-    return obj_json
+    return obj_text
