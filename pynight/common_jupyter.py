@@ -1,10 +1,11 @@
-import json
 import uuid
 from IPython.display import display, display_javascript, HTML
+from .common_json import JSONEncoderWithFallback
 
+def clipboard_copy_jupyter(text):
+    json_encoder = JSONEncoderWithFallback(fallback_function=str, indent=2)
+    escaped_text = json_encoder.encode(text)
 
-def clipboard_copy_jupyter(text: str):
-    escaped_text = json.dumps(text)
     button_id = f"copy-btn-{uuid.uuid4()}"
     html_code = f"""
     <button id="{button_id}" style="padding: 10px; background-color: #4CAF50; border: none; color: white; cursor: pointer;">
