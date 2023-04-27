@@ -1,6 +1,7 @@
 import jax
 
 import torch.nn as nn
+import torchvision
 
 ##
 def torch_shape_get(input):
@@ -51,4 +52,9 @@ class TorchModelMode:
             self.model.eval()
 
 
+##
+torch_to_PIL = torchvision.transforms.ToPILImage()
+
+def img_tensor_show(img_tensor):
+    plt.imshow(torch_to_PIL(img_tensor))
 ##
