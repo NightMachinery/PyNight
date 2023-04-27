@@ -3,6 +3,9 @@ import jax
 import torch.nn as nn
 import torchvision
 
+import matplotlib.pyplot as plt
+
+
 ##
 def torch_shape_get(input):
     def h_shape_get(x):
