@@ -6,6 +6,7 @@ import torchvision
 
 import matplotlib.pyplot as plt
 import gc
+from .common_jupyter import jupyter_gc
 
 
 ##
@@ -80,6 +81,7 @@ def torch_memory_tensor(tensor):
 
 
 def torch_gpu_empty_cache():
+    jupyter_gc()
     gc.collect()
     torch.cuda.empty_cache()
 
