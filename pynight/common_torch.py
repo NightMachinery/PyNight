@@ -4,6 +4,7 @@ import torch.nn as nn
 import torchvision
 
 import matplotlib.pyplot as plt
+import gc
 
 
 ##
@@ -60,4 +61,43 @@ torch_to_PIL = torchvision.transforms.ToPILImage()
 
 def img_tensor_show(img_tensor):
     plt.imshow(torch_to_PIL(img_tensor))
+##
+def torch_gpu_memory_stats():
+    #: @seeAlso `print(torch.cuda.memory_summary())`
+    ###
+    gigabyte = 1024**3
+
+    allocated = torch.cuda.memory_allocated()/(gigabyte)
+    reserved = torch.cuda.memory_reserved()/(gigabyte)
+    print(f"gpu allocated: {allocated}\ngpu reserved: {reserved}")
+
+
+def torch_memory_tensor(tensor):
+    size_in_bytes = tensor.element_size() * tensor.nelement()
+    size_in_gigabytes = size_in_bytes / (1024 ** 3)
+    return size_in_gigabytes
+
+
+def torch_gpu_empty_cache():
+    gc.collect()
+    torch.cuda.empty_cache()
+
+
+def torch_gpu_remove_all():
+    #: This does not remove all GPU tensors. I don't know why.
+    #:
+    #: * [[https://docs.python.org/3/library/gc.html][gc — Garbage Collector interface — Python 3.11.3 documentation]]
+    #: ** =gc.get_objects=
+    #: Returns a list of all objects tracked by the collector, excluding the list returned. If generation is not None, return only the objects tracked by the collector that are in that generation.
+    ##
+    for obj in gc.get_objects():
+        try:
+            if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+                if obj.is_cuda:
+                    del obj
+        except:
+            #: There are errors when trying to determine if these objects are tensors or not.
+            pass
+
+    torch_gpu_empty_cache()
 ##
