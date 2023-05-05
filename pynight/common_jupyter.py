@@ -60,7 +60,7 @@ def clipboard_copy_jupyter(obj, indent=4):
 def jupyter_gc():
     global_ns = get_ipython().user_ns
 
-    del global_ns['Out']
+    global_ns['Out'] = dict()
 
     gc.collect()
 ##
