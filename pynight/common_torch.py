@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 import torchvision
 
+from contextlib import nullcontext
+
 import matplotlib.pyplot as plt
 import gc
 from .common_jupyter import jupyter_gc
@@ -103,4 +105,10 @@ def torch_gpu_remove_all():
             pass
 
     torch_gpu_empty_cache()
+##
+def no_grad_maybe(no_grad_p):
+    if no_grad_p:
+        return torch.no_grad()
+    else:
+        return nullcontext()
 ##
