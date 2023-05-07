@@ -1,5 +1,7 @@
 import hashlib
 from urllib.parse import urlparse
+import os
+
 
 def hash_url(url, length=10):
     basename = os.path.basename(urlparse(url).path)
