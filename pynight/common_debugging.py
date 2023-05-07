@@ -95,14 +95,17 @@ def reload_modules(target):
         )
 
     for name, module in list(sys.modules.items()):
+        do_reload = False
         if isinstance(module, ModuleType):
             if target_name and name.startswith(target_name):
                 reloaded_names.append(name)
+                do_reload = True
             elif target_pattern and target_pattern.match(name):
                 reloaded_names.append(name)
+                do_reload = True
 
-    if name in reloaded_names:
-        importlib.reload(module)
+            if do_reload:
+                importlib.reload(module)
 
     return reloaded_names
 
