@@ -1,6 +1,10 @@
+import re
 import sys
 import traceback
 import os
+import importlib
+from types import ModuleType
+
 
 debug_p = os.environ.get("DEBUGME", None)
 
@@ -45,6 +49,62 @@ def stacktrace_get(back=0, skip_last=2, mode="line"):
 
 def stacktrace_caller_line():
     return stacktrace_get(back=0, skip_last=3, mode="line")
+
+
+##
+def reload_modules(target):
+    """
+    Reloads the specified package and all its submodules in the sys.modules dictionary.
+
+    This function iterates through the sys.modules dictionary and reloads every module that
+    starts with the specified package's name or the provided string or matches the regex pattern.
+    It returns a list of names of the reloaded modules.
+
+    Args:
+        target (module, str, or re.Pattern): The package or module that should be reloaded
+            along with its submodules. If provided as a string or regex pattern, it should
+            match the desired package or module names.
+
+    Returns:
+        reloaded_names (list): A list of names of the reloaded modules.
+
+    Examples:
+        >>> reload_modules(pynight)
+
+        >>> import pynight.common_debugging as common_debugging
+        >>> reload_modules(common_debugging)
+
+        >>> reload_modules(re.compile("^pynight"))
+
+        >>> reload_modules("pynight") # equivalent to the above example
+    """
+    reloaded_names = []
+
+    if isinstance(target, ModuleType):
+        target_name = target.__name__
+        target_pattern = None
+    elif isinstance(target, str):
+        target_name = target
+        target_pattern = None
+    elif isinstance(target, re.Pattern):
+        target_name = None
+        target_pattern = target
+    else:
+        raise TypeError(
+            "Invalid target type. Must be a module, string, or regex pattern."
+        )
+
+    for name, module in list(sys.modules.items()):
+        if isinstance(module, ModuleType):
+            if target_name and name.startswith(target_name):
+                reloaded_names.append(name)
+            elif target_pattern and target_pattern.match(name):
+                reloaded_names.append(name)
+
+    if name in reloaded_names:
+        importlib.reload(module)
+
+    return reloaded_names
 
 
 ##
