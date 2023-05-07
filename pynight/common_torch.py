@@ -117,3 +117,6 @@ def no_grad_maybe(no_grad_p):
     else:
         return nullcontext()
 ##
+def model_device_get(model):
+    return next(model.parameters()).device
+##
