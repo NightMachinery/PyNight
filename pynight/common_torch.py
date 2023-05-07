@@ -14,7 +14,12 @@ from .common_jupyter import jupyter_gc
 ##
 def torch_shape_get(input):
     def h_shape_get(x):
-        return x.dtype, x.shape
+        if hasattr(x, 'dtype'):
+            return x.dtype, x.shape
+        elif hasattr(x, 'shape'):
+            return type(x), x.shape
+        else:
+            return x
 
     return jax.tree_map(h_shape_get, input)
 
