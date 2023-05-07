@@ -44,7 +44,7 @@ def stacktrace_get(back=0, skip_last=2, mode="line"):
         elif mode == "line":
             formatted_stacktrace += f"{frame.line}\n"
 
-    return formatted_stacktrace
+    return formatted_stacktrace.rstrip()
 
 
 def stacktrace_caller_line():
