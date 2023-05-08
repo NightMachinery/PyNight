@@ -9,14 +9,14 @@ from contextlib import nullcontext
 import matplotlib.pyplot as plt
 import gc
 from .common_jupyter import jupyter_gc
-
+from .common_numpy import hash_array_np
 
 ##
 def torch_shape_get(input):
     def h_shape_get(x):
-        if hasattr(x, 'dtype'):
+        if hasattr(x, "dtype"):
             return x.dtype, x.shape
-        elif hasattr(x, 'shape'):
+        elif hasattr(x, "shape"):
             return type(x), x.shape
         else:
             return x
@@ -68,23 +68,26 @@ class TorchModelMode:
 ##
 torch_to_PIL = torchvision.transforms.ToPILImage()
 
+
 def img_tensor_show(img_tensor):
     plt.imshow(torch_to_PIL(img_tensor))
     plt.show()
+
+
 ##
 def torch_gpu_memory_stats():
     #: @seeAlso `print(torch.cuda.memory_summary())`
     ###
     gigabyte = 1024**3
 
-    allocated = torch.cuda.memory_allocated()/(gigabyte)
-    reserved = torch.cuda.memory_reserved()/(gigabyte)
+    allocated = torch.cuda.memory_allocated() / (gigabyte)
+    reserved = torch.cuda.memory_reserved() / (gigabyte)
     print(f"gpu allocated: {allocated}\ngpu reserved: {reserved}")
 
 
 def torch_memory_tensor(tensor):
     size_in_bytes = tensor.element_size() * tensor.nelement()
-    size_in_gigabytes = size_in_bytes / (1024 ** 3)
+    size_in_gigabytes = size_in_bytes / (1024**3)
     return size_in_gigabytes
 
 
@@ -103,7 +106,9 @@ def torch_gpu_remove_all():
     ##
     for obj in gc.get_objects():
         try:
-            if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+            if torch.is_tensor(obj) or (
+                hasattr(obj, "data") and torch.is_tensor(obj.data)
+            ):
                 if obj.is_cuda:
                     del obj
         except:
@@ -111,13 +116,24 @@ def torch_gpu_remove_all():
             pass
 
     torch_gpu_empty_cache()
+
+
 ##
 def no_grad_maybe(no_grad_p):
     if no_grad_p:
         return torch.no_grad()
     else:
         return nullcontext()
+
+
 ##
 def model_device_get(model):
     return next(model.parameters()).device
+
+
+##
+def hash_tensor(tensor, *args, **kwargs):
+    return hash_array_np(tensor.cpu().numpy(), *args, **kwargs)
+
+
 ##
