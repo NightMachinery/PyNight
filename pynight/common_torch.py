@@ -70,6 +70,7 @@ torch_to_PIL = torchvision.transforms.ToPILImage()
 
 def img_tensor_show(img_tensor):
     plt.imshow(torch_to_PIL(img_tensor))
+    plt.show()
 ##
 def torch_gpu_memory_stats():
     #: @seeAlso `print(torch.cuda.memory_summary())`
