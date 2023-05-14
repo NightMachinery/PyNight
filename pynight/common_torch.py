@@ -98,7 +98,8 @@ def torch_gpu_empty_cache():
 
 
 def torch_gpu_remove_all():
-    #: This does not remove all GPU tensors. I don't know why.
+    #: This does not remove all GPU tensors. I don't know why. I think it's because `del obj` is not actually deleting the tensors.
+    #: [[id:68188d07-4317-412f-ab74-bd3158e2a378][How do I forcefully release the memory of a tensor? - PyTorch Forums]]
     #:
     #: * [[https://docs.python.org/3/library/gc.html][gc — Garbage Collector interface — Python 3.11.3 documentation]]
     #: ** =gc.get_objects=
