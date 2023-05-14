@@ -3,8 +3,19 @@ import uuid
 from IPython.display import display, display_javascript, HTML
 import gc
 from IPython import get_ipython
+from ipykernel.connect import get_connection_file
 from .common_json import JSONEncoderWithFallback
+from .common_regex import rget
 
+
+##
+def kernel_kill_current(restart=False):
+    return get_ipython().kernel.do_shutdown(restart=restart)
+
+
+def kernel_current_id():
+    conn_path = get_connection_file()
+    return rget(conn_path, r'kernel-([^/]+)\.json$')
 ##
 def clipboard_copy_jupyter(obj, indent=4):
     json_encoder = JSONEncoderWithFallback(fallback_function=str, indent=indent)
