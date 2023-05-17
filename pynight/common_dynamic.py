@@ -34,24 +34,35 @@ def dynamic_set(dynamic_dict, *args, **kwargs):
     return tokens
 
 
-def dynamic_get(dynamic_dict, var_name):
+def dynamic_get(dynamic_dict, var_name, default="MAGIC_THROW_EXCEPTION_13369831"):
     """
     Retrieve the value of a dynamic variable in the given dynamic dictionary.
 
     Args:
         dynamic_dict (dict): The dictionary where dynamic variables are stored.
         var_name (str): The name of the dynamic variable to retrieve.
+        default: The default value to return if the dynamic variable is not set in the current context.
 
     Returns:
-        The current value of the dynamic variable, or raises a LookupError if the variable
-        is not set in the current context.
+        The current value of the dynamic variable, or the default value if the variable
+        is not set in the current context, or raises a LookupError if the variable
+        is not set in the current context and no default value is provided.
     """
     if var_name in dynamic_dict:
-        return dynamic_dict[var_name].get()
+        try:
+            return dynamic_dict[var_name].get()
+        except LookupError:
+            if default == "MAGIC_THROW_EXCEPTION_13369831":
+                raise
+            else:
+                return default
     else:
-        raise LookupError(
-            f"Dynamic variable '{var_name}' is not set in the current context."
-        )
+        if default == "MAGIC_THROW_EXCEPTION_13369831":
+            raise LookupError(
+                f"Dynamic variable '{var_name}' is not set in the current context."
+            )
+        else:
+            return default
 
 
 class DynamicVariables:
