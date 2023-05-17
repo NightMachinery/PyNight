@@ -51,3 +51,17 @@ def params_cartesian_gen(parameters):
 
 
 ##
+def lst_filter_out(lst, items):
+    """Removes specified items from the given list and returns a new list.
+
+    Args:
+        lst (list): The list from which items should be removed.
+        items (list): The items to be removed from the lst.
+
+    Returns:
+        list: A new list consisting of elements from lst that are not in items.
+    """
+    return [element for element in lst if element not in items]
+
+
+##
