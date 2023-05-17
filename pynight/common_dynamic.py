@@ -1,10 +1,30 @@
 from contextvars import ContextVar
 
 
-def set_dynamic_value(dynamic_dict, var_name, new_value):
+def dynamic_set(dynamic_dict, var_name, new_value):
     """Sets a new value for a dynamic variable in the given dynamic dictionary."""
     var_object = dynamic_dict.setdefault(var_name, ContextVar(var_name))
     return var_object.set(new_value)
+
+
+def dynamic_get(dynamic_dict, var_name):
+    """
+    Retrieve the value of a dynamic variable in the given dynamic dictionary.
+
+    Args:
+        dynamic_dict (dict): The dictionary where dynamic variables are stored.
+        var_name (str): The name of the dynamic variable to retrieve.
+
+    Returns:
+        The current value of the dynamic variable, or raises a LookupError if the variable
+        is not set in the current context.
+    """
+    if var_name in dynamic_dict:
+        return dynamic_dict[var_name].get()
+    else:
+        raise LookupError(
+            f"Dynamic variable '{var_name}' is not set in the current context."
+        )
 
 
 class DynamicVariables:
@@ -53,8 +73,9 @@ class DynamicVariables:
         The tokens returned by var.set(new_value) are stored in tokens_dict for later use.
         """
         for var_name, new_value in self.new_values.items():
-            self.tokens_dict[var_name] = set_dynamic_value(self.dynamic_dict, var_name, new_value)
-
+            self.tokens_dict[var_name] = dynamic_set(
+                self.dynamic_dict, var_name, new_value
+            )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
