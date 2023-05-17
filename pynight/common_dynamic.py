@@ -1,10 +1,37 @@
 from contextvars import ContextVar
 
 
-def dynamic_set(dynamic_dict, var_name, new_value):
+def dynamic_set_v1(dynamic_dict, name, value):
     """Sets a new value for a dynamic variable in the given dynamic dictionary."""
-    var_object = dynamic_dict.setdefault(var_name, ContextVar(var_name))
-    return var_object.set(new_value)
+    var_object = dynamic_dict.setdefault(name, ContextVar(name))
+    return var_object.set(value)
+
+
+def dynamic_set(dynamic_dict, *args, **kwargs):
+    """
+    Set new values for multiple dynamic variables in the given dynamic dictionary.
+
+    Args:
+        dynamic_dict (dict): The dictionary where dynamic variables are stored.
+        *args: Pairs of variable names and new values, specified as positional arguments.
+        **kwargs: New values for the dynamic variables, specified as keyword arguments.
+
+    Returns:
+        A dictionary mapping variable names to the tokens returned by var.set(new_value).
+    """
+    if len(args) % 2 != 0:
+        raise ValueError("dynamic_set: expected an even number of arguments in 'args'")
+
+    tokens = {}
+
+    for i in range(0, len(args), 2):
+        var_name, new_value = args[i], args[i + 1]
+        tokens[var_name] = dynamic_set_v1(dynamic_dict, var_name, new_value)
+
+    for var_name, new_value in kwargs.items():
+        tokens[var_name] = dynamic_set_v1(dynamic_dict, var_name, new_value)
+
+    return tokens
 
 
 def dynamic_get(dynamic_dict, var_name):
@@ -40,11 +67,13 @@ class DynamicVariables:
     Example usage:
 
     dynamic_dict = {}
+    dynamic_set(dynamic_dict, x=-13)
     with DynamicVariables(dynamic_dict, x=10):
-        print(dynamic_dict['x'].get())  # prints: 10
+        print(dynamic_get(dynamic_dict, 'x'))  # prints: 10
         with DynamicVariables(dynamic_dict, x=20):
-            print(dynamic_dict['x'].get())  # prints: 20
-        print(dynamic_dict['x'].get())  # prints: 10
+            print(dynamic_get(dynamic_dict, 'x'))  # prints: 20
+        print(dynamic_get(dynamic_dict, 'x'))  # prints: 10
+    print(dynamic_get(dynamic_dict, 'x'))  # prints: -13
 
     The above code demonstrates how DynamicVariables can be nested and how the
     dynamic variables are reset when a context exits.
@@ -61,7 +90,6 @@ class DynamicVariables:
         """
         self.dynamic_dict = dynamic_dict
         self.new_values = new_values
-        self.tokens_dict = {}
 
     def __enter__(self):
         """
@@ -72,10 +100,7 @@ class DynamicVariables:
         a new value for the corresponding dynamic variable in dynamic_dict.
         The tokens returned by var.set(new_value) are stored in tokens_dict for later use.
         """
-        for var_name, new_value in self.new_values.items():
-            self.tokens_dict[var_name] = dynamic_set(
-                self.dynamic_dict, var_name, new_value
-            )
+        self.tokens_dict = dynamic_set(self.dynamic_dict, **self.new_values)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
