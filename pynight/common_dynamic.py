@@ -1,6 +1,12 @@
 from contextvars import ContextVar
 
 
+def set_dynamic_value(dynamic_dict, var_name, new_value):
+    """Sets a new value for a dynamic variable in the given dynamic dictionary."""
+    var_object = dynamic_dict.setdefault(var_name, ContextVar(var_name))
+    return var_object.set(new_value)
+
+
 class DynamicVariables:
     """
     A context manager class for managing dynamic variables.
@@ -47,8 +53,8 @@ class DynamicVariables:
         The tokens returned by var.set(new_value) are stored in tokens_dict for later use.
         """
         for var_name, new_value in self.new_values.items():
-            var_object = self.dynamic_dict.setdefault(var_name, ContextVar(var_name))
-            self.tokens_dict[var_name] = var_object.set(new_value)
+            self.tokens_dict[var_name] = set_dynamic_value(self.dynamic_dict, var_name, new_value)
+
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
