@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+import uuid
 
 ##
 class ReadOnlySimpleNamespace(SimpleNamespace):
