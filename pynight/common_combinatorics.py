@@ -62,6 +62,9 @@ def permutations_gen(lst, *args, **kwargs):
 
 ##
 def shuffle_multiple(*lists):
+    # * @tests
+    # ** `shuffle_multiple(range(10, 20), range(110, 120))`
+    ##
     #: check if all lists have the same length
     if len(set(map(len, lists))) > 1:
         raise ValueError("All lists must have the same length!")
