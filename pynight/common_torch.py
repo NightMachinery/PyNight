@@ -121,6 +121,8 @@ def torch_gpu_remove_all():
 
 ##
 def no_grad_maybe(no_grad_p):
+    #: @seeAlso `torch.set_grad_enabled(mode=False)`
+    ##
     if no_grad_p:
         return torch.no_grad()
     else:
