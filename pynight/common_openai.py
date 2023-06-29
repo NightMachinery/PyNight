@@ -22,8 +22,8 @@ def chatml_response_process(response, copy_mode='default'):
         text = choice["message"]["content"]
         text_m = f"""        {{"role": "assistant", "content": '''{text}'''}},"""
 
-        if False:
-            text += """
+        if copy_mode == 'chat2':
+            text_m += f"""
         {{"role": "user", "content": ''' '''}},"""
 
         if copy_mode == 'default':
@@ -34,7 +34,7 @@ def chatml_response_process(response, copy_mode='default'):
 
             pyperclip.copy(text_m)
 
-        elif copy_mode == 'chat':
+        elif copy_mode in ('chat', 'chat2'):
             pyperclip.copy(text_m)
 
         elif copy_mode == 'text':
