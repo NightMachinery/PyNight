@@ -1,3 +1,4 @@
+import random
 import numpy
 
 np = numpy
@@ -19,9 +20,7 @@ def partition_int_into_fixed_gen(n, boxes, min=1):
         return
     else:
         for i in range(min, n + 1):
-            for result in partition_int_into_fixed_gen(
-                n - i, boxes - 1, min
-            ):
+            for result in partition_int_into_fixed_gen(n - i, boxes - 1, min):
                 yield (i,) + result
 
 
@@ -59,6 +58,24 @@ def permutations_gen(lst, *args, **kwargs):
     #             p.append(last)
     #             yield p
     ##
+
+
+##
+def shuffle_multiple(*lists):
+    #: check if all lists have the same length
+    if len(set(map(len, lists))) > 1:
+        raise ValueError("All lists must have the same length!")
+
+    #: generate a permutation
+    permutation = list(range(len(lists[0])))
+    random.shuffle(permutation)
+
+    #: apply the permutation to each list
+    shuffled = []
+    for lst in lists:
+        shuffled.append([lst[i] for i in permutation])
+
+    return tuple(shuffled)
 
 
 ##
