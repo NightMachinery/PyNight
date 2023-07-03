@@ -3,9 +3,9 @@ import uuid
 
 ##
 class ReadOnlySimpleNamespace(SimpleNamespace):
-    def __init__(self, **kwargs):
+    def __init__(self, _hash=None, **kwargs):
         super().__init__(**kwargs)
-        self._hash = uuid.uuid4()
+        self._hash = _hash or uuid.uuid4()
 
     def __getitem__(self, name):
         return getattr(self, name)
@@ -20,6 +20,14 @@ class ReadOnlySimpleNamespace(SimpleNamespace):
 
     def __hash__(self):
         return hash(self._hash)
+
+
+def rosn_split(rosn):
+    #: [[https://jax.readthedocs.io/en/latest/_autosummary/jax.tree_util.register_pytree_node.html][jax.tree_util.register_pytree_node — JAX documentation]]
+    return (tuple(rosn.__dict__.values()), tuple(rosn.__dict__.keys()))
+
+def rosn_tie(keys, values):
+    return ReadOnlySimpleNamespace(**dict(zip(keys, values)))
 
 
 # simple_obj = SimpleNamespace

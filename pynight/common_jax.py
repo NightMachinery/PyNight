@@ -8,6 +8,13 @@ import os
 import sys
 import pickle
 
+from pynight.common_dict import (
+    ReadOnlySimpleNamespace,
+    rosn_split,
+    rosn_tie,
+)
+##
+jax.tree_util.register_pytree_node(ReadOnlySimpleNamespace, rosn_split, rosn_tie)
 ##
 def tree_save(out_dir: str, state, flat_array=False) -> None:
     z("mkdir -p {out_dir}").assert_zero
