@@ -12,16 +12,39 @@ from .common_jupyter import jupyter_gc
 from .common_numpy import hash_array_np
 
 ##
-def torch_shape_get(input):
-    def h_shape_get(x):
-        if hasattr(x, "dtype"):
-            return x.dtype, x.shape
-        elif hasattr(x, "shape"):
-            return type(x), x.shape
-        else:
-            return x
+def torch_shape_get(input, size_p=False):
+    total_size = 0
 
-    return jax.tree_map(h_shape_get, input)
+    def h_shape_get(x):
+        nonlocal total_size
+
+        res = ()
+        if hasattr(x, "dtype"):
+            res += (x.dtype,)
+            if hasattr(x, "shape"):
+                res += (x.shape,)
+
+        elif hasattr(x, "shape"):
+            res += (type(x), x.shape)
+
+        if size_p and hasattr(x, "element_size") and hasattr(x, "nelement"):
+            size = torch_memory_tensor(x, s=2)
+            total_size += size
+
+            res += (f"{size:.2f}MB",)
+
+        if len(res) == 0:
+            res = x
+
+        return res
+
+    res = jax.tree_map(h_shape_get, input)
+
+    if size_p:
+        # return (f"total_size: {total_size:.2f}MB", res)
+        return dict(total_size_mb=total_size, tree=res)
+    else:
+        return res
 
 
 ##
@@ -85,10 +108,12 @@ def torch_gpu_memory_stats():
     print(f"gpu allocated: {allocated}\ngpu reserved: {reserved}")
 
 
-def torch_memory_tensor(tensor):
+def torch_memory_tensor(tensor, s=3):
+    #: s=3: gigabyte
+    ##
     size_in_bytes = tensor.element_size() * tensor.nelement()
-    size_in_gigabytes = size_in_bytes / (1024**3)
-    return size_in_gigabytes
+    size = size_in_bytes / (1024**s)
+    return size
 
 
 def torch_gpu_empty_cache():
