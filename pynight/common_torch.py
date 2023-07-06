@@ -165,3 +165,29 @@ def hash_tensor(tensor, *args, **kwargs):
 
 
 ##
+def prepend_value(tensor: torch.Tensor, value) -> torch.Tensor:
+    """
+    Returns a tensor which is the input tensor with `value` prepended to its last dimension.
+
+    Args:
+        tensor (torch.Tensor): The input tensor.
+        value: The value to prepend.
+
+    Returns:
+        torch.Tensor: The output tensor `value` prepended to its last dimension.
+
+    Example:
+        >>> tensor = torch.tensor([[2, 2, 3], [4, 5, 6]])
+        >>> prepend_value(tensor, 33)
+        tensor([[33,  2,  2,  3],
+                [33,  4,  5,  6]])
+    """
+    device = tensor.device
+
+    filler = torch.full(
+        (*tensor.shape[:-1], 1), fill_value=value, dtype=tensor.dtype, device=device
+    )
+    return torch.cat((filler, tensor), dim=-1)
+
+
+##
