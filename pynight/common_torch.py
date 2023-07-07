@@ -191,3 +191,98 @@ def prepend_value(tensor: torch.Tensor, value) -> torch.Tensor:
 
 
 ##
+def drop_tokens(
+    tokens: torch.Tensor,
+    mask: torch.Tensor,
+    num_prefix_tokens: int = 1,
+    ordered: bool = True,
+) -> torch.Tensor:
+    """
+    Drops tokens according to the given mask and preserves the prefix tokens.
+
+    Parameters:
+    tokens: [batch, token, hidden]
+        The tokens to drop.
+    mask: [batch, token]
+        The mask indicating which tokens to keep.
+    num_prefix_tokens: int, default = 1
+        The number of prefix tokens to keep.
+    ordered: bool, default = True
+        Whether to keep the order of the tokens or not.
+
+    Returns:
+    torch.Tensor
+        The tensor with dropped tokens.
+
+    Example:
+    ```
+    import torch
+    from icecream import ic
+
+    tokens = torch.randint(low=0, high=100, size=(2, 5, 10))
+
+    mask = torch.tensor([[True, False, False, True], [False, True, True, False]], dtype=torch.int64)
+    ic(mask.shape)
+
+    dropped_tokens = drop_tokens(tokens, mask, num_prefix_tokens=1, ordered=True)
+    ic(dropped_tokens.shape)
+
+    print(tokens)
+    print(mask)
+    print(dropped_tokens)
+    ```
+    This would output:
+    ```
+    ic| mask.shape: torch.Size([2, 4])
+    ic| dropped_tokens.shape: torch.Size([2, 3, 10])
+    tensor([[[16, 65, 37, 10, 71, 13, 59, 62, 78, 91],
+             [72, 76, 57, 34, 76, 91, 61,  2, 66, 28],
+             [22, 92,  8, 14, 93, 12, 45, 54, 27, 38],
+             [13, 37,  3, 56, 85, 24,  9, 22, 14, 97],
+             [69,  3, 49, 42, 80, 82,  8, 74, 21, 67]],
+
+            [[24, 33, 32, 39,  6, 89, 96, 90, 65, 79],
+             [80,  8, 86, 93, 34, 86,  9, 75, 63, 78],
+             [61, 89, 57, 55,  2, 84, 59, 65, 95, 23],
+             [31, 49, 97, 28, 23, 69, 96, 58, 46, 59],
+             [59, 15, 33, 29, 90, 59, 35, 16, 56, 73]]])
+    tensor([[1, 0, 0, 1],
+            [0, 1, 1, 0]])
+    tensor([[[16, 65, 37, 10, 71, 13, 59, 62, 78, 91],
+             [72, 76, 57, 34, 76, 91, 61,  2, 66, 28],
+             [69,  3, 49, 42, 80, 82,  8, 74, 21, 67]],
+
+            [[24, 33, 32, 39,  6, 89, 96, 90, 65, 79],
+             [61, 89, 57, 55,  2, 84, 59, 65, 95, 23],
+             [31, 49, 97, 28, 23, 69, 96, 58, 46, 59]]])
+    ```
+    """
+
+    if num_prefix_tokens:
+        prefix_tokens, tokens = (
+            tokens[:, :num_prefix_tokens],
+            tokens[:, num_prefix_tokens:],
+        )
+    else:
+        prefix_tokens = None
+
+    assert tokens.shape[:-1] == mask.shape
+
+    tokens_shape = tokens.shape
+    # ic(tokens_shape)
+
+    tokens = tokens[mask.nonzero(as_tuple=True)]
+    tokens = tokens.reshape((tokens_shape[0], -1, *tokens_shape[2:]))
+    #: @assumption For all i, `mask[i].sum()` is constant.
+
+    # ic(tokens.shape)
+
+    if prefix_tokens is not None:
+        # ic(prefix_tokens.shape)
+
+        tokens = torch.cat((prefix_tokens, tokens), dim=1)
+
+    return tokens
+
+
+##
