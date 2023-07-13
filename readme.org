@@ -16,3 +16,26 @@ pip install git+https://github.com/NightMachinery/PyNight.git
 pip install --no-deps --force-reinstall git+https://github.com/NightMachinery/PyNight.git
 #+end_example
 
+* =pynight.common_tqdm=
+** =tqdm_telegram=
+#+begin_src jupyter-python :kernel py_base :session /jpy:127.0.0.1#6035:orgk1/ :async yes :exports both
+from os import environ
+
+environ['TQDM_TELEGRAM_TOKEN'] = 'xxx'
+environ['TQDM_TELEGRAM_CHAT_ID'] = 'xxx'
+#+end_src
+
+#+RESULTS:
+
+#+begin_src jupyter-python :kernel py_base :session /jpy:127.0.0.1#6035:orgk1/ :async yes :exports both
+from pynight.common_tqdm import tqdm, trange
+import time
+
+for i in tqdm(range(100)):
+    # print(i)
+    
+    time.sleep(0.1)
+#+end_src
+
+
+
