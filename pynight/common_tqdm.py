@@ -22,7 +22,7 @@ class tqdm_telegram(tqdm_auto):
     >>> for i in tqdm(iterable, token='{token}', chat_id='{chat_id}'):
     ...     ...
     """
-    def __init__(self, *args, super_enabled_p=False, **kwargs):
+    def __init__(self, *args, super_enabled_p=False, mininterval=1.0, ascii=True, **kwargs):
         """
         Parameters
         ----------
@@ -34,6 +34,9 @@ class tqdm_telegram(tqdm_auto):
         See `tqdm.auto.tqdm.__init__` for other parameters.
         """
         self.super_enabled_p = super_enabled_p
+
+        kwargs['mininterval'] = mininterval
+        kwargs['ascii'] = ascii
 
         if not kwargs.get('disable'):
             kwargs = kwargs.copy()
