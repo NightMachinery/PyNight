@@ -1,5 +1,5 @@
 from tqdm.contrib.telegram import TelegramIO
-from tqdm.auto import tqdm_auto
+from tqdm.auto import tqdm as tqdm_auto
 
 
 ##
