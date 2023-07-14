@@ -12,7 +12,7 @@ from .common_jupyter import jupyter_gc
 from .common_numpy import hash_array_np
 
 ##
-def torch_shape_get(input, size_p=False):
+def torch_shape_get(input, size_p=False, type_only_p=False):
     total_size = 0
 
     def h_shape_get(x):
@@ -34,7 +34,10 @@ def torch_shape_get(input, size_p=False):
             res += (f"{size:.2f}MB",)
 
         if len(res) == 0:
-            res = x
+            if type_only_p:
+                res = type(x)
+            else:
+                res = x
 
         return res
 
