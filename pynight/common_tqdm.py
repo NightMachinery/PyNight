@@ -26,7 +26,8 @@ class tqdm_telegram(tqdm_auto):
     def __init__(
         self,
         *args,
-        super_enabled_p=False,
+        super_enabled_p='auto',
+        tlg_enabled_p=True,
         leave_telegram=True,
         mininterval=1.0,
         ascii=True,
@@ -43,40 +44,55 @@ class tqdm_telegram(tqdm_auto):
 
         See `tqdm.auto.tqdm.__init__` for other parameters.
         """
-        self.super_enabled_p = super_enabled_p
         self.leave_telegram = leave_telegram
 
         kwargs["mininterval"] = mininterval
         kwargs["ascii"] = ascii
 
-        if not kwargs.get("disable"):
-            kwargs = kwargs.copy()
+        token = kwargs.pop("token", getenv("TQDM_TELEGRAM_TOKEN"))
+        chat_id = kwargs.pop("chat_id", getenv("TQDM_TELEGRAM_CHAT_ID"))
+        if not (token and chat_id):
+            tlg_enabled_p = False
+        self.tlg_enabled_p = tlg_enabled_p
+
+        if super_enabled_p == 'auto':
+            super_enabled_p = (not self.tlg_enabled_p)
+        self.super_enabled_p = super_enabled_p
+
+        if self.tlg_enabled_p:
+        # if not kwargs.get("disable"):
+            # kwargs = kwargs.copy()
             self.tgio = TelegramIO(
-                kwargs.pop("token", getenv("TQDM_TELEGRAM_TOKEN")),
-                kwargs.pop("chat_id", getenv("TQDM_TELEGRAM_CHAT_ID")),
+                token,
+                chat_id,
             )
+
         super(tqdm_telegram, self).__init__(*args, **kwargs)
 
     def display(self, **kwargs):
         if self.super_enabled_p:
             super(tqdm_telegram, self).display(**kwargs)
 
-        fmt = self.format_dict
-        if fmt.get("bar_format", None):
-            fmt["bar_format"] = (
-                fmt["bar_format"]
-                .replace("<bar/>", "{bar:10u}")
-                .replace("{bar}", "{bar:10u}")
-            )
-        else:
-            fmt["bar_format"] = "{l_bar}{bar:10u}{r_bar}"
-        self.tgio.write(self.format_meter(**fmt))
+        if self.tlg_enabled_p:
+            fmt = self.format_dict
+            if fmt.get("bar_format", None):
+                fmt["bar_format"] = (
+                    fmt["bar_format"]
+                    .replace("<bar/>", "{bar:10u}")
+                    .replace("{bar}", "{bar:10u}")
+                )
+            else:
+                fmt["bar_format"] = "{l_bar}{bar:10u}{r_bar}"
+            self.tgio.write(self.format_meter(**fmt))
+
 
     def clear(self, *args, **kwargs):
         super(tqdm_telegram, self).clear(*args, **kwargs)
 
-        if not self.disable:
+        if self.tlg_enabled_p:
+        # if not self.disable:
             self.tgio.write("")
+
 
     def close(self):
         if self.disable:
@@ -84,7 +100,7 @@ class tqdm_telegram(tqdm_auto):
 
         super(tqdm_telegram, self).close()
 
-        if not (self.leave_telegram):
+        if self.tlg_enabled_p and not self.leave_telegram:
             self.tgio.delete()
 
 
