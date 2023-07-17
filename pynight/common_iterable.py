@@ -65,3 +65,11 @@ def lst_filter_out(lst, items):
 
 
 ##
+class IndexableList(list):
+    def __getitem__(self, indices):
+        if isinstance(indices, list):
+            return [super(IndexableList, self).__getitem__(i) for i in indices]
+        return super(IndexableList, self).__getitem__(indices)
+
+
+##
