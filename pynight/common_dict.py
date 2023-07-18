@@ -1,9 +1,12 @@
 from types import SimpleNamespace
 import uuid
 
+
 ##
 class ReadOnlySimpleNamespace(SimpleNamespace):
-    def __init__(self, _hash=None, **kwargs):
+    def __init__(self, _hash=None, _drop_nones=False, **kwargs):
+        if _drop_nones:
+            kwargs = {k: v for k, v in kwargs.items() if v is not None}
         super().__init__(**kwargs)
         self._hash = _hash or uuid.uuid4()
 
@@ -21,10 +24,17 @@ class ReadOnlySimpleNamespace(SimpleNamespace):
     def __hash__(self):
         return hash(self._hash)
 
+    @property
+    def __dict__(self):
+        return {k: v for k, v in super().__dict__.items() if k != "_hash"}
+
+    def __contains__(self, item):
+        return item in self.__dict__
 
 def rosn_split(rosn):
     #: [[https://jax.readthedocs.io/en/latest/_autosummary/jax.tree_util.register_pytree_node.html][jax.tree_util.register_pytree_node — JAX documentation]]
     return (tuple(rosn.__dict__.values()), tuple(rosn.__dict__.keys()))
+
 
 def rosn_tie(keys, values):
     return ReadOnlySimpleNamespace(**dict(zip(keys, values)))
