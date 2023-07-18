@@ -1,15 +1,27 @@
-import jax
-
 import torch
 import torch.nn as nn
 import torchvision
-
 from contextlib import nullcontext
-
+import socket
+import psutil
+import humanize
+import time
 import matplotlib.pyplot as plt
 import gc
 from .common_jupyter import jupyter_gc
 from .common_numpy import hash_array_np
+from pynight.common_files import rm
+
+try:
+    import jax
+except ImportError:
+    pass
+
+try:
+    from codecarbon import OfflineEmissionsTracker
+except ImportError:
+    pass
+
 
 ##
 def torch_shape_get(input, size_p=False, type_only_p=False):
@@ -286,6 +298,130 @@ def drop_tokens(
         tokens = torch.cat((prefix_tokens, tokens), dim=1)
 
     return tokens
+
+
+##
+def torch_device_name_get(device=None):
+    if torch.cuda.is_available():
+        device_name = torch.cuda.get_device_name(device=device)
+    else:
+        device_name = "cpu"
+
+    return device_name
+
+
+##
+def host_info_get(device=None):
+    metadata = dict()
+
+    device_name = torch_device_name_get(device=device)
+
+    hostname = socket.gethostname()
+
+    total_ram = psutil.virtual_memory().total
+    total_ram_gb = total_ram // (1024**3)
+    #: converts bytes to gigabytes
+
+    metadata["device_name"] = device_name
+    metadata["total_ram_gb"] = total_ram_gb
+    metadata["hostname"] = hostname
+
+    try:
+        device_properties = torch.cuda.get_device_properties(device)
+        device_properties_dict = {
+            "name": device_properties.name,
+            "major": device_properties.major,
+            "minor": device_properties.minor,
+            "total_memory": device_properties.total_memory,
+            "total_memory_humanized": humanize.naturalsize(
+                device_properties.total_memory,
+                binary=True,
+            ),
+            "multi_processor_count": device_properties.multi_processor_count,
+        }
+        metadata["device_properties"] = device_properties_dict
+    except:
+        traceback_print()
+        print("Continuing despite the error ...", file=sys.stderr)
+
+    return metadata
+
+
+##
+class TorchBenchmarker:
+    def __init__(
+        self,
+        *,
+        output_dict,
+        device=None,
+        measure_carbon_p=False,
+        country_iso_code="USA",
+        tracking_mode="machine",
+        output_dir=None,
+        output_file="emissions.csv",
+        output_append_p=False,
+    ):
+        self.device = device
+        self.metadata = output_dict
+
+        self.measure_carbon_p = measure_carbon_p
+        self.country_iso_code = country_iso_code
+        self.tracking_mode = tracking_mode
+        self.output_dir = output_dir
+        self.output_file = output_file
+        self.output_append_p = output_append_p
+
+        # self.tracker = None
+        # self.start_time = None
+        # self.end_time = None
+        # self.max_memory_allocated = None
+
+    def __enter__(self):
+        torch.cuda.reset_peak_memory_stats(device=self.device)
+
+        if self.measure_carbon_p:
+            self.tracker = OfflineEmissionsTracker(
+                country_iso_code=self.country_iso_code,
+                tracking_mode=self.tracking_mode,
+                save_to_file=bool(self.output_dir),
+                output_dir=self.output_dir,
+                output_file=self.output_file,
+            )
+            self.tracker.start()
+
+        self.start_time = time.time()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        device = self.device
+
+        self.end_time = time.time()
+        time_taken = self.end_time - self.start_time
+        time_taken_humanized = humanize.precisedelta(time_taken)
+        self.metadata["time_total"] = time_taken
+        self.metadata["time_total_humanized"] = time_taken_humanized
+
+        self.max_memory_allocated = torch.cuda.max_memory_allocated(device=self.device)
+        max_memory_allocated_humanized = humanize.naturalsize(
+            self.max_memory_allocated,
+            binary=True,
+        )
+        self.metadata["max_memory_allocated"] = self.max_memory_allocated
+        self.metadata["max_memory_allocated_humanized"] = max_memory_allocated_humanized
+        self.metadata["memory_stats"] = torch.cuda.memory_stats_as_nested_dict(
+            device=device
+        )
+
+        if self.measure_carbon_p:
+            if not self.output_append_p:
+                rm(f"{self.output_dir}/{self.output_file}")
+
+            self.tracker.stop()
+
+            ##: @notNeeded
+            # h(tracker.flush)
+            # tracker.flush()
+            ##
 
 
 ##
