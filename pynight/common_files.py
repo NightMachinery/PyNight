@@ -1,3 +1,4 @@
+import os
 import io
 import pathlib
 from pathlib import Path
@@ -14,7 +15,10 @@ def cat(file_path):
 
 
 ##
-def mkdir(path):
+def mkdir(path, do_dirname=False):
+    if do_dirname:
+        path = os.path.dirname(path)
+
     #: https://docs.python.org/3/library/pathlib.html#pathlib.Path.mkdir
     return Path(path).mkdir(parents=True, exist_ok=True)
 
