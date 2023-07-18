@@ -1,7 +1,10 @@
 import os
 from pynight.common_debugging import traceback_print
 from pynight.common_torch import torch_shape_get
-from pynight.common_files import rm
+from pynight.common_files import (
+    rm,
+    mkdir,
+)
 import datasets
 from collections.abc import Mapping, MutableMapping
 from datasets import concatenate_datasets
@@ -169,6 +172,7 @@ def save_and_delete(dataset, dataset_path, **kwargs):
     cache_filenames = dataset_cache_filenames(dataset)
 
     dataset = dataset.flatten_indices()
+    mkdir(dataset_path) #: This path is a dir
     dataset.save_to_disk(dataset_path=dataset_path, **kwargs)
     print(f"Saved dataset to: {dataset_path}")
 
