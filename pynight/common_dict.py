@@ -3,18 +3,20 @@ import uuid
 
 
 ##
-class ReadOnlySimpleNamespace(SimpleNamespace):
-    def __init__(self, _hash=None, _drop_nones=False, **kwargs):
+class SimpleObject(SimpleNamespace):
+    def __init__(self, _hash=None, _drop_nones=False, _readonly_p=True, **kwargs):
         if _drop_nones:
             kwargs = {k: v for k, v in kwargs.items() if v is not None}
         super().__init__(**kwargs)
+
+        super().__setattr__('_readonly_p', _readonly_p)
         self._hash = _hash or uuid.uuid4()
 
     def __getitem__(self, name):
         return getattr(self, name)
 
     def __setattr__(self, name, value):
-        if name == "_hash":
+        if  name == "_hash" or (not self._readonly_p):
             super().__setattr__(name, value)
         else:
             raise AttributeError(
@@ -26,7 +28,7 @@ class ReadOnlySimpleNamespace(SimpleNamespace):
 
     @property
     def __dict__(self):
-        return {k: v for k, v in super().__dict__.items() if k != "_hash"}
+        return {k: v for k, v in super().__dict__.items() if k not in ("_hash", "_readonly_p")}
 
     def __contains__(self, item):
         return item in self.__dict__
@@ -37,11 +39,11 @@ def rosn_split(rosn):
 
 
 def rosn_tie(keys, values):
-    return ReadOnlySimpleNamespace(**dict(zip(keys, values)))
+    return SimpleObject(**dict(zip(keys, values)))
 
 
 # simple_obj = SimpleNamespace
-simple_obj = ReadOnlySimpleNamespace
+simple_obj = SimpleObject
 
 
 def simple_obj_update(obj, *args, **kwargs):
