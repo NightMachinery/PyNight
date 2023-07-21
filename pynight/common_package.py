@@ -5,7 +5,7 @@ import subprocess
 from typing import List, Dict
 from importlib.metadata import distribution
 from pynight.common_dict import simple_obj
-
+from icecream import ic
 
 ##
 def package_commit_get(
@@ -47,14 +47,16 @@ def package_commit_get(
                 )
             )
             if not dist_info_paths:
-                raise Exception(
-                    f"Neither .pth file nor direct_url.json file found for the package: {package_name}"
-                )
-
-            # Read the first direct_url.json file to get actual package directory
-            with open(dist_info_paths[0], "r") as f:
-                dir_info = json.load(f)
-                package_dir = dir_info.get("url").replace("file://", "")
+                package_dir = os.path.join(site_packages_path, package_name,)
+                if not os.path.exists(os.path.join(package_dir, "__init__.py")):
+                    raise Exception(
+                        f"Neither .pth file nor direct_url.json file nor __init__.py file found for the package: {package_name}"
+                    )
+            else:
+                # Read the first direct_url.json file to get actual package directory
+                with open(dist_info_paths[0], "r") as f:
+                    dir_info = json.load(f)
+                    package_dir = dir_info.get("url").replace("file://", "")
 
     # Try to get the git commit hash
     try:
@@ -92,7 +94,7 @@ def packages_commit_get(packages, **kwargs):
         try:
             res = vars(package_commit_get(pkg, **kwargs))
             output[pkg] = res
-        except e:
+        except Exception as e:
             print(e)
             pass
 
