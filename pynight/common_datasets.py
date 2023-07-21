@@ -1,6 +1,7 @@
 import os
 from pynight.common_debugging import traceback_print
 from pynight.common_torch import torch_shape_get
+from pynight.common_dict import simple_obj
 from pynight.common_files import (
     rm,
     mkdir,
@@ -32,8 +33,15 @@ def dataset_push_from_disk_to_hub(path, *args, **kwargs):
 
 
 ##
-def dataset_cache_filenames(dataset, sort_p=True, **kwargs):
+def dataset_cache_filenames(dataset, cache_only_p=False, sort_p=True, **kwargs):
     res = list(set(d["filename"] for d in dataset.cache_files))
+
+    if cache_only_p:
+        res = [p for p in res if os.path.basename(p).startswith("cache-")]
+
+    res = list(set(res))
+    #: removes any potential duplicates
+    #: no sorted set in stdlib
 
     if sort_p:
         res.sort(**kwargs)
@@ -168,23 +176,25 @@ def dataset_index_add(
 
 
 ##
-def save_and_delete(dataset, dataset_path, **kwargs):
-    cache_filenames = dataset_cache_filenames(dataset)
+def save_and_delete(dataset, dataset_path, delete_p=True, **kwargs):
+    to_delete = dataset_cache_filenames(dataset, cache_only_p=True)
 
     dataset = dataset.flatten_indices()
-    mkdir(dataset_path) #: This path is a dir
+    mkdir(dataset_path)  #: This path is a dir
     dataset.save_to_disk(dataset_path=dataset_path, **kwargs)
     print(f"Saved dataset to: {dataset_path}")
 
     dataset = datasets.load_from_disk(dataset_path)
 
-    for p in cache_filenames:
-        p_basename = os.path.basename(p)
-        if p_basename.startswith('cache-'):
-            #: not deleting the base data
-
+    if delete_p:
+        for p in to_delete:
             res = rm(p)
             print(res.msg)
 
-    return dataset
+    return simple_obj(
+        dataset=dataset,
+        to_delete=to_delete,
+    )
+
+
 ##
