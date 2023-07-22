@@ -12,7 +12,7 @@ from datasets import concatenate_datasets
 import time
 from dataclasses import dataclass
 from typing import List, Callable
-
+from icecream import ic
 
 ##
 def dataset_push_from_disk_to_hub(path, *args, **kwargs):
@@ -68,16 +68,25 @@ class TransformedDataset:
 
         return TransformedDataset(self.dataset, new_transforms)
 
+    def select(self, *args, **kwargs):
+        dataset_new = self.dataset.select(*args, **kwargs)
+        return TransformedDataset(dataset_new, self.transforms.copy())
+
     def __getitem__(self, *args, **kwargs):
         data = self.dataset.__getitem__(*args, **kwargs)
         for transform in self.transforms:
             data = transform(data)
         return data
 
+    def __len__(self):
+        return len(self.dataset)
+
     def batched_iterator(self, batch_size, drop_last_batch=False):
-        num_batches = len(self.dataset) // batch_size
+        length = len(self)
+
+        num_batches = length // batch_size
         if not drop_last_batch:
-            num_batches += len(self.dataset) % batch_size != 0
+            num_batches += length % batch_size != 0
 
         for i in range(num_batches):
             yield self[i * batch_size : (i + 1) * batch_size]
