@@ -103,6 +103,84 @@ class TransformedDataset:
         return fn2
 
 
+@dataclass()
+class ConcatenatedTransformedDataset:
+    datasets: List[TransformedDataset]
+
+    def __init__(self, datasets):
+        self.datasets = datasets
+
+    def datasets_concatenated(self,):
+        length = len(self)
+        datasets_ = [tds.dataset.select(range(length)) for tds in self.datasets]
+
+        for i in range(1, len(datasets_)):
+            #: @hack HF does not allow duplicate columns
+            ##
+            ds = datasets_[i]
+
+            cols_rm = [c for c in datasets_[0].column_names if c in ds.column_names]
+            ic(cols_rm)
+            datasets_[i] = ds.remove_columns(cols_rm)
+
+        ds = datasets.concatenate_datasets(datasets_, axis=1)
+        return ds
+
+    def preview(self, batch_size=2, type_only_p=True, **kwargs):
+        #: @duplicateCode
+        ##
+        return torch_shape_get(self[:batch_size], type_only_p=type_only_p)
+
+    def call_recursive(self, name, *args, **kwargs):
+        datasets_new = [getattr(ds, name)(*args, **kwargs) for ds in self.datasets]
+        return ConcatenatedTransformedDataset(datasets=datasets_new)
+
+    def transform(self, *args, **kwargs):
+        return self.call_recursive('transform', *args, **kwargs)
+
+    def select(self, *args, **kwargs):
+        return self.call_recursive('select', *args, **kwargs)
+
+    def __getitem__(self, *args, **kwargs):
+        batch_transformed = dict()
+        for ds in self.datasets:
+            batch_transformed.update(ds.__getitem__(*args, **kwargs))
+
+        return batch_transformed
+
+    def __len__(self):
+        return min(len(ds) for ds in self.datasets)
+
+    def batched_iterator(self, batch_size, drop_last_batch=False):
+        #: @duplicateCode
+        ##
+        length = len(self)
+
+        num_batches = length // batch_size
+        if not drop_last_batch:
+            num_batches += length % batch_size != 0
+
+        for i in range(num_batches):
+            yield self[i * batch_size : (i + 1) * batch_size]
+
+    def fn_with_transforms(self, fn):
+        def fn2(batch, *args, **kwargs):
+            batch_transformed = dict()
+            for ds in self.datasets:
+                batch_current = dict()
+                for k, v in batch.items():
+                    if k in ds.dataset.column_names:
+                        batch_current[k] = v
+
+                for transform in ds.transforms:
+                    # ic(torch_shape_get(batch_current, type_only_p=True), transform)
+                    batch_current = transform(batch_current)
+
+                batch_transformed.update(batch_current)
+
+            return fn(batch, batch_transformed, *args, **kwargs)
+
+        return fn2
 ##
 def mapconcat(
     dataset, function, unchanged_columns=None, unchanged_keep_columns=True, **kwargs
