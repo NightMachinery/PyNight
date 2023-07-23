@@ -1,6 +1,10 @@
 from .common_networking import my_ip_get
 from .common_telegram import log_tlg
-from pydantic import BaseSettings
+
+# from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
+#: pip install pydantic-settings
+
 import traceback
 import logging
 from fastapi import Request
