@@ -120,7 +120,8 @@ class ConcatenatedTransformedDataset:
             ds = datasets_[i]
 
             cols_rm = [c for c in datasets_[0].column_names if c in ds.column_names]
-            ic(cols_rm)
+            # ic(cols_rm)
+
             datasets_[i] = ds.remove_columns(cols_rm)
 
         ds = datasets.concatenate_datasets(datasets_, axis=1)
