@@ -1,3 +1,7 @@
+from pynight.common_dict import simple_obj
+import re
+
+
 ##
 def model_name_get(model, mode="arch+tag"):
     cfg = model.pretrained_cfg

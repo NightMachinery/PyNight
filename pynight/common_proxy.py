@@ -32,4 +32,4 @@ def proxy_set(proxy_address=None):
         opener = urllib.request.build_opener(proxy_handler)
         urllib.request.install_opener(opener)
 
-    zp("typeset -p HTTP_PROXY")
+    return os.environ.get("HTTP_PROXY", None)
