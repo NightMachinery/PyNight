@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision
+import functools
 from contextlib import nullcontext
 import socket
 import psutil
@@ -424,4 +425,29 @@ class TorchBenchmarker:
             ##
 
 
+##
+def tensorify_scalars(argnums=(0,)):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # Store the original types of the arguments specified by argnums
+            original_types = {argnum: torch.is_tensor(args[argnum]) for argnum in argnums}
+
+            # Convert those arguments to tensors if they're not already
+            new_args = list(args)
+            for argnum in argnums:
+                if not original_types[argnum]:
+                    new_args[argnum] = torch.tensor(args[argnum])
+
+            # Call the original function
+            result = func(*new_args, **kwargs)
+
+            # If the original type of an argument was not a tensor, convert the result back to the same type
+            for argnum in original_types.keys():
+                if not original_types[argnum]:
+                    return result.item()
+
+            return result
+        return wrapper
+    return decorator
 ##
