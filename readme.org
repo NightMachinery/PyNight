@@ -16,6 +16,48 @@ pip install git+https://github.com/NightMachinery/PyNight.git
 pip install --no-deps --force-reinstall git+https://github.com/NightMachinery/PyNight.git
 #+end_example
 
+* =pynight.common_dynamic=
+#+begin_src jupyter-python :kernel py_base :session emacs_py_1 :async yes :exports both
+from pynight.common_dynamic import (
+    DynamicVariables,
+    DynamicObject,
+    dynamic_set,
+    dynamic_get,
+)
+
+dynamic_dict = {}
+obj = DynamicObject(dynamic_dict, default_to_none_p=True)
+obj.x = -13
+obj.z = 72
+print(
+    f"x: {obj.x}, z: {obj.z}, nonexistent_attribute: {obj.nonexistent_attribute or 'some_default_value'}"
+)  #: x: -13, z: 72
+with DynamicVariables(dynamic_dict, x=10):
+    print(f"x: {obj.x}, z: {obj.z}")  #: x: 10, z: 72
+    with DynamicVariables(dynamic_dict, x=20):
+        print(f"x: {obj.x}, z: {obj.z}")  #: x: 20, z: 72
+        obj.x = 99
+        obj.y = 81
+        obj.z = -6
+        print(f"x: {obj.x}, y: {obj.y}, z: {obj.z}")
+        #: x: 99, y: 81, z: -6
+    print(f"x: {obj.x}, y: {obj.y}, z: {obj.z}")
+    #: x: 10, y: 81, z: -6
+    #: z and y did NOT get reset as they were not explicitly set in the previous context manager.
+
+    obj.y = 560
+print(f"x: {obj.x}, y: {obj.y}, z: {obj.z}")
+#: x: -13, y: 560, z: -6
+#+end_src
+
+#+RESULTS:
+: x: -13, z: 72, nonexistent_attribute: some_default_value
+: x: 10, z: 72
+: x: 20, z: 72
+: x: 99, y: 81, z: -6
+: x: 10, y: 81, z: -6
+: x: -13, y: 560, z: -6
+
 * =pynight.common_tqdm=
 ** =tqdm_telegram=
 #+begin_src jupyter-python :kernel py_base :session /jpy:127.0.0.1#6035:orgk1/ :async yes :exports both

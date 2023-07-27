@@ -1,4 +1,5 @@
 from contextvars import ContextVar
+from pynight.common_icecream import ic
 
 
 def dynamic_set_v1(dynamic_dict, name, value):
@@ -124,3 +125,125 @@ class DynamicVariables:
         for var_name, token in self.tokens_dict.items():
             var_object = self.dynamic_dict[var_name]
             var_object.reset(token)
+
+
+class DynamicObject:
+    """
+    A class for managing dynamic variables.
+
+    Dynamic variables are stored in a dictionary and each variable is associated
+    with a ContextVar instance. DynamicObject provides the ability to set and get
+    dynamic variables using object attribute access.
+
+    Example usage:
+
+    dynamic_dict = {}
+    obj = DynamicObject(dynamic_dict, default_to_none_p=True)
+    obj.x = -13
+    obj.z = 72
+    print(f"x: {obj.x}, z: {obj.z}, nonexistent_attribute: {obj.nonexistent_attribute or 'some_default_value'}")
+    #: x: -13, z: 72, nonexistent_attribute: some_default_value
+    with DynamicVariables(dynamic_dict, x=10):
+        print(f"x: {obj.x}, z: {obj.z}") #: x: 10, z: 72
+        with DynamicVariables(dynamic_dict, x=20):
+            print(f"x: {obj.x}, z: {obj.z}") #: x: 20, z: 72
+            obj.x = 99
+            obj.y = 81
+            obj.z = -6
+            print(f"x: {obj.x}, y: {obj.y}, z: {obj.z}")
+            #: x: 99, y: 81, z: -6
+        print(f"x: {obj.x}, y: {obj.y}, z: {obj.z}")
+        #: x: 10, y: 81, z: -6
+        #: z and y did NOT get reset as they were not explicitly set in the previous context manager.
+
+        obj.y = 560
+    print(f"x: {obj.x}, y: {obj.y}, z: {obj.z}")
+    #: x: -13, y: 560, z: -6
+
+    The above code demonstrates how DynamicVariables can be nested and how the
+    dynamic variables are reset when a context exits.
+    """
+
+    def __init__(self, dynamic_dict, default_to_none_p=False):
+        """
+        Initialize DynamicObject with a dictionary for storing the dynamic variables.
+
+        Args:
+            dynamic_dict (dict): The dictionary for storing the dynamic variables.
+            default_to_none_p (bool): If True, dynamic variables are defaulted to None when retrieved and they don't exist.
+            Defaults to False.
+        """
+        super().__setattr__("_dynamic_dict", dynamic_dict)
+        super().__setattr__("_default_to_none_p", default_to_none_p)
+
+    def __getitem__(self, name):
+        """
+        Retrieve the value of a dynamic variable.
+
+        This method is automatically called when getting an attribute using square brackets.
+        It calls dynamic_get to retrieve the value of the dynamic variable.
+
+        Args:
+            name (str): The name of the dynamic variable to retrieve.
+
+        Returns:
+            The current value of the dynamic variable, or raises a LookupError
+            if the variable is not set in the current context and no default value is provided.
+        """
+        return self.__getattr__(name)
+
+    def __setitem__(self, name, value):
+        """
+        Set a new value for a dynamic variable.
+
+        This method is automatically called when setting an attribute using square brackets.
+        It calls dynamic_set to set a new value for the dynamic variable.
+
+        Args:
+            name (str): The name of the dynamic variable to set a new value for.
+            value: The new value for the dynamic variable.
+        """
+        dynamic_set(self._dynamic_dict, name, value)
+
+    def __getattr__(self, name):
+        """
+        Retrieve the value of a dynamic variable.
+
+        This method is automatically called when getting an attribute using dot notation.
+        It calls dynamic_get to retrieve the value of the dynamic variable.
+
+        Args:
+            name (str): The name of the dynamic variable to retrieve.
+
+        Returns:
+            The current value of the dynamic variable, or raises a LookupError
+            if the variable is not set in the current context and no default value is provided.
+        """
+        #: @LLM
+        #: In Python, the __getattr__ method is a special method that's only invoked when the attribute wasn't found the usual ways. It's not invoked for attributes that exist on the instance dictionary.
+        #: To intercept and override access to the attributes in the instance dictionary, you can use =__getattribute__= in Python. This special method is called when an attribute is accessed on an object, regardless of whether the attribute is present in the instance dictionary or not.
+        #: In contrast to =__getattr__=, =__getattribute__= is called every time an attribute is accessed, and can therefore be used to intercept and customize any attribute access. It's important to be careful when using =__getattribute__= to avoid infinite recursion, as calling =self.attr= within =__getattribute__= will call =__getattribute__= again.
+        if name in ("_dynamic_dict", "_default_to_none_p", "__getattr__"):
+            raise AttributeError(f"@impossible Getting the attribute {name} is not supposed to invoke this function!")
+
+        if self._default_to_none_p:
+            return dynamic_get(self._dynamic_dict, name, default=None)
+        else:
+            return dynamic_get(self._dynamic_dict, name)
+
+    def __setattr__(self, name, value):
+        """
+        Set a new value for a dynamic variable.
+
+        This method is automatically called when setting an attribute using dot notation.
+        It calls dynamic_set to set a new value for the dynamic variable.
+
+        Args:
+            name (str): The name of the dynamic variable to set a new value for.
+            value: The new value for the dynamic variable.
+        """
+        if name in ("_dynamic_dict", "_default_to_none_p"):
+            # super().__setattr__(name, value)
+            raise AttributeError("_dynamic_dict is a private variable of DynamicObject")
+        else:
+            dynamic_set(self._dynamic_dict, name, value)
