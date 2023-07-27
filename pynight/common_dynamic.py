@@ -4,6 +4,9 @@ from pynight.common_icecream import ic
 
 def dynamic_set_v1(dynamic_dict, name, value):
     """Sets a new value for a dynamic variable in the given dynamic dictionary."""
+    if isinstance(dynamic_dict, DynamicObject):
+        dynamic_dict = dynamic_dict._dynamic_dict
+
     var_object = dynamic_dict.setdefault(name, ContextVar(name))
     return var_object.set(value)
 
@@ -22,6 +25,9 @@ def dynamic_set(dynamic_dict, *args, **kwargs):
     """
     if len(args) % 2 != 0:
         raise ValueError("dynamic_set: expected an even number of arguments in 'args'")
+
+    if isinstance(dynamic_dict, DynamicObject):
+        dynamic_dict = dynamic_dict._dynamic_dict
 
     tokens = {}
 
@@ -49,6 +55,9 @@ def dynamic_get(dynamic_dict, var_name, default="MAGIC_THROW_EXCEPTION_13369831"
         is not set in the current context, or raises a LookupError if the variable
         is not set in the current context and no default value is provided.
     """
+    if isinstance(dynamic_dict, DynamicObject):
+        dynamic_dict = dynamic_dict._dynamic_dict
+
     if var_name in dynamic_dict:
         try:
             return dynamic_dict[var_name].get()
