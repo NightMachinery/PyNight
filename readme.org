@@ -33,9 +33,9 @@ print(
     f"x: {obj.x}, z: {obj.z}, nonexistent_attribute: {obj.nonexistent_attribute or 'some_default_value'}"
 )
 #: x: -13, z: 72, nonexistent_attribute: some_default_value
-with DynamicVariables(dynamic_dict, x=10):
+with DynamicVariables(obj, x=10):
     print(f"x: {obj.x}, z: {obj.z}")  #: x: 10, z: 72
-    with DynamicVariables(dynamic_dict, x=20):
+    with DynamicVariables(obj, x=20):
         print(f"x: {obj.x}, z: {obj.z}")  #: x: 20, z: 72
         obj.x = 99
         obj.y = 81

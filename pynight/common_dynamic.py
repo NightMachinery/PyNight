@@ -100,6 +100,9 @@ class DynamicVariables:
             dynamic_dict (dict): The dictionary for storing the dynamic variables.
             new_values: The new values for the dynamic variables.
         """
+        if isinstance(dynamic_dict, DynamicObject):
+            dynamic_dict = dynamic_dict._dynamic_dict
+
         self.dynamic_dict = dynamic_dict
         self.new_values = new_values
 
@@ -143,9 +146,9 @@ class DynamicObject:
     obj.z = 72
     print(f"x: {obj.x}, z: {obj.z}, nonexistent_attribute: {obj.nonexistent_attribute or 'some_default_value'}")
     #: x: -13, z: 72, nonexistent_attribute: some_default_value
-    with DynamicVariables(dynamic_dict, x=10):
+    with DynamicVariables(obj, x=10):
         print(f"x: {obj.x}, z: {obj.z}") #: x: 10, z: 72
-        with DynamicVariables(dynamic_dict, x=20):
+        with DynamicVariables(obj, x=20):
             print(f"x: {obj.x}, z: {obj.z}") #: x: 20, z: 72
             obj.x = 99
             obj.y = 81
