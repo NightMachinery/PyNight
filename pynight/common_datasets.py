@@ -98,7 +98,7 @@ class TransformedDataset:
             for transform in self.transforms:
                 batch_transformed = transform(batch_transformed)
 
-            return fn(batch, batch_transformed, *args, **kwargs)
+            return fn(*args, batch=batch, batch_transformed=batch_transformed, **kwargs)
 
         return fn2
 
