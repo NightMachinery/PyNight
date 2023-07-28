@@ -17,7 +17,7 @@ def model_name_get(model, mode="arch+tag"):
 ##
 def patch_info_from_name(
     model_name,
-    bias_token_p=False,
+    bias_token_p=None,
 ):
     #: @todo We should hardcode some models like DINO.
     #:
@@ -43,16 +43,22 @@ def patch_info_from_name(
     assert patch_count_fl == patch_count
     patch_count += 1  #: for CLS
 
-    source_count = patch_count
-    if bias_token_p:
-        source_count += 1
-
-    return simple_obj(
+    output = dict(
         image_resolution=image_resolution,
         patch_resolution=patch_resolution,
-        patch_count=patch_count,
-        source_count=source_count,
     )
+
+    if bias_token_p is not None:
+        source_count = patch_count
+        if bias_token_p:
+            source_count += 1
+
+        output.update(
+            patch_count=patch_count,
+            source_count=source_count,
+        )
+
+    return simple_obj(**output)
 
 
 ##
