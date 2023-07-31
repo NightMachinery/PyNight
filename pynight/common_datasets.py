@@ -144,8 +144,14 @@ class TransformedDataset:
                 for transform in self.transforms:
                     if time_p:
                         transform = timed(transform)
-                    batch_transformed = transform(batch_transformed)
-                    batch_transformed = BatchedDict(batch)
+
+                    try:
+                        batch_transformed = transform(batch_transformed)
+                    except:
+                        ic(torch_shape_get(batch_transformed, type_only_p=True), transform)
+                        raise
+
+                    batch_transformed = BatchedDict(batch_transformed)
 
             return fn(*args, batch=batch, batch_transformed=batch_transformed, **kwargs)
 
@@ -226,12 +232,13 @@ class ConcatenatedTransformedDataset:
 
                 for transform in ds.transforms:
                     # ic(torch_shape_get(batch_current, type_only_p=True), transform)
+
                     batch_current = transform(batch_current)
                     batch_current = BatchedDict(batch_current)
 
                 batch_transformed.update(batch_current)
 
-            return fn(batch, batch_transformed, *args, **kwargs)
+            return fn(*args, batch=batch, batch_transformed=batch_transformed, **kwargs)
 
         return fn2
 
