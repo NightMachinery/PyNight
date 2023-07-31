@@ -2,9 +2,19 @@ from contextvars import ContextVar
 from pynight.common_icecream import ic
 
 
+def dynamic_object_p(obj):
+    # return (isinstance(obj, DynamicObject))
+    #: Using =isinstance= can fail when hotreloading.
+
+    return (
+        hasattr(obj, "_dynamic_dict")
+        and obj.__class__.__name__ == "DynamicObject"
+    )
+
+
 def dynamic_set_v1(dynamic_dict, name, value):
     """Sets a new value for a dynamic variable in the given dynamic dictionary."""
-    if isinstance(dynamic_dict, DynamicObject):
+    if dynamic_object_p(dynamic_dict):
         dynamic_dict = dynamic_dict._dynamic_dict
 
     var_object = dynamic_dict.setdefault(name, ContextVar(name))
@@ -26,7 +36,7 @@ def dynamic_set(dynamic_dict, *args, **kwargs):
     if len(args) % 2 != 0:
         raise ValueError("dynamic_set: expected an even number of arguments in 'args'")
 
-    if isinstance(dynamic_dict, DynamicObject):
+    if dynamic_object_p(dynamic_dict):
         dynamic_dict = dynamic_dict._dynamic_dict
 
     tokens = {}
@@ -55,7 +65,7 @@ def dynamic_get(dynamic_dict, var_name, default="MAGIC_THROW_EXCEPTION_13369831"
         is not set in the current context, or raises a LookupError if the variable
         is not set in the current context and no default value is provided.
     """
-    if isinstance(dynamic_dict, DynamicObject):
+    if dynamic_object_p(dynamic_dict):
         dynamic_dict = dynamic_dict._dynamic_dict
 
     if var_name in dynamic_dict:
@@ -73,70 +83,6 @@ def dynamic_get(dynamic_dict, var_name, default="MAGIC_THROW_EXCEPTION_13369831"
             )
         else:
             return default
-
-
-class DynamicVariables:
-    """
-    A context manager class for managing dynamic variables.
-
-    The dynamic variables are stored in a dictionary and each variable
-    is associated with a ContextVar instance. Within the context managed
-    by DynamicVariables, the dynamic variables can be set to new values,
-    and when the context exits, the variables are automatically reset to their
-    previous values.
-
-    Example usage:
-
-    dynamic_dict = {}
-    dynamic_set(dynamic_dict, x=-13)
-    with DynamicVariables(dynamic_dict, x=10):
-        print(dynamic_get(dynamic_dict, 'x'))  # prints: 10
-        with DynamicVariables(dynamic_dict, x=20):
-            print(dynamic_get(dynamic_dict, 'x'))  # prints: 20
-        print(dynamic_get(dynamic_dict, 'x'))  # prints: 10
-    print(dynamic_get(dynamic_dict, 'x'))  # prints: -13
-
-    The above code demonstrates how DynamicVariables can be nested and how the
-    dynamic variables are reset when a context exits.
-    """
-
-    def __init__(self, dynamic_dict, **new_values):
-        """
-        Initialize DynamicVariables with a dictionary for storing the dynamic
-        variables and their new values for the context.
-
-        Args:
-            dynamic_dict (dict): The dictionary for storing the dynamic variables.
-            new_values: The new values for the dynamic variables.
-        """
-        if isinstance(dynamic_dict, DynamicObject):
-            dynamic_dict = dynamic_dict._dynamic_dict
-
-        self.dynamic_dict = dynamic_dict
-        self.new_values = new_values
-
-    def __enter__(self):
-        """
-        Set the new values for the dynamic variables.
-
-        This method is automatically called when entering the 'with' statement.
-        It iterates over the new_values dictionary, and for each item, it sets
-        a new value for the corresponding dynamic variable in dynamic_dict.
-        The tokens returned by var.set(new_value) are stored in tokens_dict for later use.
-        """
-        self.tokens_dict = dynamic_set(self.dynamic_dict, **self.new_values)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Reset the dynamic variables to their previous values.
-
-        This method is automatically called when exiting the 'with' statement.
-        It iterates over the tokens_dict, and for each item, it uses the token
-        to reset the corresponding dynamic variable in dynamic_dict to its previous value.
-        """
-        for var_name, token in self.tokens_dict.items():
-            var_object = self.dynamic_dict[var_name]
-            var_object.reset(token)
 
 
 class DynamicObject:
@@ -236,7 +182,9 @@ class DynamicObject:
         #: To intercept and override access to the attributes in the instance dictionary, you can use =__getattribute__= in Python. This special method is called when an attribute is accessed on an object, regardless of whether the attribute is present in the instance dictionary or not.
         #: In contrast to =__getattr__=, =__getattribute__= is called every time an attribute is accessed, and can therefore be used to intercept and customize any attribute access. It's important to be careful when using =__getattribute__= to avoid infinite recursion, as calling =self.attr= within =__getattribute__= will call =__getattribute__= again.
         if name in ("_dynamic_dict", "_default_to_none_p", "__getattr__"):
-            raise AttributeError(f"@impossible Getting the attribute {name} is not supposed to invoke this function!")
+            raise AttributeError(
+                f"@impossible Getting the attribute {name} is not supposed to invoke this function!"
+            )
 
         if self._default_to_none_p:
             return dynamic_get(self._dynamic_dict, name, default=None)
@@ -259,3 +207,71 @@ class DynamicObject:
             raise AttributeError("_dynamic_dict is a private variable of DynamicObject")
         else:
             dynamic_set(self._dynamic_dict, name, value)
+
+
+class DynamicVariables:
+    """
+    A context manager class for managing dynamic variables.
+
+    The dynamic variables are stored in a dictionary and each variable
+    is associated with a ContextVar instance. Within the context managed
+    by DynamicVariables, the dynamic variables can be set to new values,
+    and when the context exits, the variables are automatically reset to their
+    previous values.
+
+    Example usage:
+
+    dynamic_dict = {}
+    dynamic_set(dynamic_dict, x=-13)
+    with DynamicVariables(dynamic_dict, x=10):
+        print(dynamic_get(dynamic_dict, 'x'))  # prints: 10
+        with DynamicVariables(dynamic_dict, x=20):
+            print(dynamic_get(dynamic_dict, 'x'))  # prints: 20
+        print(dynamic_get(dynamic_dict, 'x'))  # prints: 10
+    print(dynamic_get(dynamic_dict, 'x'))  # prints: -13
+
+    The above code demonstrates how DynamicVariables can be nested and how the
+    dynamic variables are reset when a context exits.
+    """
+
+    def __init__(self, dynamic_dict, **new_values):
+        """
+        Initialize DynamicVariables with a dictionary for storing the dynamic
+        variables and their new values for the context.
+
+        Args:
+            dynamic_dict (dict): The dictionary for storing the dynamic variables.
+            new_values: The new values for the dynamic variables.
+        """
+        if dynamic_object_p(dynamic_dict):
+            dynamic_dict = dynamic_dict._dynamic_dict
+
+        assert isinstance(
+            dynamic_dict, dict
+        ), f"Invalid type for dynamic_dict: {type(dynamic_dict)}"
+
+        self.dynamic_dict = dynamic_dict
+        self.new_values = new_values
+
+    def __enter__(self):
+        """
+        Set the new values for the dynamic variables.
+
+        This method is automatically called when entering the 'with' statement.
+        It iterates over the new_values dictionary, and for each item, it sets
+        a new value for the corresponding dynamic variable in dynamic_dict.
+        The tokens returned by var.set(new_value) are stored in tokens_dict for later use.
+        """
+        self.tokens_dict = dynamic_set(self.dynamic_dict, **self.new_values)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Reset the dynamic variables to their previous values.
+
+        This method is automatically called when exiting the 'with' statement.
+        It iterates over the tokens_dict, and for each item, it uses the token
+        to reset the corresponding dynamic variable in dynamic_dict to its previous value.
+        """
+        for var_name, token in self.tokens_dict.items():
+            var_object = self.dynamic_dict[var_name]
+            var_object.reset(token)
