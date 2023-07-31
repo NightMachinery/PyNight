@@ -12,6 +12,7 @@ import gc
 from .common_jupyter import jupyter_gc
 from .common_numpy import hash_array_np
 from pynight.common_files import rm
+# import pynight.common_dict
 
 try:
     import jax
@@ -45,6 +46,11 @@ def torch_shape_get(input, size_p=False, type_only_p=False):
             total_size += size
 
             res += (f"{size:.2f}MB",)
+
+        if isinstance(x, dict):
+            #: handles classes inheriting from dict
+            #: a normal dict should never reach us, as it should be handled by =tree_map= itself
+            return torch_shape_get(dict(x))
 
         if len(res) == 0:
             if type_only_p:
