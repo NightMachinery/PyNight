@@ -1,7 +1,15 @@
 import os
+from functools import wraps
 from pynight.common_debugging import traceback_print
+from pynight.common_benchmark import (
+    timed,
+    Timed,
+)
 from pynight.common_torch import torch_shape_get
-from pynight.common_dict import simple_obj
+from pynight.common_dict import (
+    simple_obj,
+    BatchedDict,
+)
 from pynight.common_files import (
     rm,
     mkdir,
@@ -13,6 +21,17 @@ import time
 from dataclasses import dataclass
 from typing import List, Callable
 from icecream import ic
+
+from pynight.common_dynamic import (
+    DynamicVariables,
+    DynamicObject,
+    dynamic_set,
+    dynamic_get,
+)
+
+dynamic_vars = dict()
+dynamic_obj = DynamicObject(dynamic_vars, default_to_none_p=True)
+
 
 ##
 def dataset_push_from_disk_to_hub(path, *args, **kwargs):
@@ -73,9 +92,21 @@ class TransformedDataset:
         return TransformedDataset(dataset_new, self.transforms.copy())
 
     def __getitem__(self, *args, **kwargs):
-        data = self.dataset.__getitem__(*args, **kwargs)
-        for transform in self.transforms:
-            data = transform(data)
+        time_p = dynamic_obj.transformed_dataset_time_p
+        # ic(time_p)
+
+        with Timed(name='dataset.__getitem__', enabled_p=time_p):
+            data = self.dataset.__getitem__(*args, **kwargs)
+
+        data = BatchedDict(data)
+        with Timed(name='All Transforms', enabled_p=time_p):
+            for transform in self.transforms:
+                if time_p:
+                    transform = timed(transform)
+
+                data = transform(data)
+                data = BatchedDict(data)
+
         return data
 
     def __len__(self):
@@ -91,12 +122,17 @@ class TransformedDataset:
         for i in range(num_batches):
             yield self[i * batch_size : (i + 1) * batch_size]
 
-    def fn_with_transforms(self, fn):
+    def fn_with_transforms(self, fn, time_p=False):
         def fn2(batch, *args, **kwargs):
-            batch_transformed = dict(batch)
+            batch_transformed = BatchedDict(batch)
+            # batch_transformed = dict(batch) #: copies the dict
 
-            for transform in self.transforms:
-                batch_transformed = transform(batch_transformed)
+            with Timed(name="All Transforms", enabled_p=time_p):
+                for transform in self.transforms:
+                    if time_p:
+                        transform = timed(transform)
+                    batch_transformed = transform(batch_transformed)
+                    batch_transformed = BatchedDict(batch)
 
             return fn(*args, batch=batch, batch_transformed=batch_transformed, **kwargs)
 
@@ -110,7 +146,9 @@ class ConcatenatedTransformedDataset:
     def __init__(self, datasets):
         self.datasets = datasets
 
-    def datasets_concatenated(self,):
+    def datasets_concatenated(
+        self,
+    ):
         length = len(self)
         datasets_ = [tds.dataset.select(range(length)) for tds in self.datasets]
 
@@ -137,10 +175,10 @@ class ConcatenatedTransformedDataset:
         return ConcatenatedTransformedDataset(datasets=datasets_new)
 
     def transform(self, *args, **kwargs):
-        return self.call_recursive('transform', *args, **kwargs)
+        return self.call_recursive("transform", *args, **kwargs)
 
     def select(self, *args, **kwargs):
-        return self.call_recursive('select', *args, **kwargs)
+        return self.call_recursive("select", *args, **kwargs)
 
     def __getitem__(self, *args, **kwargs):
         batch_transformed = dict()
@@ -166,9 +204,9 @@ class ConcatenatedTransformedDataset:
 
     def fn_with_transforms(self, fn):
         def fn2(batch, *args, **kwargs):
-            batch_transformed = dict()
+            batch_transformed = BatchedDict()
             for ds in self.datasets:
-                batch_current = dict()
+                batch_current = BatchedDict()
                 for k, v in batch.items():
                     if k in ds.dataset.column_names:
                         batch_current[k] = v
@@ -176,15 +214,23 @@ class ConcatenatedTransformedDataset:
                 for transform in ds.transforms:
                     # ic(torch_shape_get(batch_current, type_only_p=True), transform)
                     batch_current = transform(batch_current)
+                    batch_current = BatchedDict(batch_current)
 
                 batch_transformed.update(batch_current)
 
             return fn(batch, batch_transformed, *args, **kwargs)
 
         return fn2
+
+
 ##
 def mapconcat(
-    dataset, function, unchanged_columns=None, unchanged_keep_columns=True, **kwargs
+    dataset,
+    function,
+    unchanged_columns=None,
+    unchanged_keep_columns=True,
+    time_p=False,
+    **kwargs,
 ):
     if unchanged_columns is None:
         unchanged_columns = dataset.column_names
@@ -195,6 +241,7 @@ def mapconcat(
             ]
     # ic(unchanged_columns)
 
+    @wraps(function)
     def function_wrapped(*args, **kwargs):
         #: Call the original function
         original_output = function(*args, **kwargs)
@@ -210,24 +257,31 @@ def mapconcat(
 
         return original_output
 
-    ds_new = dataset.map(function_wrapped, remove_columns=unchanged_columns, **kwargs)
+    if time_p:
+        function_wrapped = timed(function_wrapped)
+
+    with Timed(name="dataset.map", enabled_p=time_p):
+        ds_new = dataset.map(
+            function_wrapped, remove_columns=unchanged_columns, **kwargs
+        )
 
     if unchanged_keep_columns:
-        if unchanged_keep_columns is True:
-            unchanged_keep_columns = unchanged_columns
+        with Timed(name="unchanged_keep_columns", enabled_p=time_p):
+            if unchanged_keep_columns is True:
+                unchanged_keep_columns = unchanged_columns
 
-        ds_source_columns = dataset.select_columns(unchanged_keep_columns)
-        # ic(unchanged_columns, ds_source_columns.column_names, ds_new.column_names)
+            ds_source_columns = dataset.select_columns(unchanged_keep_columns)
+            # ic(unchanged_columns, ds_source_columns.column_names, ds_new.column_names)
 
-        format_source = dict(ds_source_columns.format)
-        format_source["columns"] += ds_new.format["columns"]
+            format_source = dict(ds_source_columns.format)
+            format_source["columns"] += ds_new.format["columns"]
 
-        ds_combined = concatenate_datasets([ds_source_columns, ds_new], axis=1)
-        ds_combined.set_format(**format_source)
+            ds_combined = concatenate_datasets([ds_source_columns, ds_new], axis=1)
+            ds_combined.set_format(**format_source)
 
-        # ic(dataset.format, ds_source_columns.format, ds_new.format, ds_combined.format, format_source)
+            # ic(dataset.format, ds_source_columns.format, ds_new.format, ds_combined.format, format_source)
 
-        return ds_combined
+            return ds_combined
     else:
         return ds_new
 
