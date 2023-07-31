@@ -11,7 +11,9 @@ from pathlib import Path
 import tempfile
 from collections import defaultdict
 import concurrent.futures
+import threading
 from threading import Thread, Condition
+from pynight.common_iterable import to_iterable
 from pynight.common_icecream import ic
 from pynight.common_benchmark import (
     timed,
@@ -33,15 +35,30 @@ lock_key_executors = defaultdict(
 )
 thread_pool = concurrent.futures.ThreadPoolExecutor(max(os.cpu_count(), 5))
 
+class AtomicCounter:
+    def __init__(self):
+        self.value = 0
+        self._lock = threading.Lock()
+
+    def increment(self):
+        with self._lock:
+            self.value += 1
+            return self.value
+
+global_order_index = AtomicCounter()
+
 def send(
     *args,
     wait_p=False,
     **kwargs,
 ):
+    order_index = global_order_index.increment()
+
     if wait_p:
-        return _send(*args, wait_p=wait_p, **kwargs)
+        return _send(*args, wait_p=wait_p, order_index=order_index, **kwargs)
     else:
-        return thread_pool.submit(_send, *args, wait_p=wait_p, **kwargs)
+        return thread_pool.submit(_send, *args, wait_p=wait_p, order_index=order_index, **kwargs)
+
 
 def _send(
     chat_id,
@@ -52,19 +69,18 @@ def _send(
     lock_path=None,
     lock_key=None,
     autobatch=False,
+    album_p=True,
+    order_index=0,
 ):
     chat_id = chat_id or os.environ.get("tlogs", None)
     savefig_opts = savefig_opts or dict()
 
-    if files is None:
-        files = []
-    if isinstance(files, str) or not isinstance(files, Iterable):
-        files = [files]
+    files = to_iterable(files)
 
     file_paths = []
-    with Timed(name='telegram_process_files', enabled_p=False):
-    #: Time taken by telegram_process_files: 0.6532742977142334 seconds
-    ##
+    with Timed(name="telegram_process_files", enabled_p=False):
+        #: Time taken by telegram_process_files: 0.6532742977142334 seconds
+        ##
         for file in files:
             # Handle case if file is a matplotlib plot
             if isinstance(file, Figure):
@@ -82,7 +98,9 @@ def _send(
 
     if autobatch:
         #: Time taken by concurrent.futures.thread.ThreadPoolExecutor.submit: 4.57763671875e-05 seconds
-        return thread_pool.submit(send_autobatch, file_paths=file_paths, chat_id=chat_id, msg=msg)
+        return thread_pool.submit(
+            send_autobatch, file_paths=file_paths, order_index=order_index, chat_id=chat_id, msg=msg
+        )
 
     cmd = [
         "tsend.py",
@@ -92,6 +110,11 @@ def _send(
             "--file",
             file_path,
         ]
+
+    if album_p:
+        cmd += ["--album"]
+    else:
+        cmd += ["--no-album"]
 
     if lock_path:
         cmd += [
@@ -137,12 +160,14 @@ autobatch_conditions = defaultdict(Condition)
 autobatch_threads = defaultdict(Thread)
 
 
-def send_autobatch(chat_id, file_paths, msg=''):
+def send_autobatch(chat_id, file_paths, msg="", order_index=0):
     # condition_key = chat_id
     condition_key = (msg, chat_id)
 
+    file_ipaths = [(order_index, f) for f in file_paths]
+
     with autobatch_conditions[condition_key]:
-        autobatch_queues[(msg, chat_id)].extend(file_paths)
+        autobatch_queues[(msg, chat_id)].extend(file_ipaths)
 
         if not autobatch_threads[(msg, chat_id)].is_alive():
             autobatch_threads[(msg, chat_id)] = Thread(
@@ -183,12 +208,33 @@ def batch_sender(msg, chat_id, wait_ms=None):
         if files:
             print(f"sending autobatched files (len={len(files)})")
 
+            order_indices = [f[0] for f in files]
+            files.sort(
+                key=(lambda tup: tup[0]), #: order_index
+            ) #: inplace, stable
+            #: I have checked, this sorting is absolutely needed.
+
+            files = [f[1] for f in files] #: getting the paths
+
+            if False:
+                # ic(order_indices)
+                send(
+                    msg=f"{str(order_indices)}",
+                    chat_id=chat_id,
+                    wait_p=True,
+                    lock_key=chat_id,
+                    album_p=False,
+                )
+
             send(
                 files=files,
                 msg=msg,
+                # msg=msg,
                 chat_id=chat_id,
                 wait_p=True,
                 lock_key=chat_id,
+                album_p=False,
             )
+
 
 ##
