@@ -91,15 +91,28 @@ class TransformedDataset:
         dataset_new = self.dataset.select(*args, **kwargs)
         return TransformedDataset(dataset_new, self.transforms.copy())
 
+    def transform_columns(self, mapping, drop_unselected_p=False):
+        def h_transform_columns(batch):
+            new_batch = dict()
+            for k, v in batch.items():
+                if k in mapping:
+                    new_batch[mapping[k]] = v
+                elif not drop_unselected_p:
+                    new_batch[k] = v
+
+            return new_batch
+
+        return self.transform(h_transform_columns)
+
     def __getitem__(self, *args, **kwargs):
         time_p = dynamic_obj.transformed_dataset_time_p
         # ic(time_p)
 
-        with Timed(name='dataset.__getitem__', enabled_p=time_p):
+        with Timed(name="dataset.__getitem__", enabled_p=time_p):
             data = self.dataset.__getitem__(*args, **kwargs)
 
         data = BatchedDict(data)
-        with Timed(name='All Transforms', enabled_p=time_p):
+        with Timed(name="All Transforms", enabled_p=time_p):
             for transform in self.transforms:
                 if time_p:
                     transform = timed(transform)
