@@ -1,3 +1,4 @@
+import inspect
 import re
 import sys
 import traceback
@@ -11,6 +12,14 @@ debug_p = os.environ.get("DEBUGME", None)
 
 def traceback_print(file=None):
     print(traceback.format_exc(), file or sys.stderr)
+
+
+##
+def fn_name_current(back=1):
+    frame = inspect.currentframe()
+    for _ in range(back):
+        frame = frame.f_back
+    return frame.f_code.co_name
 
 
 ##
