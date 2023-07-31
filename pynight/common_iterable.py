@@ -1,4 +1,5 @@
 import re
+from typing import Iterable
 
 ##
 def iterable_chunk(lst, n):
@@ -74,5 +75,16 @@ class IndexableList(list):
             return [super_obj.__getitem__(i) for i in indices]
         return super_obj.__getitem__(indices)
 
+
+##
+def to_iterable(possibly_iterable):
+    if possibly_iterable is None:
+        return []
+    elif isinstance(possibly_iterable, (str,)):
+        return [possibly_iterable]
+    elif isinstance(possibly_iterable, Iterable):
+        return possibly_iterable
+    else:
+        return [possibly_iterable]
 
 ##
