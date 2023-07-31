@@ -12,9 +12,20 @@ from pynight.common_dict import (
     SimpleObject,
     rosn_split,
     rosn_tie,
+    # BatchedDict,
+    # batched_dict_tree_flatten,
+    # batched_dict_tree_unflatten,
 )
 ##
 jax.tree_util.register_pytree_node(SimpleObject, rosn_split, rosn_tie)
+
+# jax.tree_util.register_pytree_node(BatchedDict, batched_dict_tree_flatten, batched_dict_tree_unflatten)
+# @broken:
+# :     102 def batched_dict_tree_unflatten(aux_data, children):
+# :     103     keys, values = aux_data, children
+# : --> 104     return BatchedDict(zip(keys, values))
+# :
+# : TypeError: unhashable type: 'list'
 ##
 def tree_save(out_dir: str, state, flat_array=False) -> None:
     z("mkdir -p {out_dir}").assert_zero
