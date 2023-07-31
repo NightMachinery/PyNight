@@ -65,6 +65,7 @@ def lst_filter_out(lst, items):
     return [element for element in lst if element not in items]
 
 
+list_rm = lst_filter_out
 ##
 class IndexableList(list):
     def __getitem__(self, indices):
