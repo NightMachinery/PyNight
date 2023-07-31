@@ -10,7 +10,7 @@ def timed(func):
         start = time.time()
         result = func(*args, **kwargs)
         end = time.time()
-        print(f"Time taken by {fn_name(func)}: {end - start} seconds")
+        print(f"\nTime taken by {fn_name(func)}: {end - start} seconds")
         return result
 
     return wrapper
@@ -20,9 +20,11 @@ def timed(func):
 
 
 class Timed:
-    def __init__(self, name="", enabled_p=True):
+    def __init__(self, name="", enabled_p=True, print_p=True, output_dict=None):
         self.name = name
         self.enabled = enabled_p
+        self.print_p = print_p
+        self.output_dict = output_dict
 
     def __enter__(self):
         if self.enabled:
@@ -31,7 +33,13 @@ class Timed:
     def __exit__(self, type, value, traceback):
         if self.enabled:
             end = time.time()
-            print(f"Time taken by {self.name}: {end - self.start} seconds")
+
+            time_taken = end - self.start
+            if self.output_dict is not None:
+                self.output_dict['time'] = time_taken
+
+            if self.print_p:
+                print(f"\nTime taken by {self.name}: {time_taken} seconds")
 
 
 ##
