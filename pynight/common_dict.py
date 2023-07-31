@@ -9,14 +9,14 @@ class SimpleObject(SimpleNamespace):
             kwargs = {k: v for k, v in kwargs.items() if v is not None}
         super().__init__(**kwargs)
 
-        super().__setattr__('_readonly_p', _readonly_p)
+        super().__setattr__("_readonly_p", _readonly_p)
         self._hash = _hash or uuid.uuid4()
 
     def __getitem__(self, name):
         return getattr(self, name)
 
     def __setattr__(self, name, value):
-        if  name == "_hash" or (not self._readonly_p):
+        if name == "_hash" or (not self._readonly_p):
             super().__setattr__(name, value)
         else:
             raise AttributeError(
@@ -28,10 +28,15 @@ class SimpleObject(SimpleNamespace):
 
     @property
     def __dict__(self):
-        return {k: v for k, v in super().__dict__.items() if k not in ("_hash", "_readonly_p")}
+        return {
+            k: v
+            for k, v in super().__dict__.items()
+            if k not in ("_hash", "_readonly_p")
+        }
 
     def __contains__(self, item):
         return item in self.__dict__
+
 
 def rosn_split(rosn):
     #: [[https://jax.readthedocs.io/en/latest/_autosummary/jax.tree_util.register_pytree_node.html][jax.tree_util.register_pytree_node — JAX documentation]]
@@ -61,6 +66,50 @@ def simple_obj_update(obj, *args, **kwargs):
         d[key] = value
 
     updated_obj = simple_obj(**d)
+
+
+##
+class BatchedDict(dict):
+    #: @assumes the first dimension of values is the batch dict.
+    #: We can extend it to get the =batch_dim= and support tuples for the dimensions.
+    ##
+    def __len__(self):
+        #: @assumes all the values have the same length, otherwise this operation is undefined anyway.
+        for _, v in self.items():
+            return len(v)
+
+    def __getitem__(self, key):
+        # Check if the key is a slice
+        if isinstance(key, slice):
+            sliced_dict = BatchedDict()
+
+            for k, v in self.items():
+                sliced_value = v.__getitem__(key)
+
+                sliced_dict[k] = sliced_value
+
+            return sliced_dict
+        if isinstance(key, int):
+            sliced_dict = dict()
+
+            for k, v in self.items():
+                sliced_value = v.__getitem__(key)
+
+                sliced_dict[k] = sliced_value
+
+            return sliced_dict
+        else:
+            return super().__getitem__(key)
+
+
+def batched_dict_tree_flatten(batched_dict):
+    keys, values = zip(*batched_dict.items())
+    return (keys, values)
+
+
+def batched_dict_tree_unflatten(aux_data, children):
+    keys, values = aux_data, children
+    return BatchedDict(zip(keys, values))
 
 
 ##
