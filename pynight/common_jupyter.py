@@ -1,3 +1,5 @@
+import sys
+import traceback
 import json
 import uuid
 from IPython.display import display, display_javascript, HTML
@@ -69,6 +71,15 @@ def clipboard_copy_jupyter(obj, indent=4):
     return obj_text
 ##
 def jupyter_gc():
+    ##
+    #: [[https://github.com/ipython/ipython/pull/11572][fix a memory leak on exception (caused by the stored traceback) by stas00 · Pull Request #11572 · ipython/ipython]]
+    if hasattr(sys, 'last_traceback'):
+        traceback.clear_frames(sys.last_traceback)
+        delattr(sys, 'last_traceback')
+    if hasattr(sys, 'last_type'): delattr(sys, 'last_type')
+    if hasattr(sys, 'last_value'): delattr(sys, 'last_value')
+    ##
+
     global_ns = get_ipython().user_ns
 
     global_ns['Out'] = dict()
