@@ -1,5 +1,7 @@
 import json
 
+
+##
 class JSONEncoderWithFallback(json.JSONEncoder):
     """
     A custom JSON encoder that falls back to a user-defined function for encoding
@@ -36,3 +38,20 @@ class JSONEncoderWithFallback(json.JSONEncoder):
             return super().default(obj)
         except TypeError:
             return self.fallback_function(obj)
+
+
+##
+def json_partitioned_load(paths):
+    output = {}
+    for path in paths:
+        try:
+            with open(path, 'r') as f:
+                current = json.load(f)
+                output.update(current)
+        except FileNotFoundError:
+            print(f"File not found: {path}")
+        except json.JSONDecodeError:
+            print(f"Failed to decode JSON from file: {path}")
+
+    return output
+##

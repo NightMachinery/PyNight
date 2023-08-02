@@ -10,7 +10,7 @@ def timed(func):
         start = time.time()
         result = func(*args, **kwargs)
         end = time.time()
-        print(f"\nTime taken by {fn_name(func)}: {end - start} seconds")
+        print(f"\nTime: {fn_name(func)}: {end - start} seconds")
         return result
 
     return wrapper
@@ -39,7 +39,7 @@ class Timed:
                 self.output_dict['time'] = time_taken
 
             if self.print_p:
-                print(f"\nTime taken by {self.name}: {time_taken} seconds")
+                print(f"\nTime: {self.name}: {time_taken} seconds")
 
 
 ##

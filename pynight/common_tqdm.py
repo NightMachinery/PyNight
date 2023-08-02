@@ -26,7 +26,7 @@ class tqdm_telegram(tqdm_auto):
     def __init__(
         self,
         *args,
-        super_enabled_p='auto',
+        super_enabled_p="auto",
         tlg_enabled_p=True,
         leave_telegram=True,
         mininterval=1.0,
@@ -55,12 +55,12 @@ class tqdm_telegram(tqdm_auto):
             tlg_enabled_p = False
         self.tlg_enabled_p = tlg_enabled_p
 
-        if super_enabled_p == 'auto':
-            super_enabled_p = (not self.tlg_enabled_p)
+        if super_enabled_p == "auto":
+            super_enabled_p = not self.tlg_enabled_p
         self.super_enabled_p = super_enabled_p
 
         if self.tlg_enabled_p:
-        # if not kwargs.get("disable"):
+            # if not kwargs.get("disable"):
             # kwargs = kwargs.copy()
             self.tgio = TelegramIO(
                 token,
@@ -85,14 +85,12 @@ class tqdm_telegram(tqdm_auto):
                 fmt["bar_format"] = "{l_bar}{bar:10u}{r_bar}"
             self.tgio.write(self.format_meter(**fmt))
 
-
     def clear(self, *args, **kwargs):
         super(tqdm_telegram, self).clear(*args, **kwargs)
 
         if self.tlg_enabled_p:
-        # if not self.disable:
+            # if not self.disable:
             self.tgio.write("")
-
 
     def close(self):
         if self.disable:

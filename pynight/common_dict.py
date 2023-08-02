@@ -80,7 +80,7 @@ class BatchedDict(dict):
 
     def __getitem__(self, key):
         # Check if the key is a slice
-        if isinstance(key, slice):
+        if isinstance(key, (slice, list,)):
             sliced_dict = BatchedDict()
 
             for k, v in self.items():

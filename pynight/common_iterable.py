@@ -1,5 +1,8 @@
 import re
 from typing import Iterable
+import operator as op
+from pynight.common_icecream import ic
+
 
 ##
 def iterable_chunk(lst, n):
@@ -29,6 +32,8 @@ def dir_grep(obj, regex):
 
 
 dg = dir_grep
+
+
 ##
 def list_mv(lst, item, final_index=0):
     lst.insert(final_index, lst.pop(lst.index(item)))
@@ -66,14 +71,27 @@ def lst_filter_out(lst, items):
 
 
 list_rm = lst_filter_out
+
+
 ##
 class IndexableList(list):
     def __getitem__(self, indices):
+        #: [[https://stackoverflow.com/questions/64181453/fastest-method-for-extracting-sub-list-from-python-list-given-array-of-indexes][Fastest method for extracting sub-list from Python list given array of indexes - Stack Overflow]]
+        ##
         # super_obj = super(IndexableList, self)
         super_obj = super()
 
         if isinstance(indices, list):
-            return [super_obj.__getitem__(i) for i in indices]
+            ##
+            # return [super_obj.__getitem__(i) for i in indices]
+            ##
+            # ic(indices)
+            getter = op.itemgetter(*indices)
+            res = getter(self)
+            if len(indices) == 1:
+                res = [res]
+            return list(res)
+            ##
         return super_obj.__getitem__(indices)
 
 
@@ -87,5 +105,6 @@ def to_iterable(possibly_iterable):
         return possibly_iterable
     else:
         return [possibly_iterable]
+
 
 ##
