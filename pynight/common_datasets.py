@@ -1,6 +1,9 @@
 import os
 from functools import wraps
 from pynight.common_debugging import traceback_print
+from pynight.common_iterable import (
+    BatchedIterable,
+)
 from pynight.common_benchmark import (
     timed,
     Timed,
@@ -126,16 +129,11 @@ class TransformedDataset:
         return len(self.dataset)
 
     def batched_iterator(self, batch_size, drop_last_batch=False):
-        length = len(self)
-
-        num_batches = length // batch_size
-        if not drop_last_batch:
-            num_batches += length % batch_size != 0
-
-        for i in range(num_batches):
-            yield self[i * batch_size : (i + 1) * batch_size]
+        iterable = BatchedIterable(self, batch_size, drop_last_batch)
+        return iterable
 
     def fn_with_transforms(self, fn, time_p=False):
+        @wraps(fn)
         def fn2(batch, *args, **kwargs):
             batch_transformed = BatchedDict(batch)
             # batch_transformed = dict(batch) #: copies the dict
@@ -210,18 +208,11 @@ class ConcatenatedTransformedDataset:
         return min(len(ds) for ds in self.datasets)
 
     def batched_iterator(self, batch_size, drop_last_batch=False):
-        #: @duplicateCode
-        ##
-        length = len(self)
-
-        num_batches = length // batch_size
-        if not drop_last_batch:
-            num_batches += length % batch_size != 0
-
-        for i in range(num_batches):
-            yield self[i * batch_size : (i + 1) * batch_size]
+        iterable = BatchedIterable(self, batch_size, drop_last_batch)
+        return iterable
 
     def fn_with_transforms(self, fn):
+        @wraps(fn)
         def fn2(batch, *args, **kwargs):
             batch_transformed = BatchedDict()
             for ds in self.datasets:
