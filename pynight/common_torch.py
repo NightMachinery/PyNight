@@ -12,6 +12,8 @@ import gc
 from .common_jupyter import jupyter_gc
 from .common_numpy import hash_array_np
 from pynight.common_files import rm
+from pynight.common_icecream import ic
+
 # import pynight.common_dict
 
 try:
@@ -437,7 +439,9 @@ def tensorify_scalars(argnums=(0,)):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             # Store the original types of the arguments specified by argnums
-            original_types = {argnum: torch.is_tensor(args[argnum]) for argnum in argnums}
+            original_types = {
+                argnum: torch.is_tensor(args[argnum]) for argnum in argnums
+            }
 
             # Convert those arguments to tensors if they're not already
             new_args = list(args)
@@ -454,6 +458,59 @@ def tensorify_scalars(argnums=(0,)):
                     return result.item()
 
             return result
+
         return wrapper
+
     return decorator
+
+
+##
+def expand_as(
+    src,
+    shape,
+    dim=-1,
+):
+    if dim < 0:
+        dim += len(shape)
+
+    unsqueeze_dims_before = [1] * dim
+    unsqueeze_dims_after = [1] * (len(shape) - len(src.shape) - dim)
+
+    src = src.view(*unsqueeze_dims_before, *src.shape, *unsqueeze_dims_after)
+    src = src.expand(shape)
+    return src
+
+
+def rank_tensor(
+    data,
+    descending=True,
+    increment=1,
+    dim=-1,
+):
+    #: * @tests
+    #: ** `data = torch.tensor([[4.0, 2.0, 11], [9.0, 11, 7]])`
+    ##
+    _, sorted_indices = torch.sort(data, dim=dim, descending=descending)
+
+    ##
+    sorted_range = torch.arange(data.shape[dim]) + increment
+    # ic(torch_shape_get((data, sorted_indices, sorted_range)))
+    sorted_range = expand_as(
+        sorted_range,
+        data.shape,
+        dim=dim,
+    )
+
+    ranks = torch.zeros_like(data, dtype=torch.int64)
+    # ic(torch_shape_get((ranks, sorted_indices, sorted_range)))
+    ranks = torch.scatter(input=ranks, dim=dim, index=sorted_indices, src=sorted_range)
+    ##
+    #: @unbatched
+    # ranks = torch.zeros_like(sorted_indices)
+    # ranks[sorted_indices] = torch.arange(len(sorted_indices)) + increment
+    ##
+
+    return ranks
+
+
 ##
