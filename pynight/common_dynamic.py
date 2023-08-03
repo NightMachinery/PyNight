@@ -1,5 +1,6 @@
 from contextvars import ContextVar
 from pynight.common_icecream import ic
+import functools
 
 
 def dynamic_object_p(obj):
@@ -275,3 +276,16 @@ class DynamicVariables:
         for var_name, token in self.tokens_dict.items():
             var_object = self.dynamic_dict[var_name]
             var_object.reset(token)
+
+##
+def partial_dynamic(fn, *, dynamic_dict, **dynamic_mappings):
+    @functools.wraps(fn)
+    def fn2(*args, **kwargs):
+        with DynamicVariables(
+                dynamic_dict,
+                **dynamic_mappings,
+        ):
+            return fn(*args, **kwargs)
+
+    return fn2
+##
