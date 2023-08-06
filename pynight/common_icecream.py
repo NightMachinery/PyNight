@@ -1,5 +1,7 @@
 from pynight.common_condition import jupyter_p
-from icecream import ic, colorize as ic_colorize
+from pynight.common_debugging import traceback_print
+from icecream import ic
+from icecream import colorize as ic_colorize
 
 
 def ic_colorize2(input):
@@ -10,6 +12,20 @@ def ic_colorize2(input):
 
 
 if jupyter_p():
-    ic.configureOutput(outputFunction=lambda s: print(s))
+
+    def _ic_print(s):
+        try:
+            print(s)
+        except:
+            traceback_print()
+
 else:
-    ic.configureOutput(outputFunction=lambda s: print(ic_colorize2(s)))
+
+    def _ic_print(s):
+        try:
+            print(ic_colorize2(s))
+        except:
+            traceback_print()
+
+
+ic.configureOutput(outputFunction=_ic_print)
