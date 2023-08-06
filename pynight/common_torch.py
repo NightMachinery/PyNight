@@ -486,6 +486,7 @@ def rank_tensor(
     descending=True,
     increment=1,
     dim=-1,
+    reverse_p=False,
 ):
     #: * @tests
     #: ** `data = torch.tensor([[4.0, 2.0, 11], [9.0, 11, 7]])`
@@ -494,6 +495,9 @@ def rank_tensor(
 
     ##
     sorted_range = torch.arange(data.shape[dim]) + increment
+    if reverse_p:
+        sorted_range = sorted_range.flip(dims=(-1,))
+
     # ic(torch_shape_get((data, sorted_indices, sorted_range)))
     sorted_range = expand_as(
         sorted_range,
