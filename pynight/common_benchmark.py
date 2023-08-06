@@ -1,4 +1,5 @@
 import time
+import sys
 from functools import wraps
 from pynight.common_functional import fn_name
 
@@ -10,7 +11,11 @@ def timed(func):
         start = time.time()
         result = func(*args, **kwargs)
         end = time.time()
-        print(f"\nTime: {fn_name(func)}: {end - start} seconds")
+        print(
+            f"\nTime: {fn_name(func)}: {end - start} seconds",
+            flush=True,
+            file=sys.stderr,
+        )
         return result
 
     return wrapper
@@ -36,10 +41,14 @@ class Timed:
 
             time_taken = end - self.start
             if self.output_dict is not None:
-                self.output_dict['time'] = time_taken
+                self.output_dict["time"] = time_taken
 
             if self.print_p:
-                print(f"\nTime: {self.name}: {time_taken} seconds")
+                print(
+                    f"\nTime: {self.name}: {time_taken} seconds",
+                    flush=True,
+                    file=sys.stderr,
+                )
 
 
 ##
