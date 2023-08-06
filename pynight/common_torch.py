@@ -518,3 +518,76 @@ def rank_tensor(
 
 
 ##
+def unique_first_indices(
+    A,
+    dim=None,
+):
+    """
+    This function returns the first unique indices based on the input tensor.
+
+    Parameters
+    ----------
+    A : torch.Tensor
+        A 1-D tensor from which to select unique indices.
+    dim : int, optional
+        The dimension to apply uniqueness. If None, the tensor is flattened.
+        Defaults to None.
+
+    Returns
+    -------
+    torch.Tensor
+        A tensor of indices that index the first occurrence of each unique value
+        in the input tensor, sorted in the order that the unique values appear in
+        the original input tensor.
+
+    Example
+    --------
+    >>> import torch
+
+    # Define tensors
+    tensor_1 = torch.tensor([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+    tensor_2 = torch.tensor([7.0, 8.0, 9.0, 10.0, 11.0])
+
+    # Define associated IDs
+    id_1 = torch.tensor([0, 1, 2, 3, 4, 5])
+    id_2 = torch.tensor([3, 4, 5, 6, 7])
+
+    # Concatenate tensors and IDs
+    all_tensors = torch.cat((tensor_1, tensor_2))
+    all_ids = torch.cat((id_1, id_2))
+
+    # Print original tensors and IDs
+    print("Original Tensors:", all_tensors)
+    print("Original IDs:", all_ids)
+
+    first_indices = unique_first_indices(all_ids, dim=0)
+
+    unique_tensors = all_tensors[first_indices]
+    unique_ids = all_ids[first_indices]
+
+    print("Unique Tensors:", unique_tensors)
+    print("Unique IDs:", unique_ids)
+
+    Output:
+    Original Tensors: tensor([ 1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9., 10., 11.])
+    Original IDs: tensor([0, 1, 2, 3, 4, 5, 3, 4, 5, 6, 7])
+    Unique Tensors: tensor([ 1.,  2.,  3.,  4.,  5.,  6., 10., 11.])
+    Unique IDs: tensor([0, 1, 2, 3, 4, 5, 6, 7])
+    """
+
+    unique, idx, counts = torch.unique(
+        A,
+        dim=dim,
+        sorted=True,
+        return_inverse=True,
+        return_counts=True,
+    )
+    _, ind_sorted = torch.sort(idx, stable=True)
+    cum_sum = counts.cumsum(0)
+    cum_sum = torch.cat((torch.tensor([0]), cum_sum[:-1]))
+    first_indices = ind_sorted[cum_sum]
+
+    return first_indices
+
+
+##
