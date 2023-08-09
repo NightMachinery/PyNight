@@ -591,3 +591,22 @@ def unique_first_indices(
 
 
 ##
+def seed_set(seed, cuda_deterministic=False):
+    import torch
+    import numpy as np
+    import random
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    if torch.cuda.is_available():
+        if cuda_deterministic:
+            #: performance hit for avoiding negligible race conditions
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
+
+        torch.cuda.manual_seed_all(seed)
+
+
+##
