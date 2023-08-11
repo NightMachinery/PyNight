@@ -216,10 +216,12 @@ def batch_sender(msg, chat_id, wait_ms=None):
 
             files = [f[1] for f in files] #: getting the paths
 
+
+            # if True:
             if False:
                 # ic(order_indices)
                 send(
-                    msg=f"{str(order_indices)}",
+                    msg=f"len={len(order_indices)}, {str(order_indices)}",
                     chat_id=chat_id,
                     wait_p=True,
                     lock_key=chat_id,
