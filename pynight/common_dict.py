@@ -113,3 +113,12 @@ def batched_dict_tree_unflatten(aux_data, children):
 
 
 ##
+def key_del(dict, key, exception_if_nonexistent_p=False,):
+    if key in dict:
+        del dict[key]
+        return True
+    elif exception_if_nonexistent_p:
+        raise ValueError(f"Key not in the given dict: {key}")
+    else:
+        return False
+##
