@@ -24,18 +24,22 @@ def patch_info_from_name(
     #: * @tests
     #: `patch_info_from_name('vit_base_patch16_clip_224.openai_ft_in12k_in1k')`
     ##
-    patch_pattern = r"patch(\d+)"
-    resolution_pattern = r"_(\d{3,})"
+    if model_name == "vit_small_patch14_dinov2":
+        patch_resolution = 14
+        image_resolution = 518
+    else:
+        patch_pattern = r"patch(\d+)"
+        resolution_pattern = r"_(\d{3,})"
 
-    # Find patch resolution
-    patch_match = re.search(patch_pattern, model_name)
-    patch_resolution = int(patch_match.group(1)) if patch_match else None
-    assert patch_resolution is not None
+        # Find patch resolution
+        patch_match = re.search(patch_pattern, model_name)
+        patch_resolution = int(patch_match.group(1)) if patch_match else None
+        assert patch_resolution is not None
 
-    # Find image resolution
-    resolution_match = re.search(resolution_pattern, model_name)
-    image_resolution = int(resolution_match.group(1)) if resolution_match else None
-    assert image_resolution is not None
+        # Find image resolution
+        resolution_match = re.search(resolution_pattern, model_name)
+        image_resolution = int(resolution_match.group(1)) if resolution_match else None
+        assert image_resolution is not None
 
     # Compute the patch count
     patch_count_fl = (image_resolution**2) / (patch_resolution**2)
