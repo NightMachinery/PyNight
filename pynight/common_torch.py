@@ -321,6 +321,9 @@ def torch_device_name_get(device=None):
 
 ##
 def host_info_get(device=None):
+    #: @deprecated
+    #: @alt ${NIGHTDIR}/python/system_info.py
+    ##
     metadata = dict()
 
     device_name = torch_device_name_get(device=device)
