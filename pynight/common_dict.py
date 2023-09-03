@@ -34,6 +34,11 @@ class SimpleObject(SimpleNamespace):
             if k not in ("_hash", "_readonly_p")
         }
 
+    def __iter__(self):
+        #: [[https://stackoverflow.com/questions/46626955/override-dict-on-class][python - Override dict() on class - Stack Overflow]]
+        ##
+        yield from self.__dict__.items()
+
     def __contains__(self, item):
         return item in self.__dict__
 
