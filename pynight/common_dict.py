@@ -1,9 +1,10 @@
 from types import SimpleNamespace
+from collections.abc import Mapping
 import uuid
 
 
 ##
-class SimpleObject(SimpleNamespace):
+class SimpleObject(SimpleNamespace, Mapping):
     def __init__(self, _hash=None, _drop_nones=False, _readonly_p=True, **kwargs):
         if _drop_nones:
             kwargs = {k: v for k, v in kwargs.items() if v is not None}
@@ -39,8 +40,31 @@ class SimpleObject(SimpleNamespace):
         ##
         yield from self.__dict__.items()
 
+    def __len__(self):
+        return len(self.__dict__)
+
     def __contains__(self, item):
         return item in self.__dict__
+
+    def keys(self):
+        return self.__dict__.keys()
+
+    def items(self):
+        return ((key, getattr(self, key)) for key in self.keys())
+
+    def values(self):
+        return (getattr(self, key) for key in self.keys())
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+
+    def __eq__(self, other):
+        if not isinstance(other, SimpleObject):
+            return False
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 def rosn_split(rosn):
