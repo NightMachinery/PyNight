@@ -31,13 +31,46 @@ def semantic_scholar_paper_id_get(url):
     Returns:
         str or None: The extracted paper ID or None if not found.
     """
-    # Define regular expressions for different URL patterns
-    url_patterns = [
-        r"^https://api.semanticscholar.org/((?:arXiv|CorpusID|ACL):[^/]+)$",
-        r"^https://www.semanticscholar.org/paper/(?:(?:[^/]+)/)?([^/]{40})(?:/)?$",
+
+    # arXiv patterns
+    arxiv_patterns = [
+        r"(?i)/(?:abs|pdf)/(?:arxiv:)?([^/]+?)(?:\.pdf)?(?:#.*)?/*$",
+        r"(?i)arxiv:([^/]+?)(?:\.pdf)?/*$",
+        r"(?i)ar5iv.labs.arxiv.org/html/(\d+\.\d+)",
+        r"(?i)semanticscholar.org/arxiv:([^/]+?)/*$",
+        r"(?i)^https://scholar.google.com/.*&arxiv_id=([^/&]+)/*$",
+        r"^https://(?:www\.)?doi\.org(?:.*)/arXiv\.([^/]+)",
+        r".*/(\d+\.\d+)\.pdf$"
     ]
 
-    for pattern in url_patterns:
+    # ACL patterns
+    acl_patterns = [
+        r"^https://(?:www\.)?aclanthology\.org/([^/]*)",
+        r"^https://(?:www\.)?aclweb\.org/anthology/(?:.*/)?([^/]+)"
+    ]
+
+    # General Semantic Scholar patterns
+    general_patterns = [
+        r"^https://api.semanticscholar.org/([^?]+)$",
+        r"^https://www.semanticscholar.org/paper/(?:(?:[^/]+)/)?([^/]{40})(?:/)?$"
+    ]
+
+    # Processing arXiv patterns
+    for pattern in arxiv_patterns:
+        match = re.match(pattern, url)
+        if match:
+            return "arxiv:" + match.group(1)
+
+    # Processing ACL patterns
+    for pattern in acl_patterns:
+        match = re.match(pattern, url)
+        if match:
+            # Remove the '.pdf' suffix if it exists
+            paper_id = re.sub(r'\.pdf$', '', match.group(1))
+            return "ACL:" + paper_id
+
+    # Processing general patterns
+    for pattern in general_patterns:
         match = re.match(pattern, url)
         if match:
             return match.group(1)
