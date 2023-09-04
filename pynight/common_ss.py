@@ -258,11 +258,11 @@ def ss_get(
                                 ("date_added", "Date Added"),
                                 ("citationCount", "Citations"),
                                 ("year", "Year"),
+                                ("venue", "Venue"),
+                                ("author_affiliations", "Affiliations"),
+                                ("author_names", "Authors"),
                                 ("url", "SemanticScholar"),
                                 ("connectedPapersURL", "ConnectedPapers"),
-                                ("venue", "Venue"),
-                                ("author_names", "Authors"),
-                                ("author_affiliations", "Affiliations"),
                             ]
                         )
 
