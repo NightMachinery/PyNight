@@ -109,7 +109,13 @@ class BatchedDict(dict):
 
     def __getitem__(self, key):
         # Check if the key is a slice
-        if isinstance(key, (slice, list,)):
+        if isinstance(
+            key,
+            (
+                slice,
+                list,
+            ),
+        ):
             sliced_dict = BatchedDict()
 
             for k, v in self.items():
@@ -142,7 +148,11 @@ def batched_dict_tree_unflatten(aux_data, children):
 
 
 ##
-def key_del(dict, key, exception_if_nonexistent_p=False,):
+def key_del(
+    dict,
+    key,
+    exception_if_nonexistent_p=False,
+):
     if key in dict:
         del dict[key]
         return True
@@ -150,4 +160,6 @@ def key_del(dict, key, exception_if_nonexistent_p=False,):
         raise ValueError(f"Key not in the given dict: {key}")
     else:
         return False
+
+
 ##
