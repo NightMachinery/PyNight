@@ -143,10 +143,10 @@ def ss_flatten(data):
         flattened_data["author_url"] = first_author.get("url", None)
         flattened_data["author_external_ids"] = first_author.get("externalIds", None)
 
-    return simple_obj(
+    return vars(simple_obj(
         _drop_nones=True,
         **flattened_data,
-    )
+    ))
 
 
 def dict_flatten_json(data):
@@ -207,7 +207,9 @@ def ss_get(
 
                     if flat_p:
                         paper_info = ss_flatten(paper_info)
-                        paper_info = dict_flatten_json(paper_info)
+
+                        if output_format == "csv":
+                            paper_info = dict_flatten_json(paper_info)
 
                     if mode == "v1":
                         paper_info["tags"] = ""
