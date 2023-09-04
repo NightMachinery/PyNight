@@ -117,20 +117,22 @@ def ss_api_get(paper_id):
         return None
 
 
-def ss_augment(data):
+def ss_augment(paper_info):
+    ##
+    paper_info['publicationDate'] = paper_info.get('publicationDate', None) or paper_info.get('year', '')
     ##
     current_date = datetime.datetime.now()
     year_month = current_date.strftime("%y %b")
 
-    data["date_added"] = year_month
+    paper_info["date_added"] = year_month
     ##
-    paper_id = data["paperId"]
+    paper_id = paper_info["paperId"]
 
     connected_papers_url = f"https://www.connectedpapers.com/main/{paper_id}"
-    data["connectedPapersURL"] = connected_papers_url
+    paper_info["connectedPapersURL"] = connected_papers_url
     ##
 
-    return data
+    return paper_info
 
 
 def ss_flatten(data):
@@ -257,7 +259,8 @@ def ss_get(
                                 ("priority", "Priority"),
                                 ("date_added", "Date Added"),
                                 ("citationCount", "Citations"),
-                                ("year", "Year"),
+                                # ("year", "Year"),
+                                ("publicationDate", "Date Published"),
                                 ("venue", "Venue"),
                                 ("author_affiliations", "Affiliations"),
                                 ("author_names", "Authors"),
