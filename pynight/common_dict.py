@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from collections.abc import Mapping
+from typing import List, Union, Any, Dict
 import uuid
 
 
@@ -160,6 +161,44 @@ def key_del(
         raise ValueError(f"Key not in the given dict: {key}")
     else:
         return False
+
+
+##
+def concatenate_batches(batches: List[Dict]) -> Dict:
+    #: Write `concatenate_batches(batches: List[dict])` which concatenates the given batch dicts into a single batch dict. PyTorch tensors will be concatenated using PyTorch, while Python lists will be concatenated using `+`. Dicts will be concatenated recursively.
+    ##
+    
+    def concatenate_items(items):
+        first_item = items[0]
+        
+        # If the item is a tensor, concatenate using torch.cat
+        if isinstance(first_item, torch.Tensor):
+            return torch.cat(items, dim=0)
+
+        # If the item is a list, concatenate using +
+        elif isinstance(first_item, list):
+            return sum(items, [])
+        
+        # If the item is a dict, concatenate recursively
+        elif isinstance(first_item, dict):
+            return concatenate_batches(items)
+
+        else:
+            raise ValueError(f"Unsupported type for concatenation: {type(first_item)}")
+
+    # We assume that each batch has the same keys
+    # Therefore, we can take the keys from the first batch as reference
+    keys = batches[0].keys()
+
+    # Initialize a dictionary to store the concatenated batches
+    concatenated_batch = {}
+
+    for key in keys:
+        # For each key, collect the items across all batches
+        items_to_concatenate = [batch[key] for batch in batches]
+        concatenated_batch[key] = concatenate_items(items_to_concatenate)
+
+    return concatenated_batch
 
 
 ##
