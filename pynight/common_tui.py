@@ -1,12 +1,12 @@
 import sys
 
 ##
-def prompt_user(question):
+def prompt_user(question, end='\n'):
     """Prompt the user for input using /dev/tty if available, else use standard input."""
 
     try:
         with open('/dev/tty', 'r+') as tty:
-            tty.write(question)
+            tty.write(question + end)
             tty.flush()  # Ensure the question is displayed before reading input
             return tty.readline().strip().lower()
 
