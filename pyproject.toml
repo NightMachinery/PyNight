@@ -6,7 +6,7 @@ authors = ["NightMachinary <rudiwillalwaysloveyou@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 brish = "^0.3.3"
 dnspython = "^2.1.0"
 executing = "^1.2.0"
@@ -17,7 +17,8 @@ spacy = "^3.5.1"
 matplotlib = "^3.7.1"
 aiofile = "*"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
 
 [tool.poetry.scripts]
 semantic-scholar-get = 'pynight.common_ss:main'
