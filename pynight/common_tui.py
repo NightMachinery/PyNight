@@ -4,18 +4,14 @@ import sys
 def prompt_user(question):
     """Prompt the user for input using /dev/tty if available, else use standard input."""
 
-    # Try reading from /dev/tty
     try:
-        with open("/dev/tty", "r") as tty:
-            print(f"{question}", file=sys.stderr, end="")
+        with open('/dev/tty', 'r+') as tty:
+            tty.write(question)
+            tty.flush()  # Ensure the question is displayed before reading input
             return tty.readline().strip().lower()
 
-    # Handle specific exceptions for clarity
     except (FileNotFoundError, IOError):
         return input(question).strip().lower()
-
-    # Consider catching other exceptions if necessary
-    # e.g., KeyboardInterrupt if you want to handle Ctrl+C gracefully
 
 
 def ask(question, default=True):
