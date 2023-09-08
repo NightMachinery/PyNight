@@ -4,11 +4,12 @@ import sys
 def prompt_user(question, end='\n> '):
     """Prompt the user for input using /dev/tty if available, else use standard input."""
 
+    question = question + end
     try:
-        with open('/dev/tty', 'r+') as tty:
-            tty.write(question + end)
-            tty.flush()  # Ensure the question is displayed before reading input
-            return tty.readline().strip().lower()
+        with open('/dev/tty', 'w') as tty_out, open('/dev/tty', 'r') as tty_in:
+            tty_out.write(question)
+            tty_out.flush()  # Ensure the question is displayed before reading input
+            return tty_in.readline().strip().lower()
 
     except (FileNotFoundError, IOError):
         return input(question).strip().lower()
