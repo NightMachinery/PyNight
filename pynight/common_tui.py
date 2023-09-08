@@ -1,7 +1,7 @@
 import sys
 
 ##
-def prompt_user(question, end='\n'):
+def prompt_user(question, end='\n> '):
     """Prompt the user for input using /dev/tty if available, else use standard input."""
 
     try:
