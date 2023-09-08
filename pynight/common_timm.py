@@ -24,12 +24,25 @@ def patch_info_from_name(
     #: * @tests
     #: `patch_info_from_name('vit_base_patch16_clip_224.openai_ft_in12k_in1k')`
     ##
+    num_prefix_tokens = 1
+    
     if model_name == "vit_small_patch14_dinov2":
         patch_resolution = 14
         image_resolution = 518
     else:
-        patch_pattern = r"patch(\d+)"
-        resolution_pattern = r"_(\d{3,})"
+        if model_name.startswith('vit_'):
+            patch_pattern = r"patch(\d+)"
+            resolution_pattern = r"_(\d{3,})"
+        elif model_name.startswith('mixer_'):
+            #: 'mixer_b16_224.goog_in21k_ft_in1k'
+            ##
+            num_prefix_tokens = 0
+            
+            patch_pattern = r"mixer_b(\d+)"
+            resolution_pattern = r"mixer_b\d+_(\d{3,})"
+        else:
+            raise NotImplementedError(f"{fn_name_current()}: unsupported model name: {model_name}")
+            
 
         # Find patch resolution
         patch_match = re.search(patch_pattern, model_name)
@@ -45,11 +58,12 @@ def patch_info_from_name(
     patch_count_fl = (image_resolution**2) / (patch_resolution**2)
     patch_count = int(patch_count_fl)
     assert patch_count_fl == patch_count
-    patch_count += 1  #: for CLS
+    patch_count += num_prefix_tokens  #: for CLS
 
     output = dict(
         image_resolution=image_resolution,
         patch_resolution=patch_resolution,
+        num_prefix_tokens=num_prefix_tokens,
     )
 
     if bias_token_p is not None:
@@ -60,6 +74,7 @@ def patch_info_from_name(
         output.update(
             patch_count=patch_count,
             source_count=source_count,
+            bias_token_p=bias_token_p,
         )
 
     return simple_obj(**output)
