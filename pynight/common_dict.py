@@ -2,6 +2,7 @@ from types import SimpleNamespace
 from collections.abc import Mapping
 from typing import List, Union, Any, Dict
 import uuid
+from pynight.common_iterable import IndexableList
 
 
 ##
@@ -115,12 +116,18 @@ class BatchedDict(dict):
             (
                 slice,
                 list,
+                range,
             ),
         ):
             sliced_dict = BatchedDict()
 
             for k, v in self.items():
-                sliced_value = v.__getitem__(key)
+                key_current = key
+                if isinstance(v, (list,)):
+                    #: list indices must be integers or slices
+                    v = IndexableList(v)
+
+                sliced_value = v.__getitem__(key_current)
 
                 sliced_dict[k] = sliced_value
 
