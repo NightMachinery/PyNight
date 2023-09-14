@@ -174,10 +174,11 @@ def key_del(
 def concatenate_batches(batches: List[Dict]) -> Dict:
     #: Write `concatenate_batches(batches: List[dict])` which concatenates the given batch dicts into a single batch dict. PyTorch tensors will be concatenated using PyTorch, while Python lists will be concatenated using `+`. Dicts will be concatenated recursively.
     ##
-    
+    import torch
+
     def concatenate_items(items):
         first_item = items[0]
-        
+
         # If the item is a tensor, concatenate using torch.cat
         if isinstance(first_item, torch.Tensor):
             return torch.cat(items, dim=0)
@@ -185,7 +186,7 @@ def concatenate_batches(batches: List[Dict]) -> Dict:
         # If the item is a list, concatenate using +
         elif isinstance(first_item, list):
             return sum(items, [])
-        
+
         # If the item is a dict, concatenate recursively
         elif isinstance(first_item, dict):
             return concatenate_batches(items)
