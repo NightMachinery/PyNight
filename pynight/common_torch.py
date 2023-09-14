@@ -613,3 +613,134 @@ def seed_set(seed, cuda_deterministic=False):
 
 
 ##
+def drop_mask(
+    tensor,
+    mask,
+    dim,
+    check_mask_p=False,
+):
+    """Drop values in a tensor based on a mask along a specified dimension."""
+    if dim < 0:
+        dim += tensor.ndim
+
+    # Use the mask to select values
+    dropped = torch.masked_select(tensor, mask)
+
+    new_shape = list(tensor.shape)
+    # ic(new_shape, dim)
+    if check_mask_p:
+        # Compute the number of elements retained after masking for each slice along the specified dimension
+        elements_retained_per_slice = mask.sum(dim=dim)
+
+        unique_counts = torch.unique(elements_retained_per_slice)
+        if len(unique_counts) > 1:
+            raise ValueError("Inconsistent number of elements retained across batches.")
+
+        new_shape[dim] = unique_counts.item()
+    else:
+        o = (prod(new_shape[:dim])) * (prod(new_shape[dim + 1 :]))
+        new_shape[dim] = dropped.shape[0] // o
+
+    return dropped.view(*new_shape)
+
+
+def drop_topk(
+    tensor,
+    k,
+    dim=-1,
+    largest=True,
+    keep_p=False,
+):
+    #: If dim is None, flatten the tensor and work on the last dimension
+    if dim is None:
+        tensor = tensor.view(-1)
+        dim = -1
+
+    #: Get the top k indices
+    topk_values, indices = torch.topk(tensor, k, dim=dim, largest=largest)
+    # ic(tensor.shape, indices.shape)
+
+    #: Create a mask of the same shape as tensor
+    mask = torch.ones_like(tensor, dtype=torch.bool)
+
+    #: Set the mask values corresponding to top k indices to False
+    mask.scatter_(dim, indices, 0)
+    #: [[https://pytorch.org/docs/stable/generated/torch.Tensor.scatter_.html][torch.Tensor.scatter_ — PyTorch 2.0 documentation]]
+    #: Tensor.scatter_(dim, index, src, reduce=None)
+    #: Writes all values from the tensor src into self at the indices specified in the index tensor. For each value in src, its output index is specified by its index in src for dimension != dim and by the corresponding value in index for dimension = dim.
+
+    if keep_p:
+        mask = torch.logical_not(mask)
+
+    ##: Drop the masked elements:
+    # dropped = torch.masked_select(tensor, mask)
+    # new_shape = list(tensor.shape)
+    # new_shape[dim] -= k
+    # dropped = dropped.view(*new_shape)
+    ##
+    dropped = drop_mask(
+        tensor=tensor,
+        mask=mask,
+        dim=dim,
+        check_mask_p=False,
+    )
+    ##
+    return simple_obj(
+        tensor=dropped,
+        indices=indices,
+        values=topk_values,
+    )
+
+
+def keep_topk(
+    tensor,
+    k,
+    dim=-1,
+    largest=True,
+):
+    return drop_topk(
+        tensor,
+        k=k,
+        dim=dim,
+        largest=largest,
+        keep_p=True,
+    )
+    ##
+    # return drop_topk(
+    #     tensor,
+    #     k=(tensor.shape[dim] - k),
+    #     dim=dim,
+    #     largest=(not largest),
+    # )
+    ##
+
+
+def drop_from_dim(
+    tensor,
+    indices,
+    dim,
+    keep_p=False,
+    ordered_p=False,
+):
+    mask = torch.ones_like(tensor, dtype=torch.bool)
+
+    if ordered_p:
+        assert keep_p, "When dropping, it's meaningless to preserve the order."
+
+        #: we want to keep the values at the specified indices
+        #: [[https://pytorch.org/docs/stable/generated/torch.gather.html][torch.gather — PyTorch 2.0 documentation]]
+        return tensor.gather(dim, indices)
+
+    mask.scatter_(dim, indices, 0)
+    if keep_p:
+        mask = torch.logical_not(mask)
+
+    return drop_mask(
+        tensor=tensor,
+        mask=mask,
+        dim=dim,
+        check_mask_p=False,
+    )
+
+
+##
