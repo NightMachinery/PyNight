@@ -74,25 +74,45 @@ list_rm = lst_filter_out
 
 
 ##
+
+
 class IndexableList(list):
-    def __getitem__(self, indices):
+    def _recursive_get(self, indices):
+        """Recursively get items based on nested indices."""
         #: [[https://stackoverflow.com/questions/64181453/fastest-method-for-extracting-sub-list-from-python-list-given-array-of-indexes][Fastest method for extracting sub-list from Python list given array of indexes - Stack Overflow]]
         ##
-        # super_obj = super(IndexableList, self)
         super_obj = super()
 
-        if isinstance(indices, list):
+        if isinstance(
+            indices,
+            (
+                # list,
+                Iterable,
+            ),
+        ) and not isinstance(indices, str):
             ##
             # return [super_obj.__getitem__(i) for i in indices]
             ##
-            # ic(indices)
             getter = op.itemgetter(*indices)
             res = getter(self)
-            if len(indices) == 1:
-                res = [res]
-            return list(res)
-            ##
-        return super_obj.__getitem__(indices)
+            return list(res) if len(indices) > 1 else [res]
+        # elif isinstance(indices, list) and all(isinstance(i, list) for i in indices):
+        #     return [self._recursive_get(i) for i in indices]
+        else:
+            # assert isinstance(indices, (int, slice))
+
+            return super_obj.__getitem__(indices)
+
+    def __getitem__(self, indices):
+        try:
+            import torch
+
+            if isinstance(indices, torch.Tensor):
+                indices = indices.tolist()
+        except ImportError:
+            pass
+
+        return self._recursive_get(indices)
 
 
 ##
