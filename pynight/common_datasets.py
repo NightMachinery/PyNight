@@ -1,3 +1,4 @@
+from typing import Iterable
 import os
 from functools import wraps
 from pynight.common_debugging import traceback_print
@@ -90,8 +91,26 @@ class TransformedDataset:
 
         return TransformedDataset(self.dataset, new_transforms)
 
-    def select(self, *args, **kwargs):
-        dataset_new = self.dataset.select(*args, **kwargs)
+    def select(
+        self,
+        indices: Iterable,
+        *args,
+        **kwargs,
+    ):
+        if hasattr(self.dataset, "select"):
+            #: [[https://github.com/huggingface/datasets/blob/2.14.5/src/datasets/arrow_dataset.py#L3731][datasets/src/datasets/arrow_dataset.py at 2.14.5 · huggingface/datasets]]
+            dataset_new = self.dataset.select(indices, *args, **kwargs)
+        else:
+            try:
+                dataset_new = self.dataset[indices]
+            except:
+                ic(
+                    torch_shape_get(self.dataset, type_only_p=True,),
+                    torch_shape_get(indices, type_only_p=True,)
+                )
+
+                raise
+
         return TransformedDataset(dataset_new, self.transforms.copy())
 
     def transform_columns(self, mapping, drop_unselected_p=False):
