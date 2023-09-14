@@ -28,10 +28,15 @@ except ImportError:
 
 
 ##
-def torch_shape_get(input, size_p=False, type_only_p=False):
+def torch_shape_get(input, size_p=False, type_only_p=False, device_p=True):
     total_size = 0
 
     def h_shape_get(x):
+        if isinstance(x, dict):
+            #: handles classes inheriting from dict
+            #: a normal dict should never reach us, as it should be handled by =tree_map= itself
+            return torch_shape_get(dict(x))
+
         nonlocal total_size
 
         res = ()
@@ -43,16 +48,14 @@ def torch_shape_get(input, size_p=False, type_only_p=False):
         elif hasattr(x, "shape"):
             res += (type(x), x.shape)
 
+        if device_p and hasattr(x, "device"):
+            res += (x.device,)
+
         if size_p and hasattr(x, "element_size") and hasattr(x, "nelement"):
             size = torch_memory_tensor(x, s=2)
             total_size += size
 
             res += (f"{size:.2f}MB",)
-
-        if isinstance(x, dict):
-            #: handles classes inheriting from dict
-            #: a normal dict should never reach us, as it should be handled by =tree_map= itself
-            return torch_shape_get(dict(x))
 
         if len(res) == 0:
             if type_only_p:
