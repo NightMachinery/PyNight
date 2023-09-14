@@ -153,3 +153,28 @@ class BatchedIterable:
 
 
 ##
+def list_dup_rm(lst, keep_first_p=True):
+    """
+    Remove duplicates from the list while preserving order.
+
+    Parameters:
+    - lst: List from which to remove duplicates.
+    - keep_first_p: If True, keep the first occurrence of a duplicate; otherwise, keep the last occurrence.
+
+    Returns:
+    - List with duplicates removed.
+    """
+    if keep_first_p:
+        seen = set()
+        result = []
+        for item in lst:
+            if item not in seen:
+                seen.add(item)
+                result.append(item)
+
+        return result
+    else:
+        return list_dup_rm(lst[::-1], keep_first_p=True)[::-1]
+
+
+##
