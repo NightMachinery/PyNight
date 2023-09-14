@@ -222,7 +222,6 @@ def drop_tokens(
     tokens: torch.Tensor,
     mask: torch.Tensor,
     num_prefix_tokens: int = 1,
-    ordered: bool = True,
 ) -> torch.Tensor:
     """
     Drops tokens according to the given mask and preserves the prefix tokens.
@@ -234,8 +233,6 @@ def drop_tokens(
         The mask indicating which tokens to keep.
     num_prefix_tokens: int, default = 1
         The number of prefix tokens to keep.
-    ordered: bool, default = True
-        Whether to keep the order of the tokens or not.
 
     Returns:
     torch.Tensor
@@ -251,7 +248,7 @@ def drop_tokens(
     mask = torch.tensor([[True, False, False, True], [False, True, True, False]], dtype=torch.int64)
     ic(mask.shape)
 
-    dropped_tokens = drop_tokens(tokens, mask, num_prefix_tokens=1, ordered=True)
+    dropped_tokens = drop_tokens(tokens, mask, num_prefix_tokens=1,)
     ic(dropped_tokens.shape)
 
     print(tokens)
