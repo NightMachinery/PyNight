@@ -9,10 +9,12 @@ import humanize
 import time
 import matplotlib.pyplot as plt
 import gc
+from math import prod
 from .common_jupyter import jupyter_gc
 from .common_numpy import hash_array_np
 from pynight.common_files import rm
 from pynight.common_icecream import ic
+from pynight.common_dict import simple_obj
 
 # import pynight.common_dict
 

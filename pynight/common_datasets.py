@@ -165,7 +165,10 @@ class TransformedDataset:
                     try:
                         batch_transformed = transform(batch_transformed)
                     except:
-                        ic(torch_shape_get(batch_transformed, type_only_p=True), transform)
+                        ic(
+                            torch_shape_get(batch_transformed, type_only_p=True),
+                            transform,
+                        )
                         raise
 
                     batch_transformed = BatchedDict(batch_transformed)
