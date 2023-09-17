@@ -57,13 +57,13 @@ def semantic_scholar_paper_id_get(url):
 
     # Processing arXiv patterns
     for pattern in arxiv_patterns:
-        match = re.match(pattern, url)
+        match = re.search(pattern, url)
         if match:
             return "arxiv:" + match.group(1)
 
     # Processing ACL patterns
     for pattern in acl_patterns:
-        match = re.match(pattern, url)
+        match = re.search(pattern, url)
         if match:
             # Remove the '.pdf' suffix if it exists
             paper_id = re.sub(r'\.pdf$', '', match.group(1))
@@ -71,7 +71,7 @@ def semantic_scholar_paper_id_get(url):
 
     # Processing general patterns
     for pattern in general_patterns:
-        match = re.match(pattern, url)
+        match = re.search(pattern, url)
         if match:
             return match.group(1)
 
