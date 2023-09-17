@@ -1,0 +1,133 @@
+#+TITLE: pynight/common_torch
+
+* @bootstrap
+#+begin_src jupyter-python :kernel py_base :session emacs_py_1 :async yes :exports both
+from pynight.common_debugging import reload_modules
+from pynight.common_icecream import ic
+import re
+import torch
+
+reload_modules(re.compile("^(pynight)"))
+None
+#+end_src
+
+#+RESULTS:
+
+* Droppers
+#+begin_src jupyter-python :kernel py_base :session emacs_py_1 :async yes :exports both
+from pynight.common_torch import (
+    drop_mask,
+    drop_topk,
+    keep_topk,
+    drop_from_dim,
+)
+#+end_src
+
+#+RESULTS:
+
+** =drop_mask=
+#+begin_src jupyter-python :kernel py_base :session emacs_py_1 :async yes :exports both
+# Recreate tensor and mask for dim=1 and test
+tensor_dim1 = torch.rand(1, 198, 1000)
+mask_dim1 = torch.ones_like(tensor_dim1, dtype=torch.bool)
+_, indices_dim1 = torch.topk(tensor_dim1, 5, dim=1, largest=True)
+mask_dim1.scatter_(1, indices_dim1, 0)
+
+result_dim1 = drop_mask(tensor_dim1, mask_dim1, dim=1)
+result_dim1.shape
+#+end_src
+
+#+RESULTS:
+: torch.Size([1, 193, 1000])
+
+** =keep_topk=
+#+begin_src jupyter-python :kernel py_base :session emacs_py_1 :async yes :exports both
+# Test with dim=1
+tensor_dim1 = (100*torch.rand(1, 2, 10)).long()
+ic(tensor_dim1.shape, tensor_dim1)
+
+res = keep_topk(tensor_dim1, k=3, dim=-1, largest=True)
+ic(res)
+result_dim1 = res.tensor
+
+result_dim1.shape, result_dim1
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: ic| tensor_dim1.shape: torch.Size([1, 2, 10])
+:     tensor_dim1: tensor([[[71, 85, 36, 26, 23, 20, 70, 97, 67, 88],
+:                           [ 0, 45, 38, 16, 13, 22,  0, 12, 29, 78]]])
+: ic| res: SimpleObject(tensor=tensor([[[85, 97, 88],
+:                   [45, 38, 78]]]),
+:                       indices=tensor([[[7, 9, 1],
+:                   [9, 1, 2]]]),
+:                       values=tensor([[[97, 88, 85],
+:                   [78, 45, 38]]]))
+: (torch.Size([1, 2, 3]),
+:  tensor([[[85, 97, 88],
+:           [45, 38, 78]]]))
+:END:
+
+** =drop_from_dim=
+This function all lose the order specified by indices.
+
+#+begin_src jupyter-python :kernel py_base :session emacs_py_1 :async yes :exports both
+tensor = torch.rand((2,1000))
+ic(tensor.shape)
+
+target_labels = torch.tensor([[99, 10, 20], [33, 6, 0]])
+ic(target_labels.shape)
+None
+#+end_src
+
+#+RESULTS:
+: ic| tensor.shape: torch.Size([2, 1000])
+: ic| target_labels.shape: torch.Size([2, 3])
+
+#+begin_src jupyter-python :kernel py_base :session emacs_py_1 :async yes :exports both
+tensor.gather(-1, target_labels)
+#+end_src
+
+#+RESULTS:
+: tensor([[0.2599, 0.7339, 0.3643],
+:         [0.7830, 0.9721, 0.4300]])
+
+#+begin_src jupyter-python :kernel py_base :session emacs_py_1 :async yes :exports both
+tensor_dropped = drop_from_dim(
+    tensor=tensor,
+    indices=target_labels,
+    dim=-1,
+)
+ic(tensor_dropped.shape)
+
+tensor_kept = drop_from_dim(
+    tensor=tensor,
+    indices=target_labels,
+    dim=-1,
+    keep_p=True,
+    ordered_p=True,
+)
+ic(
+    tensor_kept.shape,
+    tensor_kept,
+    tensor[0, [10, 20, 99]],
+    tensor[0, [99, 10, 20]],
+    tensor[1, [0, 6, 33]],
+    tensor[1, [33, 6, 0]],
+)
+
+None
+#+end_src
+
+#+RESULTS:
+: ic| tensor_dropped.shape: torch.Size([2, 997])
+: ic| tensor_kept.shape: torch.Size([2, 3])
+:     tensor_kept: tensor([[0.2599, 0.7339, 0.3643],
+:                          [0.7830, 0.9721, 0.4300]])
+:     tensor[0, [10, 20, 99]]: tensor([0.7339, 0.3643, 0.2599])
+:     tensor[0, [99, 10, 20]]: tensor([0.2599, 0.7339, 0.3643])
+:     tensor[1, [0, 6, 33]]: tensor([0.4300, 0.9721, 0.7830])
+:     tensor[1, [33, 6, 0]]: tensor([0.7830, 0.9721, 0.4300])
+
+
