@@ -3,7 +3,8 @@ from types import SimpleNamespace
 import openai
 import os
 from brish import z, zp
-from .common_bells import bell_gpt
+from pynight.common_bells import bell_gpt
+from pynight.common_dict import simple_obj
 
 # openai.api_key = os.environ["OPENAI_API_KEY"]
 openai.api_key = z('print -r -- "$openai_api_key"').outrs
@@ -17,36 +18,51 @@ import subprocess
 import time
 import sys
 
-def chatml_response_process(response, copy_mode='default'):
-    for choice in response["choices"]:
-        text = choice["message"]["content"]
-        text_m = f"""        {{"role": "assistant", "content": '''{text}'''}},"""
 
-        if copy_mode == 'chat2':
-            text_m += f"""
+def chatml_response_text_process(
+    text,
+    copy_mode="default",
+):
+    text_m = f"""        {{"role": "assistant", "content": '''{text}'''}},"""
+
+    if copy_mode == "chat2":
+        text_m += f"""
         {{"role": "user", "content": ''' '''}},"""
 
-        if copy_mode == 'default':
-            pyperclip.copy(text)
+    if copy_mode == "default":
+        pyperclip.copy(text)
 
-            time.sleep(0.1)
-            #: to allow polling-based clipboard managers to capture the text
+        time.sleep(0.1)
+        #: to allow polling-based clipboard managers to capture the text
 
-            pyperclip.copy(text_m)
+        pyperclip.copy(text_m)
 
-        elif copy_mode in ('chat', 'chat2'):
-            pyperclip.copy(text_m)
+    elif copy_mode in ("chat", "chat2"):
+        pyperclip.copy(text_m)
 
-        elif copy_mode == 'text':
-            pyperclip.copy(text)
+    elif copy_mode == "text":
+        pyperclip.copy(text)
 
+    return simple_obj(
+        text=text,
+        text_chat=text_m,
+    )
+
+
+def chatml_response_process(response, copy_mode="default"):
+    for choice in response["choices"]:
+        text = choice["message"]["content"]
+
+        chatml_response_text_process(text)
         print(text)
         print("-------")
 
 
 def writegpt_process(messages_lst):
     out = ""
-    seen = ["PLACEHOLDER",]
+    seen = [
+        "PLACEHOLDER",
+    ]
     #: We can also just count the number of assistant outputs previously seen, and skip exactly that many. That way, we can edit the text more easily.
 
     for messages in messages_lst:
@@ -54,7 +70,7 @@ def writegpt_process(messages_lst):
             role = message["role"]
             content = message["content"]
 
-            if role in ("assistant",) and content not in seen :
+            if role in ("assistant",) and content not in seen:
                 seen.append(content)
 
                 if out:
@@ -73,13 +89,16 @@ def writegpt_process(messages_lst):
     pyperclip.copy(out)
     return out
 
-def openai_chat_complete(*args,
-                         model="gpt-3.5-turbo",
-                         messages=None,
-                         interactive=False,
-                         copy_last_message=None,
-                         bell=None,
-                         **kwargs):
+
+def openai_chat_complete(
+    *args,
+    model="gpt-3.5-turbo",
+    messages=None,
+    interactive=False,
+    copy_last_message=None,
+    bell=None,
+    **kwargs,
+):
     if interactive:
         if copy_last_message is None:
             copy_last_message = True
@@ -89,25 +108,32 @@ def openai_chat_complete(*args,
     try:
         while True:
             if copy_last_message:
-                last_message = messages[-1]['content']
+                last_message = messages[-1]["content"]
                 pyperclip.copy(last_message)
 
             try:
-                return openai.ChatCompletion.create(*args, model=model, messages=messages, **kwargs)
+                return openai.ChatCompletion.create(
+                    *args, model=model, messages=messages, **kwargs
+                )
             except openai.error.RateLimitError:
-                print("OpenAI ratelimit encountered, sleeping ...", file=sys.stderr, flush=True)
-                time.sleep(10) #: in seconds
+                print(
+                    "OpenAI ratelimit encountered, sleeping ...",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                time.sleep(10)  #: in seconds
     finally:
         if bell:
             bell_gpt()
 
+
 ###
-def truncate_by_tokens(text, length=3500, model='gpt-3.5-turbo'):
+def truncate_by_tokens(text, length=3500, model="gpt-3.5-turbo"):
     encoder = tiktoken.encoding_for_model(model)
 
     encoded = encoder.encode(text)
 
-    truncate_p = (len(encoded) > length)
+    truncate_p = len(encoded) > length
     encoded_rest = None
     if truncate_p:
         encoded_truncated = encoded[:length]
@@ -120,7 +146,11 @@ def truncate_by_tokens(text, length=3500, model='gpt-3.5-turbo'):
     if encoded_rest:
         text_rest = encoder.decode(encoded_rest)
 
-    return SimpleNamespace(text=text_truncated,
-                           text_rest=text_rest,
-                           truncated_p=truncate_p,)
+    return SimpleNamespace(
+        text=text_truncated,
+        text_rest=text_rest,
+        truncated_p=truncate_p,
+    )
+
+
 ###
