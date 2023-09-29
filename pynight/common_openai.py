@@ -23,7 +23,13 @@ def chatml_response_text_process(
     text,
     copy_mode="default",
 ):
-    text_m = f"""        {{"role": "assistant", "content": '''{text}'''}},"""
+    #: 'rawchat' is currently useless, just use 'text'.
+    ##
+    text_m = None
+    if copy_mode in ("chat", "chat2"):
+        text_m = f"""        {{"role": "assistant", "content": '''{text}'''}},"""
+    elif copy_mode in ("rawchat"):
+        text_m = f"""{text}"""
 
     if copy_mode == "chat2":
         text_m += f"""
@@ -37,7 +43,7 @@ def chatml_response_text_process(
 
         pyperclip.copy(text_m)
 
-    elif copy_mode in ("chat", "chat2"):
+    elif copy_mode in ("chat", "chat2", "rawchat"):
         pyperclip.copy(text_m)
 
     elif copy_mode == "text":
