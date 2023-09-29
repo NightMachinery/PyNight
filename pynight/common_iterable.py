@@ -2,6 +2,7 @@ import re
 from typing import Iterable
 import operator as op
 from pynight.common_icecream import ic
+import itertools
 
 
 ##
@@ -177,4 +178,7 @@ def list_dup_rm(lst, keep_first_p=True):
         return list_dup_rm(lst[::-1], keep_first_p=True)[::-1]
 
 
+##
+def flatten1_iterable(list_of_lists):
+    return list(itertools.chain.from_iterable(list_of_lists))
 ##
