@@ -9,6 +9,7 @@ from pynight.common_condition import jupyter_p
 
 
 debug_p = os.environ.get("DEBUGME", None)
+deus_p = os.environ.get("deusvult", None)
 
 
 def traceback_print(file=None):
