@@ -17,11 +17,13 @@ def traceback_print(file=None):
 
 
 ##
-def ipdb_enable(disable_in_jupyter_p=True,):
+def ipdb_enable(
+    disable_in_jupyter_p=True,
+):
     if disable_in_jupyter_p:
         if jupyter_p():
             return
-    
+
     import sys
     from IPython.core import ultratb
 
