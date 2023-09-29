@@ -71,6 +71,7 @@ def _send(
     autobatch=False,
     album_p=True,
     order_index=0,
+    parse_mode=None,
 ):
     chat_id = chat_id or os.environ.get("tlogs", None)
     savefig_opts = savefig_opts or dict()
@@ -116,6 +117,9 @@ def _send(
     else:
         cmd += ["--no-album"]
 
+    if parse_mode:
+        cmd += ["--parse-mode", parse_mode]
+
     if lock_path:
         cmd += [
             "--lock-path",
@@ -140,12 +144,14 @@ def _send(
             return future
     else:
         if wait_p:
-            subprocess.check_call(cmd)
+            _run_cmd(cmd)
         else:
             subprocess.Popen(cmd)
 
 
 def _run_cmd(cmd):
+    # ic(cmd)
+
     subprocess.check_call(cmd)
 
 
