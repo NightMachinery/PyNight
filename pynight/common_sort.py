@@ -1,3 +1,4 @@
+from pynight.common_icecream import ic
 import re
 import os
 
@@ -17,7 +18,7 @@ def version_sort_key(s, pre_key_fn=identity, float_p=False):
     split_pattern = float_pattern if float_p else int_pattern
 
     result = []
-    for text in split_pattern.split(pre_key_fn(s)):
+    for text in split_pattern.split(str(pre_key_fn(s))):
         try:
             if float_p:
                 num = float(text)
@@ -29,6 +30,7 @@ def version_sort_key(s, pre_key_fn=identity, float_p=False):
             # If it's not a number, treat it as a string
             result.append(text)
 
+    # ic(result)
     return result
 
 
