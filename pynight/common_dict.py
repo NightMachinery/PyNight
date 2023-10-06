@@ -2,7 +2,10 @@ from types import SimpleNamespace
 from collections.abc import Mapping
 from typing import List, Union, Any, Dict
 import uuid
-from pynight.common_iterable import IndexableList
+from pynight.common_iterable import (
+    IndexableList,
+    list_of_dict_to_dict_of_list,
+)
 
 
 ##
@@ -168,6 +171,19 @@ def key_del(
         raise ValueError(f"Key not in the given dict: {key}")
     else:
         return False
+
+
+##
+def list_of_dict_to_bacthed_dict(
+    *args,
+    **kwargs,
+):
+    return BatchedDict(
+        list_of_dict_to_dict_of_list(
+            *args,
+            **kwargs,
+        )
+    )
 
 
 ##

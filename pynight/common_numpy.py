@@ -2,6 +2,7 @@ import numpy
 import numpy as np
 import hashlib
 
+
 ##
 def hash_array_np(array: np.ndarray, hash_algorithm: str = "sha256") -> str:
     """
@@ -27,6 +28,54 @@ def hash_array_np(array: np.ndarray, hash_algorithm: str = "sha256") -> str:
     hash_str = hash_func.hexdigest()
 
     return hash_str
+
+
+##
+def image_url2np(
+    url,
+    format=None,
+    drop_alpha=True,
+    cache_dir="/opt/decompv/cache",
+    # cache_dir=None,
+):
+    if format is None:
+        format = url.split(".")[-1]
+
+    # Check if URL is a local file path
+    if os.path.exists(url):
+        image_np = plt.imread(url, format=format)
+    else:
+        # Calculate hash of the URL
+        url_hash = hashlib.sha256(url.encode()).hexdigest()
+
+        # Define cache file path
+        cache_file_path = None
+        if cache_dir is not None:
+            mkdir(cache_dir)
+
+            cache_file_path = os.path.join(cache_dir, url_hash + ".npy")
+
+            # If file is cached, load it and return
+            if os.path.exists(cache_file_path):
+                return np.load(cache_file_path)
+
+        with urllib.request.urlopen(url) as url_response:
+            image_data = url_response.read()
+
+        # Convert the image data to a numpy array
+        image_np = plt.imread(io.BytesIO(image_data), format=format)
+
+    if image_np.dtype != np.uint8:
+        image_np = (image_np * 255).astype(np.uint8)
+
+    if drop_alpha:
+        image_np = image_np[:, :, :3]
+
+    # Save to cache if cache directory is specified
+    if cache_file_path is not None:
+        np.save(cache_file_path, image_np)
+
+    return image_np
 
 
 ##

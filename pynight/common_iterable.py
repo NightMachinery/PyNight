@@ -181,4 +181,109 @@ def list_dup_rm(lst, keep_first_p=True):
 ##
 def flatten1_iterable(list_of_lists):
     return list(itertools.chain.from_iterable(list_of_lists))
+
+##
+def list_of_dict_to_dict_of_list(
+    lst,
+    default=None,
+    warn_unused_keys=False,
+    exclude_key_patterns=None,
+    include_key_patterns=None,
+):
+    """
+    Converts a list of dictionaries to a dictionary of lists.
+
+    Parameters:
+    - lst: A list of dictionaries.
+    - default: The default value to use when a key is missing in a dictionary. Default is None.
+    - warn_unused_keys: If True, will print a warning for keys present in any dictionary but not in the first dictionary.
+    - exclude_key_patterns: A list of regex patterns. Keys matching any pattern in this list will be excluded.
+    - include_key_patterns: A list of regex patterns. Only keys matching a pattern in this list will be included.
+
+    Returns:
+    A dictionary of lists. Each key from the first dictionary in lst will be a key in the result, pointing to a list of values.
+
+    Example:
+    >>> lst = [
+    ...     {"a": 1, "b": 2, "c": 3},
+    ...     {"a": 4, "b": 5},
+    ...     {"a": 6, "c": 7, "d": 8}
+    ... ]
+    >>> list_of_dict_to_dict_of_list(lst, default=0, warn_unused_keys=True)
+    {'a': [1, 4, 6], 'b': [2, 5, 0], 'c': [3, 0, 7]}
+    """
+
+    if not lst:
+        return {}
+
+    # Use a list to maintain the order of the keys from lst[0]
+    base_keys = list(lst[0].keys())
+    base_keys_set = set(base_keys)
+    base_keys = lst_include_exclude(
+        base_keys,
+        exclude_key_patterns=exclude_key_patterns,
+        include_key_patterns=include_key_patterns,
+    )
+
+    result = {key: [default] * len(lst) for key in base_keys}
+
+    unused_keys = set() if warn_unused_keys else None
+
+    for idx, dct in enumerate(lst):
+        for key in base_keys:
+            result[key][idx] = dct.get(key, default)
+
+        if warn_unused_keys:
+            current_keys = set(dct.keys())
+            unused = current_keys - base_keys_set
+            unused_keys.update(unused)
+
+    if warn_unused_keys and unused_keys:
+        print(f"Warning: Unused keys - {', '.join(unused_keys)}", file=sys.stderr)
+
+    return result
+
+
+##
+def lst_include_exclude(
+    lst,
+    *,
+    exclude_key_patterns=None,
+    include_key_patterns=None,
+):
+    """
+    Filters a list of strings based on the provided regex patterns.
+
+    Parameters:
+    - lst: A list of strings.
+    - exclude_key_patterns: A list of regex patterns. Strings matching any pattern in this list will be excluded.
+    - include_key_patterns: A list of regex patterns. Only strings matching a pattern in this list will be included.
+
+    Returns:
+    A list of filtered strings.
+
+    Example:
+    >>> lst = ["apple", "banana", "cherry", "berry", "date"]
+    >>> lst_include_exclude(lst, exclude_key_patterns=["^b.*"], include_key_patterns=[".*rr.*"])
+    ['cherry']
+    """
+
+    def matches_any_pattern(key, patterns):
+        return any(re.search(pattern, key) for pattern in patterns)
+
+    filtered_lst = [
+        key
+        for key in lst
+        if (
+            (not include_key_patterns or matches_any_pattern(key, include_key_patterns))
+            and (
+                not exclude_key_patterns
+                or not matches_any_pattern(key, exclude_key_patterns)
+            )
+        )
+    ]
+
+    return filtered_lst
+
+
 ##

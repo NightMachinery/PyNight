@@ -1,5 +1,12 @@
-from pynight.common_dict import simple_obj
 import re
+import torch
+import torchvision
+from pynight.common_dict import simple_obj
+from pynight.common_numpy import image_url2np
+from pynight.common_torch import (
+    torch_shape_get,
+    model_device_get,
+)
 
 
 ##
@@ -25,24 +32,25 @@ def patch_info_from_name(
     #: `patch_info_from_name('vit_base_patch16_clip_224.openai_ft_in12k_in1k')`
     ##
     num_prefix_tokens = 1
-    
+
     if model_name == "vit_small_patch14_dinov2":
         patch_resolution = 14
         image_resolution = 518
     else:
-        if model_name.startswith('vit_'):
+        if model_name.startswith("vit_"):
             patch_pattern = r"patch(\d+)"
             resolution_pattern = r"_(\d{3,})"
-        elif model_name.startswith('mixer_'):
+        elif model_name.startswith("mixer_"):
             #: 'mixer_b16_224.goog_in21k_ft_in1k'
             ##
             num_prefix_tokens = 0
-            
+
             patch_pattern = r"mixer_b(\d+)"
             resolution_pattern = r"mixer_b\d+_(\d{3,})"
         else:
-            raise NotImplementedError(f"{fn_name_current()}: unsupported model name: {model_name}")
-            
+            raise NotImplementedError(
+                f"{fn_name_current()}: unsupported model name: {model_name}"
+            )
 
         # Find patch resolution
         patch_match = re.search(patch_pattern, model_name)
@@ -78,6 +86,71 @@ def patch_info_from_name(
         )
 
     return simple_obj(**output)
+
+
+##
+def image_from_url(*, model, url, device=None):
+    if device is None:
+        device = model_device_get(model)
+    elif device == "NA":
+        device = None
+
+    if isinstance(url, str):
+        image_np = image_url2np(url=url)
+
+        image_pil = torchvision.transforms.ToPILImage()(image_np)
+    elif isinstance(url, PIL.Image.Image):
+        image_pil = url
+    else:
+        raise ValueError(f"unsupported type for: {url}")
+
+    transforms = model_transform_get(model)
+    image_transformed_tensor = transforms.transform_tensor(image_pil).cpu()
+    image_transformed = transforms.transform(image_pil)
+
+    image_cpu_squeezed = image_transformed
+    image_cpu = image_cpu_squeezed.unsqueeze(0)
+
+    if device:
+        image_dv = image_cpu.to(device)
+    else:
+        image_dv = None
+
+    return simple_obj(
+        # image_np=image_np,
+        image_pil=image_pil,
+        image_natural=image_transformed_tensor,
+        image_cpu_squeezed=image_cpu_squeezed,
+        image_cpu=image_cpu,
+        image_dv=image_dv,
+    )
+
+
+def image_batch_from_urls(*, model, urls, device=None):
+    if device is None:
+        device = model_device_get(model)
+    elif device == "NA":
+        device = None
+
+    image_objects = [image_from_url(model=model, url=url, device="NA") for url in urls]
+
+    #: Assuming all images are of same dimensions
+    image_batch_cpu = torch.stack(
+        [image_obj.image_cpu.squeeze(0) for image_obj in image_objects]
+    )
+
+    image_natural = [image_obj.image_natural for image_obj in image_objects]
+
+    if device:
+        image_batch_dv = image_batch_cpu.to(device)
+    else:
+        image_batch_dv = None
+
+    return simple_obj(
+        image_natural=image_natural,
+        image_batch_cpu=image_batch_cpu,
+        image_batch_dv=image_batch_dv,
+    )
 
 
 ##
