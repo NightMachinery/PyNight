@@ -6,6 +6,19 @@ from pygments.formatters import Terminal256Formatter
 from pygments.lexers import PythonLexer
 
 from pynight.common_icecream import ic_colorize2
+from pynight.common_clipboard import clipboard_copy
+
+
+##
+def print_copy(
+    obj,
+    **kwargs,
+):
+    clipboard_copy(obj)
+    print(
+        obj,
+        **kwargs,
+    )
 
 
 ##
