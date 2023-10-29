@@ -40,12 +40,24 @@ class JSONEncoderWithFallback(json.JSONEncoder):
             return self.fallback_function(obj)
 
 
+def dumps(
+    obj,
+    indent=2,
+    **kwargs,
+):
+    encoder = JSONEncoderWithFallback(
+        indent=indent,
+        **kwargs,
+    )
+    return encoder.encode(obj)
+
+
 ##
 def json_partitioned_load(paths):
     output = {}
     for path in paths:
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 current = json.load(f)
                 output.update(current)
         except FileNotFoundError:
@@ -54,4 +66,6 @@ def json_partitioned_load(paths):
             print(f"Failed to decode JSON from file: {path}")
 
     return output
+
+
 ##
