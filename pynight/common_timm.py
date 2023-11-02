@@ -7,6 +7,7 @@ from pynight.common_torch import (
     torch_shape_get,
     model_device_get,
 )
+from pynight.common_debugging import fn_name_current
 
 
 ##
@@ -37,9 +38,15 @@ def patch_info_from_name(
         patch_resolution = 14
         image_resolution = 518
     else:
+        pat1 = re.compile(r"^(?:(?:coca_|xlm-roberta-base-)?ViT|EVA\d*)-[^-]+-(\d+)")
+
         if model_name.startswith("vit_"):
             patch_pattern = r"patch(\d+)"
             resolution_pattern = r"_(\d{3,})"
+        elif pat1.match(model_name):
+            #: =ViT-B-32_laion400m_e31=
+            patch_pattern = pat1
+            resolution_pattern = None
         elif model_name.startswith("mixer_"):
             #: 'mixer_b16_224.goog_in21k_ft_in1k'
             ##
@@ -57,16 +64,24 @@ def patch_info_from_name(
         patch_resolution = int(patch_match.group(1)) if patch_match else None
         assert patch_resolution is not None
 
-        # Find image resolution
-        resolution_match = re.search(resolution_pattern, model_name)
-        image_resolution = int(resolution_match.group(1)) if resolution_match else None
-        assert image_resolution is not None
+        if resolution_pattern is not None:
+            # Find image resolution
+            resolution_match = re.search(resolution_pattern, model_name)
+            image_resolution = (
+                int(resolution_match.group(1)) if resolution_match else None
+            )
+            assert image_resolution is not None
+        else:
+            image_resolution = None
 
-    # Compute the patch count
-    patch_count_fl = (image_resolution**2) / (patch_resolution**2)
-    patch_count = int(patch_count_fl)
-    assert patch_count_fl == patch_count
-    patch_count += num_prefix_tokens  #: for CLS
+    if image_resolution is not None:
+        # Compute the patch count
+        patch_count_fl = (image_resolution**2) / (patch_resolution**2)
+        patch_count = int(patch_count_fl)
+        assert patch_count_fl == patch_count
+        patch_count += num_prefix_tokens  #: for CLS
+    else:
+        patch_count = None
 
     output = dict(
         model_name=model_name,
@@ -75,7 +90,7 @@ def patch_info_from_name(
         num_prefix_tokens=num_prefix_tokens,
     )
 
-    if bias_token_p is not None:
+    if bias_token_p is not None and patch_count is not None:
         source_count = patch_count
         if bias_token_p:
             source_count += 1
