@@ -34,6 +34,8 @@ def embed_tty(
     locals_=None,
     **kwargs23828237,
 ):
+    #: doesn't work on Jupyter sessions as they don't have =/dev/tty=
+    ##
     if locals_ is None:
         previous_frame = sys._getframe(1)
         previous_frame_locals = previous_frame.f_locals
@@ -43,15 +45,23 @@ def embed_tty(
     locals_["kwargs23828237"] = kwargs23828237
     locals_["IPython2882872827"] = IPython
 
-    with open("/dev/tty") as user_tty:
+    with open("/dev/tty", 'r+') as user_tty:
         stdin_orig = sys.stdin
+        stdout_orig = sys.stdout
+        stderr_orig = sys.stderr
+
         try:
             sys.stdin = user_tty
+            sys.stdout = user_tty
+            sys.stderr = user_tty
+
             return exec(
                 "IPython2882872827.embed(*args1872782, **kwargs23828237)", locals_
             )
         finally:
             sys.stdin = stdin_orig
+            sys.stdout = stdout_orig
+            sys.stderr = stderr_orig
 
 
 def embed_stdin_to_stderr(*args1872782, locals_=None, **kwargs23828237):
