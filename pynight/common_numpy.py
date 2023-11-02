@@ -1,6 +1,8 @@
+import os
 import numpy
 import numpy as np
 import hashlib
+import matplotlib.pyplot as plt
 
 
 ##
@@ -36,10 +38,14 @@ def image_url2np(
     format=None,
     drop_alpha=True,
     cache_dir="/opt/decompv/cache",
+    accept_gray_p=False,
     # cache_dir=None,
 ):
     if format is None:
         format = url.split(".")[-1]
+
+    # Define cache file path
+    cache_file_path = None
 
     # Check if URL is a local file path
     if os.path.exists(url):
@@ -48,8 +54,6 @@ def image_url2np(
         # Calculate hash of the URL
         url_hash = hashlib.sha256(url.encode()).hexdigest()
 
-        # Define cache file path
-        cache_file_path = None
         if cache_dir is not None:
             mkdir(cache_dir)
 
@@ -67,6 +71,15 @@ def image_url2np(
 
     if image_np.dtype != np.uint8:
         image_np = (image_np * 255).astype(np.uint8)
+
+    if image_np.ndim == 2: #: the image is probably grayscale
+        if accept_gray_p:
+            image_np = image_np[:, :, np.newaxis]
+        else:
+            return None
+
+    assert image_np.ndim == 3, f"image_np has unexpected shape: {image_np.shape}, URL: {url}"
+    #: (width, height, channels)
 
     if drop_alpha:
         image_np = image_np[:, :, :3]
