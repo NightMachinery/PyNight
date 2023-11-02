@@ -182,6 +182,7 @@ def list_dup_rm(lst, keep_first_p=True):
 def flatten1_iterable(list_of_lists):
     return list(itertools.chain.from_iterable(list_of_lists))
 
+
 ##
 def list_of_dict_to_dict_of_list(
     lst,
@@ -284,6 +285,31 @@ def lst_include_exclude(
     ]
 
     return filtered_lst
+
+
+##
+class HiddenList(list):
+    """
+    This class is merely used to signal to =torch_shape_get= etc. that its content should not be shown (e.g., to avoid clutter).
+    """
+
+    #: @seeAlso [[https://github.com/google/jax/issues/18049][Is there a way to register a particular Python object as a PyTree leaf? · Issue #18049 · google/jax]]
+    pass
+
+
+##
+def range_contiguous_p(key: range) -> bool:
+    if isinstance(key, range):
+        return key.step in (1, -1)
+
+    return False
+
+
+def range_to_slice(key: range) -> slice:
+    if isinstance(key, range):
+        return slice(key.start, key.stop, key.step)
+
+    return None
 
 
 ##
