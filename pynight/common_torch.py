@@ -12,9 +12,14 @@ import gc
 from math import prod
 from .common_jupyter import jupyter_gc
 from .common_numpy import hash_array_np
+from pynight.common_hash import is_hashable
 from pynight.common_files import rm
 from pynight.common_icecream import ic
 from pynight.common_dict import simple_obj
+from pynight.common_iterable import (
+    HiddenList,
+)
+
 
 # import pynight.common_dict
 
@@ -30,8 +35,24 @@ except ImportError:
 
 
 ##
+torch_shape_get_hidden = set()
+torch_shape_get_hidden_ids = set()
+
+
 def torch_shape_get(input, size_p=False, type_only_p=False, device_p=True):
     total_size = 0
+
+    def is_leaf(x):
+        #: [[https://stackoverflow.com/questions/77269443/how-to-add-custom-attributes-to-a-python-list][How to add custom attributes to a Python list? - Stack Overflow]]
+        ##
+        if (
+            (is_hashable(x) and x in torch_shape_get_hidden)
+            or id(x) in torch_shape_get_hidden_ids
+            or (hasattr(x, "_shape_get_hidden_p") and x._shape_get_hidden_p)
+        ):
+            return True
+        else:
+            return False
 
     def h_shape_get(x):
         if isinstance(x, dict):
@@ -60,14 +81,14 @@ def torch_shape_get(input, size_p=False, type_only_p=False, device_p=True):
             res += (f"{size:.2f}MB",)
 
         if len(res) == 0:
-            if type_only_p:
+            if type_only_p or isinstance(x, HiddenList) or is_leaf(x):
                 res = type(x)
             else:
                 res = x
 
         return res
 
-    res = jax.tree_map(h_shape_get, input)
+    res = jax.tree_map(h_shape_get, input, is_leaf=is_leaf)
 
     if size_p:
         # return (f"total_size: {total_size:.2f}MB", res)
