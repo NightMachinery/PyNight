@@ -69,6 +69,7 @@ def patch_info_from_name(
     patch_count += num_prefix_tokens  #: for CLS
 
     output = dict(
+        model_name=model_name,
         image_resolution=image_resolution,
         patch_resolution=patch_resolution,
         num_prefix_tokens=num_prefix_tokens,
