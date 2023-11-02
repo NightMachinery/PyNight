@@ -16,8 +16,26 @@ from pynight.common_dict import (
     # batched_dict_tree_flatten,
     # batched_dict_tree_unflatten,
 )
+
+from pynight.common_iterable import IndexableList
+
+##
+def indexablelist_flatten(indexable_list):
+    # The constituent data of the IndexableList is just its elements.
+    # The auxiliary data is the length of the list.
+    return (indexable_list, len(indexable_list))
+
+
+def indexablelist_unflatten(length, elems):
+    return IndexableList(elems)
+
+
+jax.tree_util.register_pytree_node(
+    IndexableList, indexablelist_flatten, indexablelist_unflatten
+)
 ##
 jax.tree_util.register_pytree_node(SimpleObject, rosn_split, rosn_tie)
+
 
 # jax.tree_util.register_pytree_node(BatchedDict, batched_dict_tree_flatten, batched_dict_tree_unflatten)
 # @broken:
