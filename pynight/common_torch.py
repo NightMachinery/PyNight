@@ -779,3 +779,52 @@ def drop_from_dim(
 
 
 ##
+def scale_patch_to_pixel(
+    patch_wise,
+    verbose=False,
+    output_channel_dim_p=False,
+    output_width=None,
+    output_height=None,
+):
+    #: patch_wise: (batch, patch)
+    #: output: (batch, width, height)
+    #: assumes square image
+    ##
+    output_width = output_width or output_height
+    output_height = output_height or output_width
+    assert output_width == output_height
+
+    patch_w = int(patch_wise.shape[-1] ** 0.5)
+    patch_h = patch_w
+    if verbose:
+        ic(patch_w)
+
+    pixel_wise = patch_wise.reshape((-1, patch_w, patch_h))
+    if verbose:
+        ic(pixel_wise.shape)
+
+    pixel_wise = pixel_wise.unsqueeze(1)
+    if verbose:
+        ic(pixel_wise.shape)
+        ic(patch_size)
+
+    pixel_wise = nn.functional.interpolate(
+        pixel_wise,
+        scale_factor=(output_width / patch_w),
+        mode="nearest",
+    )
+    #: The input dimensions are interpreted in the form:
+    #: `mini-batch x channels x [optional depth] x [optional height] x width`.
+    if verbose:
+        ic(pixel_wise.shape)
+
+    if not output_channel_dim_p:
+        pixel_wise = pixel_wise.squeeze(1)  #: remove useless channel dimension
+
+    if verbose:
+        ic(pixel_wise.shape)
+
+    return pixel_wise
+
+
+##
