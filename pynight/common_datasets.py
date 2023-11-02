@@ -4,6 +4,8 @@ from functools import wraps
 from pynight.common_debugging import traceback_print
 from pynight.common_iterable import (
     BatchedIterable,
+    IndexableList,
+    range_to_slice,
 )
 from pynight.common_benchmark import (
     timed,
@@ -11,6 +13,7 @@ from pynight.common_benchmark import (
 )
 from pynight.common_torch import torch_shape_get
 from pynight.common_dict import (
+    SimpleObject,
     simple_obj,
     BatchedDict,
 )
@@ -35,8 +38,12 @@ from pynight.common_dynamic import (
 
 dynamic_vars = dict()
 dynamic_obj = DynamicObject(dynamic_vars, default_to_none_p=True)
-
-
+##
+class TransformResult(SimpleObject):
+    """
+    This class is interpreted specially by `TransformedDataset`; the transform's result will be `TransformResult.result`.
+    """
+    pass
 ##
 def dataset_push_from_disk_to_hub(path, *args, **kwargs):
     """
@@ -73,9 +80,21 @@ def dataset_cache_filenames(dataset, cache_only_p=False, sort_p=True, **kwargs):
 
 
 ##
+def transform_result_postprocess(data):
+    if isinstance(data, TransformResult):
+        data = data.result
+
+    if isinstance(data, dict):
+        data = BatchedDict(data)
+    elif isinstance(data, list):
+        data = IndexableList(data)
+
+    return data
+
+
 @dataclass()
 class TransformedDataset:
-    dataset: datasets.Dataset
+    dataset: datasets.Dataset #: or dict
     transforms: List[Callable]
 
     def __init__(self, dataset: datasets.Dataset, transforms: List[Callable] = None):
@@ -102,6 +121,8 @@ class TransformedDataset:
             dataset_new = self.dataset.select(indices, *args, **kwargs)
         else:
             try:
+                indices = range_to_slice(indices) or indices
+
                 dataset_new = self.dataset[indices]
             except:
                 ic(
@@ -126,6 +147,7 @@ class TransformedDataset:
 
         return self.transform(h_transform_columns)
 
+
     def __getitem__(self, *args, **kwargs):
         time_p = dynamic_obj.transformed_dataset_time_p
         # ic(time_p)
@@ -133,14 +155,14 @@ class TransformedDataset:
         with Timed(name="dataset.__getitem__", enabled_p=time_p):
             data = self.dataset.__getitem__(*args, **kwargs)
 
-        data = BatchedDict(data)
+        data = transform_result_postprocess(data)
         with Timed(name="All Transforms", enabled_p=time_p):
             for transform in self.transforms:
                 if time_p:
                     transform = timed(transform)
 
                 data = transform(data)
-                data = BatchedDict(data)
+                data = transform_result_postprocess(data)
 
         return data
 
@@ -154,8 +176,7 @@ class TransformedDataset:
     def fn_with_transforms(self, fn, time_p=False):
         @wraps(fn)
         def fn2(batch, *args, **kwargs):
-            batch_transformed = BatchedDict(batch)
-            # batch_transformed = dict(batch) #: copies the dict
+            batch_transformed = transform_result_postprocess(batch)
 
             with Timed(name="All Transforms", enabled_p=time_p):
                 for transform in self.transforms:
@@ -164,14 +185,13 @@ class TransformedDataset:
 
                     try:
                         batch_transformed = transform(batch_transformed)
+                        batch_transformed = transform_result_postprocess(batch_transformed)
                     except:
                         ic(
                             torch_shape_get(batch_transformed, type_only_p=True),
                             transform,
                         )
                         raise
-
-                    batch_transformed = BatchedDict(batch_transformed)
 
             return fn(*args, batch=batch, batch_transformed=batch_transformed, **kwargs)
 
@@ -247,7 +267,7 @@ class ConcatenatedTransformedDataset:
                     # ic(torch_shape_get(batch_current, type_only_p=True), transform)
 
                     batch_current = transform(batch_current)
-                    batch_current = BatchedDict(batch_current)
+                    batch_current = transform_result_postprocess(batch_current)
 
                 batch_transformed.update(batch_current)
 
