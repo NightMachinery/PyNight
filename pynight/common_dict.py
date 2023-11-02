@@ -29,6 +29,9 @@ class SimpleObject(SimpleNamespace, Mapping):
                 f"Cannot modify attribute '{name}', this namespace is read-only."
             )
 
+    def __setitem__(self, name, value):
+        setattr(self, name, value)
+
     def __hash__(self):
         return hash(self._hash)
 
