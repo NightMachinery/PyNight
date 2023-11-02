@@ -142,9 +142,21 @@ class TorchModelMode:
 torch_to_PIL = torchvision.transforms.ToPILImage()
 
 
-def img_tensor_show(img_tensor):
+def img_tensor_show(
+    img_tensor,
+    dpi=100,
+):
+    # Get image dimensions
+    height, width = img_tensor.shape[-2:]
+
+    # Set the figure size based on the image dimensions
+    plt.figure(figsize=(width / dpi, height / dpi))
+
     plt.imshow(torch_to_PIL(img_tensor))
+    plt.axis("off")
+    plt.tight_layout()
     plt.show()
+    plt.close()
 
 
 ##
