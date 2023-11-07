@@ -34,18 +34,41 @@ def patch_info_from_name(
     ##
     num_prefix_tokens = 1
 
+    model_size = None
+    image_resolution = None
+    patch_resolution = None
+    model_size_pattern = None
     if model_name == "vit_small_patch14_dinov2":
         patch_resolution = 14
         image_resolution = 518
+    elif model_name in (
+        "blip",
+        "ALIGN",
+        "NegCLIP",
+        "FLAVA",
+        "AltCLIP",
+        "ALIGN",
+    ):
+        #: NA for now, just hardcoding some nonsense
+        ##
+        patch_resolution = 100
+        model_size = "NA"
     else:
-        pat1 = re.compile(r"^(?:(?:coca_|xlm-roberta-base-)?ViT|EVA\d*)-[^-]+-(\d+)")
+        ##
+        pat1 = re.compile(r"^(?:(?:coca_|xlm-roberta-[^-]+-)?ViT|EVA\d*)-[^-]+-(\d+)")
+        pat1_model_size = re.compile(
+            r"^(?:(?:coca_|xlm-roberta-[^-]+-)?ViT|EVA\d*)-([^-]+)-\d+"
+        )
+        ##
 
+        model_size_pattern = None
         if model_name.startswith("vit_"):
             patch_pattern = r"patch(\d+)"
             resolution_pattern = r"_(\d{3,})"
         elif pat1.match(model_name):
             #: =ViT-B-32_laion400m_e31=
             patch_pattern = pat1
+            model_size_pattern = pat1_model_size
             resolution_pattern = None
         elif model_name.startswith("mixer_"):
             #: 'mixer_b16_224.goog_in21k_ft_in1k'
@@ -83,8 +106,15 @@ def patch_info_from_name(
     else:
         patch_count = None
 
+    model_size = None
+    if model_size_pattern is not None:
+        m = model_size_pattern.search(model_name)
+        if m:
+            model_size = m.group(1)
+
     output = dict(
         model_name=model_name,
+        model_size=model_size,
         image_resolution=image_resolution,
         patch_resolution=patch_resolution,
         num_prefix_tokens=num_prefix_tokens,
