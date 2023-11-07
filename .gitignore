@@ -1,3 +1,4 @@
+.ob-jupyter/
 __pycache__
 pynight.egg-info
 setup.py
