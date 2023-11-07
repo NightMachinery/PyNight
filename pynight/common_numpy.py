@@ -72,13 +72,15 @@ def image_url2np(
     if image_np.dtype != np.uint8:
         image_np = (image_np * 255).astype(np.uint8)
 
-    if image_np.ndim == 2: #: the image is probably grayscale
+    if image_np.ndim == 2:  #: the image is probably grayscale
         if accept_gray_p:
             image_np = image_np[:, :, np.newaxis]
         else:
             return None
 
-    assert image_np.ndim == 3, f"image_np has unexpected shape: {image_np.shape}, URL: {url}"
+    assert (
+        image_np.ndim == 3
+    ), f"image_np has unexpected shape: {image_np.shape}, URL: {url}"
     #: (width, height, channels)
 
     if drop_alpha:
@@ -89,6 +91,60 @@ def image_url2np(
         np.save(cache_file_path, image_np)
 
     return image_np
+
+
+##
+def nanlen(arr):
+    return len(arr) - np.sum(np.isnan(arr))
+
+
+##
+def nan_corrcoef(
+    x,
+    y,
+    **kwargs,
+):
+    """
+    @LLMGenerated
+
+    Calculate the Pearson correlation coefficient between two arrays, ignoring any NaN values.
+
+    Parameters:
+    x (array_like): 1-D array containing data with potentially missing values.
+    y (array_like): 1-D array containing data with potentially missing values.
+
+    Returns:
+    numpy.ndarray: A 2x2 array with the correlation coefficients.
+
+    Raises:
+    ValueError: If x and y have different lengths.
+
+    Example:
+    >>> x = np.array([1, 2, np.nan, 4, 5])
+    >>> y = np.array([5, np.nan, 7, 1, 3])
+    >>> nan_corrcoef(x, y)
+    array([[1.        , 0.75592895],
+           [0.75592895, 1.        ]])
+
+    Note:
+    The function returns a full 2x2 correlation matrix. The correlation coefficient between the non-NaN
+    parts of x and y is found at indices [0, 1] or [1, 0] in the returned matrix.
+    """
+    x = np.array(x)
+    y = np.array(y)
+
+    if len(x) != len(y):
+        raise ValueError("Arrays x and y must be the same length.")
+
+    # Create a boolean mask for values where neither x nor y is NaN
+    mask = ~np.isnan(x) & ~np.isnan(y)
+
+    # Apply the mask to both x and y
+    x_filtered = x[mask]
+    y_filtered = y[mask]
+
+    # Calculate the correlation coefficient using the filtered data
+    return np.corrcoef(x_filtered, y_filtered, **kwargs)
 
 
 ##
