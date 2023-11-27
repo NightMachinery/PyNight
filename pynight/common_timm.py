@@ -1,3 +1,4 @@
+import PIL
 import re
 import torch
 import torchvision
@@ -41,7 +42,7 @@ def patch_info_from_name(
     if model_name == "vit_small_patch14_dinov2":
         patch_resolution = 14
         image_resolution = 518
-    elif model_name in (
+    elif model_name.startswith("RN") or model_name in (
         "blip",
         "ALIGN",
         "NegCLIP",
