@@ -1,4 +1,5 @@
 import PIL
+import timm
 import re
 import torch
 import torchvision
@@ -9,6 +10,29 @@ from pynight.common_torch import (
     model_device_get,
 )
 from pynight.common_debugging import fn_name_current
+
+
+##
+def model_transform_get(model):
+    data_cfg = timm.data.resolve_data_config(model.pretrained_cfg)
+    # ic(data_cfg)
+
+    transform = timm.data.create_transform(**data_cfg)
+    transforms = transform.transforms
+
+    if isinstance(transforms[-1], torchvision.transforms.Normalize):
+        transform_tensor = torchvision.transforms.Compose(transforms[:-1])
+        transform_normalize = transforms[-1]
+    else:
+        transform_tensor = transform_tensor
+        transform_normalize = torchvision.transforms.ToTensor
+        #: ToTensor is effectively identity
+
+    return simple_obj(
+        transform=transform,
+        transform_tensor=transform_tensor,
+        transform_normalize=transform_normalize,
+    )
 
 
 ##
