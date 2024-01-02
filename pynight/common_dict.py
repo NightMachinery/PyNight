@@ -103,7 +103,7 @@ def simple_obj_update(obj, *args, **kwargs):
         d[key] = value
 
     updated_obj = simple_obj(**d)
-
+    return updated_obj
 
 ##
 class BatchedDict(dict):
