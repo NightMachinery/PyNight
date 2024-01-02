@@ -5,10 +5,32 @@ import os
 from brish import z, zp
 from pynight.common_bells import bell_gpt
 from pynight.common_dict import simple_obj
+from pynight.common_clipboard import (
+    clipboard_copy,
+    clipboard_copy_multi,
+)
 
-# openai.api_key = os.environ["OPENAI_API_KEY"]
-openai.api_key = z('print -r -- "$openai_api_key"').outrs
-#: 'openai_api_key' not actually exported
+##
+openai_key = None
+
+
+def setup_openai_key():
+    global openai_key
+
+    openai_key = z("var-get openai_api_key").outrs
+    assert openai_key, "setup_openai_key: could not get OpenAI API key!"
+
+    openai.api_key = openai_key
+
+
+def openai_key_get():
+    global openai_key
+
+    if openai_key is None:
+        setup_openai_key()
+
+    return openai_key
+
 
 ###
 import openai
