@@ -8,17 +8,28 @@ def identity(x):
     return x
 
 
-def version_sort_key(s, pre_key_fn=identity, float_p=False):
+def version_sort_key(
+    s,
+    pre_key_fn=identity,
+    float_p=False,
+    sign_pattern=r"(?:-|\+)?",
+):
     """Sort strings containing numbers in a way that the numbers are considered as a whole,
     not individual characters (e.g. 10 comes after 2)"""
 
-    int_pattern = re.compile("(\d+)")
-    float_pattern = re.compile("(\d+\.\d+|\d+)")
+    int_pattern = re.compile(f"({sign_pattern}\\d+)")
+    float_pattern = re.compile(f"({sign_pattern}(?:\\d+\\.\\d+|\\d+))")
 
     split_pattern = float_pattern if float_p else int_pattern
 
+    s_processed = str(pre_key_fn(s))
+    parts = list(split_pattern.split(s_processed))
     result = []
-    for text in split_pattern.split(str(pre_key_fn(s))):
+    # ic(s, s_processed, split_pattern, parts)
+
+    for text in parts:
+        # ic(text)
+
         try:
             if float_p:
                 num = float(text)
