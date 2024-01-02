@@ -5,6 +5,9 @@ import os
 from brish import z, zp
 from pynight.common_bells import bell_gpt
 from pynight.common_dict import simple_obj
+from pynight.common_str import (
+    whitespace_shared_rm,
+)
 from pynight.common_clipboard import (
     clipboard_copy,
     clipboard_copy_multi,
@@ -223,6 +226,7 @@ def openai_chat_complete(
         if trim_p:
             #: Trim the messages:
             for message in messages:
+                message["content"] = whitespace_shared_rm(message["content"])
                 message["content"] = message["content"].strip()
 
     try:
