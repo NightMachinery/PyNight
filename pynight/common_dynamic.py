@@ -7,10 +7,7 @@ def dynamic_object_p(obj):
     # return (isinstance(obj, DynamicObject))
     #: Using =isinstance= can fail when hotreloading.
 
-    return (
-        hasattr(obj, "_dynamic_dict")
-        and obj.__class__.__name__ == "DynamicObject"
-    )
+    return hasattr(obj, "_dynamic_dict") and obj.__class__.__name__ == "DynamicObject"
 
 
 def dynamic_set_v1(dynamic_dict, name, value):
@@ -192,6 +189,9 @@ class DynamicObject:
         else:
             return dynamic_get(self._dynamic_dict, name)
 
+    def get(self, name, default=None):
+        return dynamic_get(self._dynamic_dict, name, default=default)
+
     def __setattr__(self, name, value):
         """
         Set a new value for a dynamic variable.
@@ -277,15 +277,18 @@ class DynamicVariables:
             var_object = self.dynamic_dict[var_name]
             var_object.reset(token)
 
+
 ##
 def partial_dynamic(fn, *, dynamic_dict, **dynamic_mappings):
     @functools.wraps(fn)
     def fn2(*args, **kwargs):
         with DynamicVariables(
-                dynamic_dict,
-                **dynamic_mappings,
+            dynamic_dict,
+            **dynamic_mappings,
         ):
             return fn(*args, **kwargs)
 
     return fn2
+
+
 ##
