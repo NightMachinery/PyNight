@@ -2,7 +2,12 @@ import tiktoken
 from types import SimpleNamespace
 import openai
 import os
+import tempfile
 from brish import z, zp
+from pynight.common_base64 import (
+    base64_encode_file,
+    convert_to_jpeg_and_base64_encode,
+)
 from pynight.common_bells import bell_gpt
 from pynight.common_dict import simple_obj
 from pynight.common_str import (
@@ -212,11 +217,21 @@ def openai_chat_complete(
     trim_p=True,
     **kwargs,
 ):
-    if model in (
+    model_orig = model
+
+    if model_orig in (
+        "gpt-4-turbo-auto-vision",
         "gpt-4-turbo",
         "4t",
     ):
-        model = "gpt-4-1106-preview"
+        # model = "gpt-4-1106-preview"
+        model = "gpt-4-0125-preview"
+
+    def clean_message(msg):
+        msg = whitespace_shared_rm(msg)
+        msg = msg.strip()
+
+        return msg
 
     if interactive:
         if copy_last_message is None:
@@ -226,14 +241,22 @@ def openai_chat_complete(
         if trim_p:
             #: Trim the messages:
             for message in messages:
-                message["content"] = whitespace_shared_rm(message["content"])
-                message["content"] = message["content"].strip()
-
+                if isinstance(message["content"], str):
+                    message["content"] = clean_message(message["content"])
+                elif isinstance(message["content"], list):
+                    for i, msg in enumerate(message["content"]):
+                        if isinstance(msg, dict) and "type" in msg:
+                            if msg["type"] == "text":
+                                msg["text"] = clean_message(msg["text"])
+                            elif msg["type"] == "image_url":
+                                if model_orig in ["gpt-4-turbo-auto-vision"]:
+                                    model = "gpt-4-vision-preview"
     try:
         while True:
             if copy_last_message:
                 last_message = messages[-1]["content"]
-                clipboard_copy(last_message)
+                if isinstance(last_message, str):
+                    clipboard_copy(last_message)
 
             try:
                 return openai.ChatCompletion.create(
@@ -284,3 +307,38 @@ def truncate_by_tokens(text, length=3500, model="gpt-3.5-turbo"):
 
 
 ###
+def openai_image_url_auto(
+    url,
+    strip_p=True,
+    magic_p=True,
+):
+    if strip_p:
+        url = url.strip()
+
+    if magic_p:
+        if url in ("clip", "MAGIC_CLIPBOARD"):
+            format = "jpg"
+            #: We need to convert to JPEG later anyway.
+
+            with tempfile.NamedTemporaryFile(suffix=f".{format}", delete=False) as tmpfile:
+
+                if format == "jpg":
+                    z("jpgpaste {tmpfile.name}").assert_zero
+                elif format == "png":
+                    z("pngpaste {tmpfile.name}").assert_zero
+                else:
+                    raise ValueError(f"Unsupported format: {format}")
+
+                url = tmpfile.name
+
+    if os.path.exists(url):
+        file_base64 = convert_to_jpeg_and_base64_encode(
+            url,
+            url_p=True,
+        )
+        return file_base64
+    else:
+        return url
+
+
+##
