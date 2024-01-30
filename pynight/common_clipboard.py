@@ -3,8 +3,14 @@ import threading
 import time
 
 
-def clipboard_copy(obj):
-    return pyperclip.copy(obj)
+def clipboard_copy(obj, *, ignore_errors=True,):
+    try:
+        return pyperclip.copy(obj)
+    except:
+        if ignore_errors:
+            return None
+        else:
+            raise
 
 
 def clipboard_copy_multi_sync(
