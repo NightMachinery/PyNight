@@ -1,3 +1,5 @@
+import numpy
+import numpy as np
 import torch
 import torch.nn as nn
 import torchvision
@@ -10,6 +12,7 @@ import time
 import matplotlib.pyplot as plt
 import gc
 from math import prod
+from PIL import Image
 from .common_jupyter import jupyter_gc
 from .common_numpy import hash_array_np
 from pynight.common_hash import is_hashable
@@ -19,6 +22,7 @@ from pynight.common_dict import simple_obj
 from pynight.common_iterable import (
     HiddenList,
 )
+import torchvision.transforms as transforms
 
 
 # import pynight.common_dict
@@ -146,13 +150,28 @@ def img_tensor_show(
     img_tensor,
     dpi=100,
 ):
-    # Get image dimensions
-    height, width = img_tensor.shape[-2:]
+    if isinstance(img_tensor, Image.Image):
+        image = img_tensor
+    else:
+        ##
+        #: Check if the tensor is boolean, and if so, convert to uint8
+        if img_tensor.dtype == torch.bool:
+            img_tensor = img_tensor.to(torch.uint8) * 255
+            #: Convert True/False to 255/0
 
-    # Set the figure size based on the image dimensions
+        #: Alternatively, for NumPy arrays:
+        if img_tensor.dtype == np.bool_:
+            img_tensor = img_tensor.astype(np.uint8) * 255
+        ##
+        image = torch_to_PIL(img_tensor)
+
+    # Get image dimensions
+    height, width = image.size
+
+    #: Set the figure size based on the image dimensions
     plt.figure(figsize=(width / dpi, height / dpi))
 
-    plt.imshow(torch_to_PIL(img_tensor))
+    plt.imshow(image)
     plt.axis("off")
     plt.tight_layout()
     plt.show()
