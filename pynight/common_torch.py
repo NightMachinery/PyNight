@@ -542,6 +542,7 @@ def rank_tensor(
     data,
     descending=True,
     increment=1,
+    #: The ranks start from =increment=.
     dim=-1,
     reverse_p=False,
 ):
