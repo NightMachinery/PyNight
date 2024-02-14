@@ -804,6 +804,7 @@ def scale_patch_to_pixel(
     output_channel_dim_p=False,
     output_width=None,
     output_height=None,
+    interpolate_mode="nearest",
 ):
     #: patch_wise: (batch, patch)
     #: output: (batch, width, height)
@@ -830,7 +831,7 @@ def scale_patch_to_pixel(
     pixel_wise = nn.functional.interpolate(
         pixel_wise,
         scale_factor=(output_width / patch_w),
-        mode="nearest",
+        mode=interpolate_mode,
     )
     #: The input dimensions are interpreted in the form:
     #: `mini-batch x channels x [optional depth] x [optional height] x width`.
