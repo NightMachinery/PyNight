@@ -848,3 +848,40 @@ def scale_patch_to_pixel(
 
 
 ##
+def swap_interpolation_to(
+    transform, interpolation=transforms.InterpolationMode.NEAREST
+):
+    """
+    Swap the interpolation mode of torchvision transforms to the specified mode.
+
+    Args:
+    - transform (transforms.Compose): The torchvision Compose transform.
+    - interpolation (transforms.InterpolationMode): The desired interpolation mode.
+
+    Returns:
+    - transforms.Compose: The modified Compose transform with the updated interpolation mode.
+    """
+    if isinstance(transform, transforms.Compose):
+        # Iterate through each transform in the Compose
+        new_transforms = []
+        for t in transform.transforms:
+            new_transforms.append(swap_interpolation_to(t, interpolation))
+        return transforms.Compose(new_transforms)
+    elif hasattr(transform, "interpolation"):
+        # If the transform has an interpolation attribute, create a new instance with the desired interpolation
+        new_kwargs = {
+            k: v
+            for k, v in transform.__dict__.items()
+            if k
+            not in [
+                "training",
+                "interpolation",
+            ] and not k.startswith("_")
+        }
+        return transform.__class__(interpolation=interpolation, **new_kwargs)
+    else:
+        # If the transform does not have an interpolation attribute, return it unchanged
+        return transform
+
+
+##
