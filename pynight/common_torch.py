@@ -149,6 +149,7 @@ torch_to_PIL = torchvision.transforms.ToPILImage()
 def img_tensor_show(
     img_tensor,
     dpi=100,
+    title=None,
 ):
     if isinstance(img_tensor, Image.Image):
         image = img_tensor
@@ -173,6 +174,10 @@ def img_tensor_show(
 
     plt.imshow(image)
     plt.axis("off")
+
+    if title:
+        plt.title(title)
+
     plt.tight_layout()
     plt.show()
     plt.close()
@@ -197,9 +202,17 @@ def torch_memory_tensor(tensor, s=3):
     return size
 
 
-def torch_gpu_empty_cache():
-    jupyter_gc()
-    gc.collect()
+def torch_gpu_empty_cache(gc_mode="full"):
+    if gc_mode == "full":
+        jupyter_gc()
+        #: does `gc.collect()`, too
+    elif gc_mode == "py":
+        gc.collect()
+    elif gc_mode is None or gc_mode is False:
+        pass
+    else:
+        raise ValueError(f"Invalid gc_mode: {gc_mode}")
+
     torch.cuda.empty_cache()
 
 
@@ -552,7 +565,13 @@ def rank_tensor(
     _, sorted_indices = torch.sort(data, dim=dim, descending=descending)
 
     ##
-    sorted_range = torch.arange(data.shape[dim]) + increment
+    sorted_range = (
+        torch.arange(
+            data.shape[dim],
+            device=data.device,
+        )
+        + increment
+    )
     if reverse_p:
         sorted_range = sorted_range.flip(dims=(-1,))
 
@@ -805,7 +824,9 @@ def scale_patch_to_pixel(
     output_channel_dim_p=False,
     output_width=None,
     output_height=None,
-    interpolate_mode="nearest",
+    interpolate_mode="nearest-exact",
+    #: Mode =mode='nearest-exact'= matches Scikit-Image and PIL nearest neighbours interpolation algorithms and fixes known issues with =mode='nearest'=. This mode is introduced to keep backward compatibility. Mode =mode='nearest'= matches buggy OpenCV's =INTER_NEAREST= interpolation algorithm.
+    # interpolate_mode="nearest",
 ):
     #: patch_wise: (batch, patch)
     #: output: (batch, width, height)
@@ -820,6 +841,7 @@ def scale_patch_to_pixel(
     if verbose:
         ic(patch_w)
 
+    #: The following reshape works both for unbatched and batched inputs, and always results in a batched output (with the batch size possibly being one).
     pixel_wise = patch_wise.reshape((-1, patch_w, patch_h))
     if verbose:
         ic(pixel_wise.shape)
@@ -827,7 +849,6 @@ def scale_patch_to_pixel(
     pixel_wise = pixel_wise.unsqueeze(1)
     if verbose:
         ic(pixel_wise.shape)
-        ic(patch_size)
 
     pixel_wise = nn.functional.interpolate(
         pixel_wise,
@@ -877,7 +898,8 @@ def swap_interpolation_to(
             not in [
                 "training",
                 "interpolation",
-            ] and not k.startswith("_")
+            ]
+            and not k.startswith("_")
         }
         return transform.__class__(interpolation=interpolation, **new_kwargs)
     else:
