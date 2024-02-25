@@ -908,3 +908,24 @@ def swap_interpolation_to(
 
 
 ##
+def quantile_sum(
+    input_tensor,
+    quantile,
+    *,
+    dim,
+    keepdim=False,
+    greater_than_p=True,
+):
+    quantile_value = torch.quantile(input_tensor, quantile, dim=dim, keepdim=True)
+    #: quantile(input, q, dim=None, keepdim=False, *, interpolation='linear', out=None) -> Tensor
+
+    if greater_than_p:
+        mask = input_tensor >= quantile_value
+    else:
+        mask = input_tensor < quantile_value
+
+    mask = mask.float()
+    return torch.sum(input_tensor * mask, dim=dim, keepdim=keepdim)
+
+
+##
