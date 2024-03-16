@@ -58,6 +58,8 @@ def print_chat_streaming(
     copy_mode="chat2",
     # copy_mode="default",
     end="\n-------",
+    backend="auto",
+    # backend="OpenAI",
 ):
     """
     Process and print out chat completions from a model when the stream is set to True.
@@ -65,31 +67,47 @@ def print_chat_streaming(
     Args:
         output (iterable): The output from the model with stream=True.
     """
+    if backend == "auto":
+        import anthropic
+
+        if isinstance(output, anthropic.Stream):
+            backend = "Anthropic"
+        else:
+            backend = "OpenAI"
+
     text = ""
     r = None
     for i, r in enumerate(output):
-        if not isinstance(r, dict):
-            #: OpenAI v1: Response objects are now pydantic models instead of dicts.
-            ##
-            r = dict(r)
-
         text_current = None
-        choice = r["choices"][0]
-        if "delta" in choice:
-            delta = choice["delta"]
-            if i >= 1:
-                #: No need to start all responses with 'assistant:'.
+
+        if backend == "OpenAI":
+            if not isinstance(r, dict):
+                #: OpenAI v1: Response objects are now pydantic models instead of dicts.
                 ##
-                if "role" in delta:
-                    if i >= 1:
-                        print("\n", end="")
+                r = dict(r)
 
-                    print(f"{delta['role']}: ", end="")
+            choice = r["choices"][0]
+            if "delta" in choice:
+                delta = choice["delta"]
+                if i >= 1:
+                    #: No need to start all responses with 'assistant:'.
+                    ##
+                    if "role" in delta:
+                        if i >= 1:
+                            print("\n", end="")
 
-            if "content" in delta:
-                text_current = f"{delta['content']}"
-        elif "text" in choice:
-            text_current = f"{choice['text']}"
+                        print(f"{delta['role']}: ", end="")
+
+                if "content" in delta:
+                    text_current = f"{delta['content']}"
+            elif "text" in choice:
+                text_current = f"{choice['text']}"
+
+        elif backend == "Anthropic":
+            if r.type == "content_block_start":
+                text_current = r.content_block.text
+            elif r.type == "content_block_delta":
+                text_current = r.delta.text
 
         if text_current:
             text += text_current
@@ -192,6 +210,7 @@ def writegpt_process(messages_lst):
 
                 if out:
                     out += "\n\n"
+
                 out += content
 
     out = subprocess.run(
@@ -215,9 +234,17 @@ def openai_chat_complete(
     interactive=False,
     copy_last_message=None,
     trim_p=True,
+    # backend="OpenAI",
+    backend="auto",
     **kwargs,
 ):
     model_orig = model
+
+    if backend == "auto":
+        if "claude" in model_orig.lower():
+            backend = "Anthropic"
+        else:
+            backend = "OpenAI"
 
     if model_orig in (
         "gpt-4-turbo-auto-vision",
@@ -237,20 +264,36 @@ def openai_chat_complete(
         if copy_last_message is None:
             copy_last_message = True
 
+    system_message = None
     if messages is not None:
-        if trim_p:
-            #: Trim the messages:
-            for message in messages:
-                if isinstance(message["content"], str):
+        messages_processed = []
+
+        for message in messages:
+            if isinstance(message["content"], str):
+                if trim_p:
                     message["content"] = clean_message(message["content"])
-                elif isinstance(message["content"], list):
-                    for i, msg in enumerate(message["content"]):
-                        if isinstance(msg, dict) and "type" in msg:
-                            if msg["type"] == "text":
+            elif isinstance(message["content"], list):
+                for i, msg in enumerate(message["content"]):
+                    if isinstance(msg, dict) and "type" in msg:
+                        if msg["type"] == "text":
+                            if trim_p:
                                 msg["text"] = clean_message(msg["text"])
-                            elif msg["type"] == "image_url":
-                                if model_orig in ["gpt-4-turbo-auto-vision"]:
-                                    model = "gpt-4-vision-preview"
+                        elif msg["type"] == "image_url":
+                            if model_orig in ["gpt-4-turbo-auto-vision"]:
+                                model = "gpt-4-vision-preview"
+
+            if backend == "Anthropic":
+                if "role" in message and message["role"] == "system":
+                    assert system_message is None, "Only one system message is allowed for Anthropic."
+
+                    system_message = message["content"]
+                    message = None
+
+            if message is not None:
+                messages_processed.append(message)
+
+        messages = messages_processed
+
     try:
         while True:
             if copy_last_message:
@@ -258,21 +301,40 @@ def openai_chat_complete(
                 if isinstance(last_message, str):
                     clipboard_copy(last_message)
 
-            try:
-                return openai.ChatCompletion.create(
+            if backend == "OpenAI":
+                try:
+                    return openai.ChatCompletion.create(
+                        *args,
+                        model=model,
+                        messages=messages,
+                        stream=stream,
+                        **kwargs,
+                    )
+                except openai.error.RateLimitError:
+                    print(
+                        "OpenAI ratelimit encountered, sleeping ...",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+                    time.sleep(10)  #: in seconds
+
+            elif backend == "Anthropic":
+                import anthropic
+                from pynight.common_anthropic import (
+                    anthropic_client,
+                )
+
+                if system_message:
+                    assert "system" not in kwargs, "Only one system message is allowed for Anthropic."
+                    kwargs["system"] = system_message
+
+                return anthropic_client.messages.create(
                     *args,
                     model=model,
                     messages=messages,
                     stream=stream,
                     **kwargs,
                 )
-            except openai.error.RateLimitError:
-                print(
-                    "OpenAI ratelimit encountered, sleeping ...",
-                    file=sys.stderr,
-                    flush=True,
-                )
-                time.sleep(10)  #: in seconds
     finally:
         pass
 
@@ -320,7 +382,9 @@ def openai_image_url_auto(
             format = "jpg"
             #: We need to convert to JPEG later anyway.
 
-            with tempfile.NamedTemporaryFile(suffix=f".{format}", delete=False) as tmpfile:
+            with tempfile.NamedTemporaryFile(
+                suffix=f".{format}", delete=False
+            ) as tmpfile:
 
                 if format == "jpg":
                     z("jpgpaste {tmpfile.name}").assert_zero
