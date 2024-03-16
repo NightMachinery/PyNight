@@ -41,7 +41,7 @@ dynamic_obj = DynamicObject(dynamic_vars, default_to_none_p=True)
 ##
 class TransformResult(SimpleObject):
     """
-    This class is interpreted specially by `TransformedDataset`; the transform's result will be `TransformResult.result`.
+    This class is interpreted specially by `TransformedDataset`; the transform's result will be `TransformResult.result`. This allows the transform to return extra metadata.
     """
     pass
 ##
@@ -85,6 +85,7 @@ def transform_result_postprocess(data):
         data = data.result
 
     if isinstance(data, dict):
+        #: This copies the dict, which can be time consuming when done in a hot loop.
         data = BatchedDict(data)
     elif isinstance(data, list):
         data = IndexableList(data)

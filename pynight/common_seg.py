@@ -84,3 +84,38 @@ def overlay_masks_on_image(
 
 
 ##
+def compute_segmentation_metrics(
+    predicted_mask,
+    ground_truth_mask,
+):
+    #: The inputs can be batched or unbatched.
+    ##
+
+    # Ensure the masks are binary
+    predicted_mask = predicted_mask > 0
+    ground_truth_mask = ground_truth_mask > 0
+
+    # Compute True Positive, False Positive, True Negative, False Negative
+    TP = (predicted_mask & ground_truth_mask).float().sum().item()
+    FP = (predicted_mask & ~ground_truth_mask).float().sum().item()
+    TN = (~predicted_mask & ~ground_truth_mask).float().sum().item()
+    FN = (~predicted_mask & ground_truth_mask).float().sum().item()
+
+    # Compute metrics
+    metrics = {}
+    metrics["IoU"] = TP / (TP + FP + FN) if (TP + FP + FN) != 0 else 0
+    metrics["Precision"] = TP / (TP + FP) if TP + FP != 0 else 0
+    metrics["Recall"] = TP / (TP + FN) if TP + FN != 0 else 0
+    metrics["F1-Score"] = (
+        2
+        * (metrics["Precision"] * metrics["Recall"])
+        / (metrics["Precision"] + metrics["Recall"])
+        if metrics["Precision"] + metrics["Recall"] != 0
+        else 0
+    )
+    metrics["Accuracy"] = (TP + TN) / (TP + FP + FN + TN)
+
+    return metrics
+
+
+##

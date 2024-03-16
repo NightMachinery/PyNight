@@ -1,4 +1,6 @@
 import json
+import os
+from pynight.common_files import mkdir
 
 
 ##
@@ -50,6 +52,39 @@ def dumps(
         **kwargs,
     )
     return encoder.encode(obj)
+
+
+def json_save(
+    obj,
+    *,
+    file,
+    indent=2,
+    exists_mode="ignore",
+    **kwargs,
+):
+    json_data = dumps(obj, indent=indent, **kwargs)
+
+    if isinstance(file, str):
+        #: If file is a path string, ensure the directory exists
+        mkdir(file, do_dirname=True)
+
+        #: Check if the file exists and handle according to exists_mode
+        if os.path.exists(file):
+            if exists_mode == "error":
+                raise FileExistsError(f"The file '{file}' already exists.")
+            elif exists_mode == "ignore":
+                #: Do nothing, proceed to write the file
+                pass
+            else:
+                raise ValueError(
+                    f"Invalid exists_mode: '{exists_mode}'"
+                )
+
+        with open(file, "w", encoding="utf-8") as f:
+            f.write(json_data)
+    else:
+        #: If file is a file-like object, just write to it
+        file.write(json_data)
 
 
 ##
