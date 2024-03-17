@@ -238,6 +238,8 @@ def openai_chat_complete(
     backend="auto",
     **kwargs,
 ):
+    print("/❂\\") #: to detect dead kernels
+
     model_orig = model
 
     if backend == "auto":
