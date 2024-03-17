@@ -21,13 +21,17 @@ def normalize_map(
     num_prefix_tokens=0,
     bias_token_p=False,
     clone_p=True,
+    pixel_p=False,
 ):
-    attributions_skipped = attributions[..., num_prefix_tokens:]  #: Skips CLS
-    if bias_token_p:
-        attributions_skipped = attributions_skipped[..., :-1]
-        #: Skips the bias token
+    if pixel_p:
+        attributions_skipped = attributions
+    else:
+        attributions_skipped = attributions[..., num_prefix_tokens:]  #: Skips CLS
+        if bias_token_p:
+            attributions_skipped = attributions_skipped[..., :-1]
+            #: Skips the bias token
 
-    # ic(num_prefix_tokens, attributions.shape, attributions_skipped.shape)
+        # ic(num_prefix_tokens, attributions.shape, attributions_skipped.shape)
 
     attributions_normalized = attributions_skipped
     if clone_p:
@@ -42,12 +46,19 @@ def normalize_map(
                 "scale_by_max_signed_attr",
             ]:
                 #: higher outlier_quantile makes discerning the attributions in the middle easier, but the higher attributions become the same
-                max_attr = torch.quantile(
-                    attributions_normalized,
-                    1 - outlier_quantile,
-                    dim=-1,
-                    keepdim=True,
-                )
+                if outlier_quantile == 0:
+                    max_attr = torch.max(
+                        attributions_normalized,
+                        dim=-1,
+                        keepdim=True,
+                    ).values
+                else:
+                    max_attr = torch.quantile(
+                        attributions_normalized,
+                        1 - outlier_quantile,
+                        dim=-1,
+                        keepdim=True,
+                    )
 
                 # max_attr = torch.max(attributions_normalized).item()
             else:
@@ -57,12 +68,19 @@ def normalize_map(
                 "scale_by_max_signed_attr",
                 "shift_min_to_zero",
             ]:
-                min_attr = torch.quantile(
-                    attributions_normalized,
-                    outlier_quantile,
-                    dim=-1,
-                    keepdim=True,
-                )
+                if outlier_quantile == 0:
+                    min_attr = torch.min(
+                        attributions_normalized,
+                        dim=-1,
+                        keepdim=True,
+                    ).values
+                else:
+                    min_attr = torch.quantile(
+                        attributions_normalized,
+                        outlier_quantile,
+                        dim=-1,
+                        keepdim=True,
+                    )
 
                 # min_attr = torch.min(attributions_normalized).item()
             else:
@@ -71,12 +89,19 @@ def normalize_map(
             if normalizer in [
                 "scale_by_max_abs_attr",
             ]:
-                max_abs_attr = torch.quantile(
-                    torch.abs(attributions_normalized),
-                    1 - outlier_quantile,
-                    dim=-1,
-                    keepdim=True,
-                )
+                if outlier_quantile == 0:
+                    max_abs_attr = torch.max(
+                        torch.abs(attributions_normalized),
+                        dim=-1,
+                        keepdim=True,
+                    ).values
+                else:
+                    max_abs_attr = torch.quantile(
+                        torch.abs(attributions_normalized),
+                        1 - outlier_quantile,
+                        dim=-1,
+                        keepdim=True,
+                    )
 
                 # max_abs_attr = torch.max(torch.abs(attributions_normalized)).item()
             else:
