@@ -828,40 +828,60 @@ def scale_patch_to_pixel(
     #: Mode =mode='nearest-exact'= matches Scikit-Image and PIL nearest neighbours interpolation algorithms and fixes known issues with =mode='nearest'=. This mode is introduced to keep backward compatibility. Mode =mode='nearest'= matches buggy OpenCV's =INTER_NEAREST= interpolation algorithm.
     # interpolate_mode="nearest",
 ):
-    #: patch_wise: (batch, patch)
-    #: output: (batch, width, height)
+    #: patch_wise: ([batch,] patch)
+    #: patch_wise (can be pixel-wise): (batch, [1,] width, height)
+    #: output: (batch, [1,] width, height)
     #: assumes square image
     ##
     output_width = output_width or output_height
     output_height = output_height or output_width
     assert output_width == output_height
 
-    patch_w = int(patch_wise.shape[-1] ** 0.5)
-    patch_h = patch_w
     if verbose:
-        ic(patch_w)
+        ic(patch_wise.shape)
 
-    #: The following reshape works both for unbatched and batched inputs, and always results in a batched output (with the batch size possibly being one).
-    pixel_wise = patch_wise.reshape((-1, patch_w, patch_h))
-    if verbose:
-        ic(pixel_wise.shape)
+    if patch_wise.ndim == 3 and patch_wise.shape[-1] == patch_wise.shape[-2]:
+        pixel_wise = patch_wise
 
-    pixel_wise = pixel_wise.unsqueeze(1)
-    if verbose:
-        ic(pixel_wise.shape)
+        if output_channel_dim_p:
+            pixel_wise = pixel_wise.unsqueeze(1)
+            #: (batch, 1, width, height)
 
-    pixel_wise = nn.functional.interpolate(
-        pixel_wise,
-        scale_factor=(output_width / patch_w),
-        mode=interpolate_mode,
-    )
-    #: The input dimensions are interpreted in the form:
-    #: `mini-batch x channels x [optional depth] x [optional height] x width`.
-    if verbose:
-        ic(pixel_wise.shape)
+    elif patch_wise.ndim == 4 and patch_wise.shape[-1] == patch_wise.shape[-2]:
+        #: (batch, 1, width, height)
+        pixel_wise = patch_wise
 
-    if not output_channel_dim_p:
-        pixel_wise = pixel_wise.squeeze(1)  #: remove useless channel dimension
+        if not output_channel_dim_p:
+            pixel_wise = pixel_wise.squeeze(1)
+            #: (batch, width, height)
+
+    else:
+        patch_w = int(patch_wise.shape[-1] ** 0.5)
+        patch_h = patch_w
+        if verbose:
+            ic(patch_w)
+
+        #: The following reshape works both for unbatched and batched inputs, and always results in a batched output (with the batch size possibly being one).
+        pixel_wise = patch_wise.reshape((-1, patch_w, patch_h))
+        if verbose:
+            ic(pixel_wise.shape)
+
+        pixel_wise = pixel_wise.unsqueeze(1)
+        if verbose:
+            ic(pixel_wise.shape)
+
+        pixel_wise = nn.functional.interpolate(
+            pixel_wise,
+            scale_factor=(output_width / patch_w),
+            mode=interpolate_mode,
+        )
+        #: The input dimensions are interpreted in the form:
+        #: `mini-batch x channels x [optional depth] x [optional height] x width`.
+        if verbose:
+            ic(pixel_wise.shape)
+
+        if not output_channel_dim_p:
+            pixel_wise = pixel_wise.squeeze(1)  #: remove useless channel dimension
 
     if verbose:
         ic(pixel_wise.shape)
