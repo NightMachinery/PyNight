@@ -87,7 +87,7 @@ def list_children(
     abs_exclude_patterns = to_iterable(abs_exclude_patterns)
 
     for root, dirs, files in os.walk(directory, topdown=True):
-        dirs_orig = list(dirs) #: shallow copy
+        dirs_orig = list(dirs)  #: shallow copy
         if not recursive:
             dirs[:] = []
             #: When topdown is true, the caller can modify the dirnames list in-place (e.g., via del or slice assignment), and walk will only recurse into the subdirectories whose names remain in dirnames; this can be used to prune the search, or to impose a specific order of visiting.
@@ -141,14 +141,49 @@ def list_children(
 
     return children
 
+
 ##
 def sanitize_filename(some_str):
     for x in (
-            '/',
-            '\\',
-            '~',
-            ):
-        some_str = some_str.replace(x, '_')
+        "/",
+        "\\",
+        "~",
+    ):
+        some_str = some_str.replace(x, "_")
 
     return some_str
+
+
+##
+class open_file:
+    def __init__(self, file_path, mode="r", *, mkdir_p=True, exists=None, **kwargs,):
+        self.file_path = file_path
+        self.mode = mode
+        self.exists = exists
+        self.file = None
+        self.mkdir_p = mkdir_p
+        self.kwargs = kwargs
+
+    def __enter__(self):
+        if self.exists is None:
+            pass
+        elif self.exists == "error" and os.path.exists(self.file_path):
+            raise FileExistsError(f"File '{self.file_path}' already exists.")
+        elif self.exists == "increment_number":
+            index = 1
+            file_name, file_ext = os.path.splitext(self.file_path)
+            while os.path.exists(self.file_path):
+                self.file_path = f"{file_name}_{index}{file_ext}"
+                index += 1
+
+        if self.mkdir_p:
+            mkdir(self.file_path, do_dirname=True)
+
+        self.file = open(self.file_path, self.mode, **self.kwargs,)
+        return self.file
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.file.close()
+
+
 ##
