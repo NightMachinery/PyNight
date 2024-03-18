@@ -66,18 +66,18 @@ def patch_info_from_name(
     if model_name == "vit_small_patch14_dinov2":
         patch_resolution = 14
         image_resolution = 518
-    elif model_name.startswith("RN") or model_name in (
-        "blip",
-        "ALIGN",
-        "NegCLIP",
-        "FLAVA",
-        "AltCLIP",
-        "ALIGN",
-    ):
-        #: NA for now, just hardcoding some nonsense
-        ##
-        patch_resolution = 100
-        model_size = "NA"
+    # elif model_name.startswith("RN") or model_name in (
+    #     "blip",
+    #     "ALIGN",
+    #     "NegCLIP",
+    #     "FLAVA",
+    #     "AltCLIP",
+    #     "ALIGN",
+    # ):
+    #     #: NA for now, just hardcoding some nonsense
+    #     ##
+    #     patch_resolution = 100
+    #     model_size = "NA"
     else:
         ##
         pat1 = re.compile(r"^(?:(?:coca_|xlm-roberta-[^-]+-)?ViT|EVA\d*)-[^-]+-(\d+)")
@@ -87,7 +87,10 @@ def patch_info_from_name(
         ##
 
         model_size_pattern = None
-        if model_name.startswith("vit_"):
+        if any(model_name.startswith(prefix) for prefix in [
+                "vit_",
+                "eva_",
+        ]):
             patch_pattern = r"patch(\d+)"
             resolution_pattern = r"_(\d{3,})"
         elif pat1.match(model_name):
