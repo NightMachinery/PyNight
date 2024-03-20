@@ -312,6 +312,10 @@ def openai_chat_complete(
                         stream=stream,
                         **kwargs,
                     )
+                # except:
+                #     raise
+
+                #: APIRemovedInV1
                 except openai.error.RateLimitError:
                     print(
                         "OpenAI ratelimit encountered, sleeping ...",
