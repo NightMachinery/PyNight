@@ -1,6 +1,7 @@
 import tiktoken
 from types import SimpleNamespace
 import openai
+from openai import OpenAI
 import os
 import tempfile
 from brish import z, zp
@@ -20,15 +21,17 @@ from pynight.common_clipboard import (
 
 ##
 openai_key = None
-
+openai_client = None
 
 def setup_openai_key():
     global openai_key
+    global openai_client
 
     openai_key = z("var-get openai_api_key").outrs
     assert openai_key, "setup_openai_key: could not get OpenAI API key!"
 
-    openai.api_key = openai_key
+    openai_client = OpenAI(api_key=openai_key)
+    return openai_client
 
 
 def openai_key_get():
@@ -41,7 +44,6 @@ def openai_key_get():
 
 
 ###
-import openai
 import pyperclip
 from icecream import ic
 import subprocess
@@ -85,22 +87,27 @@ def print_chat_streaming(
                 #: OpenAI v1: Response objects are now pydantic models instead of dicts.
                 ##
                 r = dict(r)
+                # ic(r)
 
             choice = r["choices"][0]
+            choice = dict(choice)
+
             if "delta" in choice:
                 delta = choice["delta"]
+                delta = dict(delta)
+
                 if i >= 1:
                     #: No need to start all responses with 'assistant:'.
                     ##
-                    if "role" in delta:
+                    if "role" in delta and delta['role']:
                         if i >= 1:
                             print("\n", end="")
 
                         print(f"{delta['role']}: ", end="")
 
-                if "content" in delta:
+                if "content" in delta and delta['content']:
                     text_current = f"{delta['content']}"
-            elif "text" in choice:
+            elif "text" in choice and choice['text']:
                 text_current = f"{choice['text']}"
 
         elif backend == "Anthropic":
@@ -305,18 +312,13 @@ def openai_chat_complete(
 
             if backend == "OpenAI":
                 try:
-                    return openai.ChatCompletion.create(
-                        *args,
-                        model=model,
-                        messages=messages,
-                        stream=stream,
-                        **kwargs,
-                    )
-                # except:
-                #     raise
+                    return openai_client.chat.completions.create(*args,
+                    model=model,
+                    messages=messages,
+                    stream=stream,
+                    **kwargs)
 
-                #: APIRemovedInV1
-                except openai.error.RateLimitError:
+                except openai.RateLimitError:
                     print(
                         "OpenAI ratelimit encountered, sleeping ...",
                         file=sys.stderr,
