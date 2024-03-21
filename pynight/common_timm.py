@@ -37,6 +37,9 @@ def model_transform_get(model):
 
 ##
 def model_name_get(model, mode="arch+tag"):
+    if hasattr(model, "name"):
+        return model.name
+
     cfg = model.pretrained_cfg
 
     if mode == "arch+tag":
