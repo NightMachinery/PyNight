@@ -18,10 +18,14 @@ from pynight.common_clipboard import (
     clipboard_copy,
     clipboard_copy_multi,
 )
+from pynight.common_debugging import fn_name_current
+
 
 ##
+#: @duplicateCode/1eda4a3f17ea02a0fca9b6d7a6b16663
 openai_key = None
 openai_client = None
+
 
 def setup_openai_key():
     global openai_key
@@ -41,6 +45,35 @@ def openai_key_get():
         setup_openai_key()
 
     return openai_key
+
+
+##
+#: @duplicateCode/1eda4a3f17ea02a0fca9b6d7a6b16663
+openrouter_key = None
+openrouter_client = None
+
+
+def setup_openrouter_key():
+    global openrouter_key
+    global openrouter_client
+
+    openrouter_key = z("var-get openrouter_api_key").outrs
+    assert openrouter_key, "setup_openrouter_key: could not get OpenRouter API key!"
+
+    openrouter_client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=openrouter_key,
+    )
+    return openrouter_client
+
+
+def openrouter_key_get():
+    global openrouter_key
+
+    if openrouter_key is None:
+        setup_openrouter_key()
+
+    return openrouter_key
 
 
 ###
@@ -69,79 +102,89 @@ def print_chat_streaming(
     Args:
         output (iterable): The output from the model with stream=True.
     """
-    if backend == "auto":
-        import anthropic
+    try:
+        if backend == "auto":
+            import anthropic
 
-        if isinstance(output, anthropic.Stream):
-            backend = "Anthropic"
-        else:
-            backend = "OpenAI"
+            if isinstance(output, anthropic.Stream):
+                backend = "Anthropic"
+            else:
+                backend = "OpenAI"
 
-    text = ""
-    r = None
-    for i, r in enumerate(output):
-        text_current = None
+        text = ""
+        r = None
+        last_role = None
+        for i, r in enumerate(output):
+            text_current = None
 
-        if backend == "OpenAI":
-            if not isinstance(r, dict):
-                #: OpenAI v1: Response objects are now pydantic models instead of dicts.
-                ##
-                r = dict(r)
-                # ic(r)
-
-            choice = r["choices"][0]
-            choice = dict(choice)
-
-            if "delta" in choice:
-                delta = choice["delta"]
-                delta = dict(delta)
-
-                if i >= 1:
-                    #: No need to start all responses with 'assistant:'.
+            if backend == "OpenAI":
+                if not isinstance(r, dict):
+                    #: OpenAI v1: Response objects are now pydantic models instead of dicts.
                     ##
-                    if "role" in delta and delta['role']:
-                        if i >= 1:
+                    r = dict(r)
+                    # ic(r)
+
+                choice = r["choices"][0]
+                choice = dict(choice)
+
+                if "delta" in choice:
+                    delta = choice["delta"]
+                    delta = dict(delta)
+
+                    if "role" in delta and delta["role"]:
+                        if last_role is None:
+                            last_role = delta["role"]
+                        elif last_role != delta["role"]:
+                            last_role = delta["role"]
+
                             print("\n", end="")
+                            print(f"{delta['role']}: ", end="")
 
-                        print(f"{delta['role']}: ", end="")
+                    if "content" in delta and delta["content"]:
+                        text_current = f"{delta['content']}"
+                elif "text" in choice and choice["text"]:
+                    text_current = f"{choice['text']}"
 
-                if "content" in delta and delta['content']:
-                    text_current = f"{delta['content']}"
-            elif "text" in choice and choice['text']:
-                text_current = f"{choice['text']}"
+            elif backend == "Anthropic":
+                if r.type == "content_block_start":
+                    text_current = r.content_block.text
+                elif r.type == "content_block_delta":
+                    text_current = r.delta.text
 
-        elif backend == "Anthropic":
-            if r.type == "content_block_start":
-                text_current = r.content_block.text
-            elif r.type == "content_block_delta":
-                text_current = r.delta.text
+            if text_current:
+                text += text_current
+                print(f"{text_current}", end="")
 
-        if text_current:
-            text += text_current
-            print(f"{text_current}", end="")
+        print(end, end="")
 
-    print(end, end="")
+        text = text.rstrip()
 
-    text = text.rstrip()
+        if debug_p == True:
+            ic(r)
 
-    if debug_p == True:
-        ic(r)
+        chat_result = None
+        if copy_mode:
+            chat_result = chatml_response_text_process(
+                text,
+                copy_mode=copy_mode,
+            )
 
-    chat_result = None
-    if copy_mode:
-        chat_result = chatml_response_text_process(
-            text,
-            copy_mode=copy_mode,
-        )
+        if output_mode == "chat":
+            return chat_result
+        elif output_mode == "text":
+            return text
+        elif not output_mode:
+            return None
+        else:
+            raise ValueError(f"Unsupported output_mode: {output_mode}")
+    finally:
+        output.close()
+        #: The hope is to stop the upstream credit charges.
+        #: [[id:fba91d52-7694-4894-8ab0-44d16aa96a90][Stream Cancellation]]
 
-    if output_mode == "chat":
-        return chat_result
-    elif output_mode == "text":
-        return text
-    elif not output_mode:
-        return None
-    else:
-        raise ValueError(f"Unsupported output_mode: {output_mode}")
+        # print(f"\n{fn_name_current()}: closed the connection")
+        # ic(type(output))
+        #: ic| type(output): <class 'openai.Stream'>
 
 
 def chatml_response_process(
@@ -245,13 +288,23 @@ def openai_chat_complete(
     backend="auto",
     **kwargs,
 ):
-    print("/❂\\") #: to detect dead kernels
+    print("/❂\\")  #: to detect dead kernels
+    #: The above marker needs to be excluded in [help:night/org-babel-result-get].
 
     model_orig = model
+    model_orig_normalized = model_orig.lower()
 
     if backend == "auto":
-        if "claude" in model_orig.lower():
+        # ic(model_orig_normalized)
+
+        if model_orig_normalized.startswith("or:"):
+            backend = "OpenRouter"
+
+            model = model_orig_normalized[3:]
+
+        elif "claude" in model_orig_normalized:
             backend = "Anthropic"
+
         else:
             backend = "OpenAI"
 
@@ -293,7 +346,9 @@ def openai_chat_complete(
 
             if backend == "Anthropic":
                 if "role" in message and message["role"] == "system":
-                    assert system_message is None, "Only one system message is allowed for Anthropic."
+                    assert (
+                        system_message is None
+                    ), "Only one system message is allowed for Anthropic."
 
                     system_message = message["content"]
                     message = None
@@ -310,13 +365,21 @@ def openai_chat_complete(
                 if isinstance(last_message, str):
                     clipboard_copy(last_message)
 
-            if backend == "OpenAI":
+            if backend in ["OpenAI", "OpenRouter"]:
+                if backend == "OpenAI":
+                    client = openai_client
+                elif backend == "OpenRouter":
+                    client = openrouter_client
+
                 try:
-                    return openai_client.chat.completions.create(*args,
-                    model=model,
-                    messages=messages,
-                    stream=stream,
-                    **kwargs)
+                    response = client.chat.completions.create(
+                        *args,
+                        model=model,
+                        messages=messages,
+                        stream=stream,
+                        **kwargs,
+                    )
+                    return response
 
                 except openai.RateLimitError:
                     print(
@@ -333,7 +396,9 @@ def openai_chat_complete(
                 )
 
                 if system_message:
-                    assert "system" not in kwargs, "Only one system message is allowed for Anthropic."
+                    assert (
+                        "system" not in kwargs
+                    ), "Only one system message is allowed for Anthropic."
                     kwargs["system"] = system_message
 
                 return anthropic_client.messages.create(
