@@ -1,6 +1,7 @@
 import json
 import os
 from pynight.common_files import mkdir
+from pynight.common_debugging import fn_name_current
 
 
 ##
@@ -76,9 +77,7 @@ def json_save(
                 #: Do nothing, proceed to write the file
                 pass
             else:
-                raise ValueError(
-                    f"Invalid exists_mode: '{exists_mode}'"
-                )
+                raise ValueError(f"Invalid exists_mode: '{exists_mode}'")
 
         with open(file, "w", encoding="utf-8") as f:
             f.write(json_data)
@@ -87,14 +86,56 @@ def json_save(
         file.write(json_data)
 
 
+def json_save_update(
+    obj,
+    *,
+    file,
+    no_overwrite_p=False,
+    **kwargs,
+):
+    kwargs["exists_mode"] = "ignore"
+
+    # Check if the file exists
+    if isinstance(file, str) and os.path.exists(file):
+        # Load the existing JSON data
+        with open(file, "r", encoding="utf-8") as f:
+            existing_data = json.load(f)
+
+        # Update the existing JSON data with the new object
+        if no_overwrite_p:
+            # Only add new keys, do not overwrite existing keys
+            for key, value in obj.items():
+                if key not in existing_data:
+                    existing_data[key] = value
+                else:
+                    raise KeyError(
+                        f"{fn_name_current()}: Key '{key}' already exists in the JSON data. (Turn off 'no_overwrite_p' to overwrite the data.)"
+                    )
+        else:
+            # Update existing keys and add new ones
+
+            existing_data.update(obj)
+
+        # Use json_save to save the updated JSON data
+        json_save(existing_data, file=file, **kwargs)
+    else:
+        # If the file does not exist or 'file' is a file-like object, just save the new object
+
+        json_save(obj, file=file, **kwargs)
+
+
 ##
+def json_load(path):
+    with open(path, "r") as f:
+        return json.load(f)
+
+
 def json_partitioned_load(paths):
     output = {}
     for path in paths:
         try:
-            with open(path, "r") as f:
-                current = json.load(f)
-                output.update(current)
+            current = json_load(path)
+            output.update(current)
         except FileNotFoundError:
             print(f"File not found: {path}")
         except json.JSONDecodeError:
