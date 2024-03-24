@@ -165,7 +165,7 @@ class open_file:
         self.kwargs = kwargs
 
     def __enter__(self):
-        if self.exists is None:
+        if self.exists is None or self.exists == "ignore":
             pass
         elif self.exists == "error" and os.path.exists(self.file_path):
             raise FileExistsError(f"File '{self.file_path}' already exists.")
@@ -175,6 +175,8 @@ class open_file:
             while os.path.exists(self.file_path):
                 self.file_path = f"{file_name}_{index}{file_ext}"
                 index += 1
+        else:
+            raise ValueError(f"Invalid exists_mode: '{self.exists}'")
 
         if self.mkdir_p:
             mkdir(self.file_path, do_dirname=True)

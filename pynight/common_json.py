@@ -55,7 +55,7 @@ def dumps(
     return encoder.encode(obj)
 
 
-def json_save(
+def json_save_v1(
     obj,
     *,
     file,
@@ -80,6 +80,30 @@ def json_save(
                 raise ValueError(f"Invalid exists_mode: '{exists_mode}'")
 
         with open(file, "w", encoding="utf-8") as f:
+            f.write(json_data)
+    else:
+        #: If file is a file-like object, just write to it
+        file.write(json_data)
+
+
+def json_save(
+    obj,
+    *,
+    file,
+    indent=2,
+    exists_mode="ignore",
+    **kwargs,
+):
+    json_data = dumps(obj, indent=indent, **kwargs)
+
+    if isinstance(file, str):
+        with open_file(
+            file,
+            mode="w",
+            exists=exists_param,
+            mkdir_p=True,
+            encoding="utf-8",
+        ) as f:
             f.write(json_data)
     else:
         #: If file is a file-like object, just write to it
