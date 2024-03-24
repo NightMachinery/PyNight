@@ -114,7 +114,7 @@ def json_save_update(
     obj,
     *,
     file,
-    no_overwrite_p=False,
+    update_mode="force",
     **kwargs,
 ):
     kwargs["exists_mode"] = "ignore"
@@ -126,18 +126,21 @@ def json_save_update(
             existing_data = json.load(f)
 
         # Update the existing JSON data with the new object
-        if no_overwrite_p:
-            # Only add new keys, do not overwrite existing keys
+        if update_mode != "force":
             for key, value in obj.items():
-                if key not in existing_data:
-                    existing_data[key] = value
-                else:
-                    raise KeyError(
-                        f"{fn_name_current()}: Key '{key}' already exists in the JSON data. (Turn off 'no_overwrite_p' to overwrite the data.)"
-                    )
+                if key in existing_data:
+                    if update_mode == "warn":
+                        print(
+                            f"{fn_name_current()}: overwriting key: {key}"
+                        )
+                    elif update_mode == "error":
+                        raise KeyError(
+                            f"{fn_name_current()}: Key '{key}' already exists in the JSON data. (Change 'update_mode' to ignore this error.)"
+                        )
+
+                existing_data[key] = value
         else:
             # Update existing keys and add new ones
-
             existing_data.update(obj)
 
         # Use json_save to save the updated JSON data
