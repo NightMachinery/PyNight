@@ -1,6 +1,9 @@
 import json
 import os
-from pynight.common_files import mkdir
+from pynight.common_files import (
+    mkdir,
+    open_file,
+)
 from pynight.common_debugging import fn_name_current
 
 
@@ -60,7 +63,7 @@ def json_save_v1(
     *,
     file,
     indent=2,
-    exists_mode="ignore",
+    exists="ignore",
     **kwargs,
 ):
     json_data = dumps(obj, indent=indent, **kwargs)
@@ -69,15 +72,15 @@ def json_save_v1(
         #: If file is a path string, ensure the directory exists
         mkdir(file, do_dirname=True)
 
-        #: Check if the file exists and handle according to exists_mode
+        #: Check if the file exists and handle according to exists
         if os.path.exists(file):
-            if exists_mode == "error":
+            if exists == "error":
                 raise FileExistsError(f"The file '{file}' already exists.")
-            elif exists_mode == "ignore":
+            elif exists == "ignore":
                 #: Do nothing, proceed to write the file
                 pass
             else:
-                raise ValueError(f"Invalid exists_mode: '{exists_mode}'")
+                raise ValueError(f"Invalid exists: '{exists}'")
 
         with open(file, "w", encoding="utf-8") as f:
             f.write(json_data)
@@ -91,7 +94,7 @@ def json_save(
     *,
     file,
     indent=2,
-    exists_mode="ignore",
+    exists="ignore",
     **kwargs,
 ):
     json_data = dumps(obj, indent=indent, **kwargs)
@@ -100,7 +103,7 @@ def json_save(
         with open_file(
             file,
             mode="w",
-            exists=exists_param,
+            exists=exists,
             mkdir_p=True,
             encoding="utf-8",
         ) as f:
@@ -117,7 +120,7 @@ def json_save_update(
     update_mode="force",
     **kwargs,
 ):
-    kwargs["exists_mode"] = "ignore"
+    kwargs["exists"] = "ignore"
 
     # Check if the file exists
     if isinstance(file, str) and os.path.exists(file):
@@ -130,9 +133,7 @@ def json_save_update(
             for key, value in obj.items():
                 if key in existing_data:
                     if update_mode == "warn":
-                        print(
-                            f"{fn_name_current()}: overwriting key: {key}"
-                        )
+                        print(f"{fn_name_current()}: overwriting key: {key}")
                     elif update_mode == "error":
                         raise KeyError(
                             f"{fn_name_current()}: Key '{key}' already exists in the JSON data. (Change 'update_mode' to ignore this error.)"
