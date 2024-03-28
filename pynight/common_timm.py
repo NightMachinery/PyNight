@@ -92,8 +92,10 @@ def patch_info_from_name(
         model_size_pattern = None
         if any(model_name.startswith(prefix) for prefix in [
                 "vit_",
-                "eva_",
+                "eva(?:02)?_",
         ]):
+            #: `eva02_tiny_patch14_336.mim_in22k_ft_in1k`
+            ##
             patch_pattern = r"patch(\d+)"
             resolution_pattern = r"_(\d{3,})"
         elif pat1.match(model_name):
