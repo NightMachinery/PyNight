@@ -286,6 +286,7 @@ def openai_chat_complete(
     trim_p=True,
     # backend="OpenAI",
     backend="auto",
+    system_repeat_mode="concat",
     **kwargs,
 ):
     print("/❂\\")  #: to detect dead kernels
@@ -317,8 +318,9 @@ def openai_chat_complete(
         model = "gpt-4-0125-preview"
 
     def clean_message(msg):
-        msg = whitespace_shared_rm(msg)
-        msg = msg.strip()
+        if msg:
+            msg = whitespace_shared_rm(msg)
+            msg = msg.strip()
 
         return msg
 
@@ -346,17 +348,22 @@ def openai_chat_complete(
 
             if backend == "Anthropic":
                 if "role" in message and message["role"] == "system":
-                    assert (
-                        system_message is None
-                    ), "Only one system message is allowed for Anthropic."
+                    if system_repeat_mode == "error":
+                        assert (
+                            system_message is None
+                        ), "Only one system message is allowed for Anthropic."
 
-                    system_message = message["content"]
+                    system_message += "\n" + message["content"]
                     message = None
 
             if message is not None:
                 messages_processed.append(message)
 
         messages = messages_processed
+
+
+    if trim_p:
+        system_message = clean_message(system_message)
 
     try:
         while True:
@@ -396,9 +403,17 @@ def openai_chat_complete(
                 )
 
                 if system_message:
-                    assert (
-                        "system" not in kwargs
-                    ), "Only one system message is allowed for Anthropic."
+                    if system_repeat_mode == "error":
+                        assert (
+                            "system" not in kwargs
+                        ), "Only one system message is allowed for Anthropic."
+                    else:
+                        if "system" in kwargs:
+                            system_message = kwargs.system + "\n" + system_message
+
+                    if trim_p:
+                        system_message = clean_message(system_message)
+
                     kwargs["system"] = system_message
 
                 return anthropic_client.messages.create(
