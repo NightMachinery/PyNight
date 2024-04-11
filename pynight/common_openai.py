@@ -315,7 +315,9 @@ def openai_chat_complete(
         "4t",
     ):
         # model = "gpt-4-1106-preview"
-        model = "gpt-4-0125-preview"
+        # model = "gpt-4-0125-preview"
+        # model = "gpt-4-turbo-preview"
+        model = "gpt-4-turbo"
 
     def clean_message(msg):
         if msg:
@@ -344,7 +346,8 @@ def openai_chat_complete(
                                 msg["text"] = clean_message(msg["text"])
                         elif msg["type"] == "image_url":
                             if model_orig in ["gpt-4-turbo-auto-vision"]:
-                                model = "gpt-4-vision-preview"
+                                # model = "gpt-4-vision-preview"
+                                model = "gpt-4-turbo"
 
             if backend == "Anthropic":
                 if "role" in message and message["role"] == "system":
