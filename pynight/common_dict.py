@@ -5,6 +5,7 @@ import uuid
 from pynight.common_iterable import (
     IndexableList,
     list_of_dict_to_dict_of_list,
+    merge_iterables,
 )
 
 
@@ -149,6 +150,26 @@ class BatchedDict(dict):
             return sliced_dict
         else:
             return super().__getitem__(key)
+
+    def __add__(self, other):
+        #: @untested
+        ##
+        if not isinstance(other, BatchedDict):
+            raise TypeError(f"Unsupported operand type for +: 'BatchedDict' and '{type(other).__name__}'")
+
+        merged_dict = BatchedDict()
+
+        for k, v in self.items():
+            if k in other:
+                merged_dict[k] = merge_iterables(v, other[k])
+            else:
+                merged_dict[k] = v
+
+        for k, v in other.items():
+            if k not in self:
+                merged_dict[k] = v
+
+        return merged_dict
 
 
 def batched_dict_tree_flatten(batched_dict):

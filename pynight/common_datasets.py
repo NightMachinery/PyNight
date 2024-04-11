@@ -3,10 +3,10 @@ import os
 from functools import wraps
 from pynight.common_debugging import traceback_print
 from pynight.common_iterable import (
-    BatchedIterable,
     IndexableList,
     range_to_slice,
 )
+from pynight.batched_iterable import BatchedIterable
 from pynight.common_benchmark import (
     timed,
     Timed,
@@ -38,12 +38,6 @@ from pynight.common_dynamic import (
 
 dynamic_vars = dict()
 dynamic_obj = DynamicObject(dynamic_vars, default_to_none_p=True)
-##
-class TransformResult(SimpleObject):
-    """
-    This class is interpreted specially by `TransformedDataset`; the transform's result will be `TransformResult.result`. This allows the transform to return extra metadata.
-    """
-    pass
 ##
 def dataset_push_from_disk_to_hub(path, *args, **kwargs):
     """
@@ -78,13 +72,20 @@ def dataset_cache_filenames(dataset, cache_only_p=False, sort_p=True, **kwargs):
 
     return res
 
-
 ##
+class TransformResult(SimpleObject):
+    """
+    This class is interpreted specially by `TransformedDataset`; the transform's result will be `TransformResult.result`. This allows the transform to return extra metadata.
+    """
+    pass
+
+
 def transform_result_postprocess(data):
     if isinstance(data, TransformResult):
         data = data.result
 
-    if isinstance(data, dict):
+    if isinstance(data, Mapping):
+    # if isinstance(data, dict):
         #: This copies the dict, which can be time consuming when done in a hot loop.
         data = BatchedDict(data)
     elif isinstance(data, list):
@@ -93,6 +94,7 @@ def transform_result_postprocess(data):
     return data
 
 
+##
 @dataclass()
 class TransformedDataset:
     dataset: datasets.Dataset #: or dict

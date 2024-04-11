@@ -6,6 +6,16 @@ import itertools
 
 
 ##
+def merge_iterables(a, b):
+    if isinstance(a, list) and isinstance(b, list):
+        return a + b
+    elif isinstance(a, torch.Tensor) and isinstance(b, torch.Tensor):
+        return torch.cat((a, b), dim=0)
+    else:
+        raise TypeError(f"Unsupported types for merging: '{type(a).__name__}' and '{type(b).__name__}'")
+
+
+##
 def iterable_chunk(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
@@ -75,8 +85,6 @@ list_rm = lst_filter_out
 
 
 ##
-
-
 class IndexableList(list):
     def _recursive_get(self, indices):
         """Recursively get items based on nested indices."""
@@ -126,36 +134,6 @@ def to_iterable(possibly_iterable):
         return possibly_iterable
     else:
         return [possibly_iterable]
-
-
-##
-class BatchedIterable:
-    def __init__(self, data, batch_size, drop_last_batch=False, skip_none_p=True,):
-        self.data = data
-        self.batch_size = batch_size
-        self.drop_last_batch = drop_last_batch
-        self.skip_none_p = skip_none_p
-
-    def __iter__(self):
-        length = len(self.data)
-
-        num_batches = length // self.batch_size
-        if not self.drop_last_batch:
-            num_batches += length % self.batch_size != 0
-
-        for i in range(num_batches):
-            res = self.data[i * self.batch_size : (i + 1) * self.batch_size]
-            if self.skip_none_p and res is None:
-                continue
-            
-            yield res
-
-    def __len__(self):
-        length = len(self.data)
-        num_batches = length // self.batch_size
-        if not self.drop_last_batch:
-            num_batches += length % self.batch_size != 0
-        return num_batches
 
 
 ##
