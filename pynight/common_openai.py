@@ -361,7 +361,6 @@ def openai_chat_complete(
 
         messages = messages_processed
 
-
     if trim_p:
         system_message = clean_message(system_message)
 

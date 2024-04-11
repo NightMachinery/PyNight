@@ -40,19 +40,19 @@ def semantic_scholar_paper_id_get(url):
         r"(?i)semanticscholar.org/arxiv:([^/]+?)/*$",
         r"(?i)^https://scholar.google.com/.*&arxiv_id=([^/&]+)/*$",
         r"^https://(?:www\.)?doi\.org(?:.*)/arXiv\.([^/]+)",
-        r".*/(\d+\.\d+)\.pdf$"
+        r".*/(\d+\.\d+)\.pdf$",
     ]
 
     # ACL patterns
     acl_patterns = [
         r"^https://(?:www\.)?aclanthology\.org/([^/]*)",
-        r"^https://(?:www\.)?aclweb\.org/anthology/(?:.*/)?([^/]+)"
+        r"^https://(?:www\.)?aclweb\.org/anthology/(?:.*/)?([^/]+)",
     ]
 
     # General Semantic Scholar patterns
     general_patterns = [
         r"^https://api.semanticscholar.org/([^?]+)$",
-        r"^https://www.semanticscholar.org/paper/(?:(?:[^/]+)/)?([^/]{40})(?:/)?$"
+        r"^https://www.semanticscholar.org/paper/(?:(?:[^/]+)/)?([^/]{40})(?:/)?$",
     ]
 
     # Processing arXiv patterns
@@ -66,7 +66,7 @@ def semantic_scholar_paper_id_get(url):
         match = re.search(pattern, url)
         if match:
             # Remove the '.pdf' suffix if it exists
-            paper_id = re.sub(r'\.pdf$', '', match.group(1))
+            paper_id = re.sub(r"\.pdf$", "", match.group(1))
             return "ACL:" + paper_id
 
     # Processing general patterns
@@ -119,7 +119,9 @@ def ss_api_get(paper_id):
 
 def ss_augment(paper_info):
     ##
-    paper_info['publicationDate'] = paper_info.get('publicationDate', None) or paper_info.get('year', '')
+    paper_info["publicationDate"] = paper_info.get(
+        "publicationDate", None
+    ) or paper_info.get("year", "")
     ##
     current_date = datetime.datetime.now()
     year_month = current_date.strftime("%y %b")
@@ -178,10 +180,12 @@ def ss_flatten(data):
         flattened_data["author_url"] = first_author.get("url", None)
         flattened_data["author_external_ids"] = first_author.get("externalIds", None)
 
-    return vars(simple_obj(
-        _drop_nones=True,
-        **flattened_data,
-    ))
+    return vars(
+        simple_obj(
+            _drop_nones=True,
+            **flattened_data,
+        )
+    )
 
 
 def dict_flatten_json(data):

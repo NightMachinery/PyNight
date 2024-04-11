@@ -7,6 +7,7 @@ from importlib.metadata import distribution
 from pynight.common_dict import simple_obj
 from icecream import ic
 
+
 ##
 def package_commit_get(
     package_name: str,
@@ -47,7 +48,10 @@ def package_commit_get(
                 )
             )
             if not dist_info_paths:
-                package_dir = os.path.join(site_packages_path, package_name,)
+                package_dir = os.path.join(
+                    site_packages_path,
+                    package_name,
+                )
                 if not os.path.exists(os.path.join(package_dir, "__init__.py")):
                     raise Exception(
                         f"Neither .pth file nor direct_url.json file nor __init__.py file found for the package: {package_name}"
@@ -99,4 +103,6 @@ def packages_commit_get(packages, **kwargs):
             pass
 
     return output
+
+
 ##

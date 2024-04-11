@@ -35,6 +35,7 @@ lock_key_executors = defaultdict(
 )
 thread_pool = concurrent.futures.ThreadPoolExecutor(max(os.cpu_count(), 5))
 
+
 class AtomicCounter:
     def __init__(self):
         self.value = 0
@@ -45,7 +46,9 @@ class AtomicCounter:
             self.value += 1
             return self.value
 
+
 global_order_index = AtomicCounter()
+
 
 def send(
     *args,
@@ -57,7 +60,9 @@ def send(
     if wait_p:
         return _send(*args, wait_p=wait_p, order_index=order_index, **kwargs)
     else:
-        return thread_pool.submit(_send, *args, wait_p=wait_p, order_index=order_index, **kwargs)
+        return thread_pool.submit(
+            _send, *args, wait_p=wait_p, order_index=order_index, **kwargs
+        )
 
 
 def _send(
@@ -100,7 +105,11 @@ def _send(
     if autobatch:
         #: Time taken by concurrent.futures.thread.ThreadPoolExecutor.submit: 4.57763671875e-05 seconds
         return thread_pool.submit(
-            send_autobatch, file_paths=file_paths, order_index=order_index, chat_id=chat_id, msg=msg
+            send_autobatch,
+            file_paths=file_paths,
+            order_index=order_index,
+            chat_id=chat_id,
+            msg=msg,
         )
 
     cmd = [
@@ -216,12 +225,11 @@ def batch_sender(msg, chat_id, wait_ms=None):
 
             order_indices = [f[0] for f in files]
             files.sort(
-                key=(lambda tup: tup[0]), #: order_index
-            ) #: inplace, stable
+                key=(lambda tup: tup[0]),  #: order_index
+            )  #: inplace, stable
             #: I have checked, this sorting is absolutely needed.
 
-            files = [f[1] for f in files] #: getting the paths
-
+            files = [f[1] for f in files]  #: getting the paths
 
             # if True:
             if False:

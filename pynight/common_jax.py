@@ -19,6 +19,7 @@ from pynight.common_dict import (
 
 from pynight.common_iterable import IndexableList
 
+
 ##
 def indexablelist_flatten(indexable_list):
     # The constituent data of the IndexableList is just its elements.

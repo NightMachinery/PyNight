@@ -156,7 +156,15 @@ def sanitize_filename(some_str):
 
 ##
 class open_file:
-    def __init__(self, file_path, mode="r", *, mkdir_p=True, exists=None, **kwargs,):
+    def __init__(
+        self,
+        file_path,
+        mode="r",
+        *,
+        mkdir_p=True,
+        exists=None,
+        **kwargs,
+    ):
         self.file_path = file_path
         self.mode = mode
         self.exists = exists
@@ -181,7 +189,11 @@ class open_file:
         if self.mkdir_p:
             mkdir(self.file_path, do_dirname=True)
 
-        self.file = open(self.file_path, self.mode, **self.kwargs,)
+        self.file = open(
+            self.file_path,
+            self.mode,
+            **self.kwargs,
+        )
         return self.file
 
     def __exit__(self, exc_type, exc_value, traceback):

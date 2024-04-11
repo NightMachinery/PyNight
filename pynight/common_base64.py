@@ -13,7 +13,7 @@ def base64_encode_file(file_path):
 def convert_to_jpeg_and_base64_encode(file_path, url_p=True):
     if os.path.exists(file_path):
         with Image.open(file_path) as img:
-            if img.format.lower() not in  ["jpg", "jpeg"]:
+            if img.format.lower() not in ["jpg", "jpeg"]:
                 #: I don't know if =format= is normalized first or not, so I took the safest approach above.
 
                 rgb_im = img.convert(

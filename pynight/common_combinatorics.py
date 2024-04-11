@@ -3,6 +3,7 @@ import numpy
 
 np = numpy
 
+
 ##
 def partition_int_into_fixed_gen(n, boxes, min=1):
     "Partitions the integer 'n' into 'boxes' boxes, each box having at least 'min' elements. Order matters. Returns a generator."

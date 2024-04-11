@@ -12,6 +12,7 @@ from pynight.async_url import (
     fetch_url,
 )
 
+
 ##
 def feed_update_check(url, key_prefix="", last_n=10):
     #: @duplicateCode/4134a31821d1a53fe62090f0649f0629
@@ -87,7 +88,6 @@ async def feed_update_async(url, redis_pool=None, key_prefix="", last_n=10):
 
     for entry in entries_to_check:
         key = entry.id if hasattr(entry, "id") else entry.link
-
 
         # Check if the item already exists in the Redis hash
         exists = await r.hexists(redis_hash_key, key)

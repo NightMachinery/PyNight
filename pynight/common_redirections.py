@@ -6,9 +6,7 @@ from contextlib import contextmanager
 def fileno(file_or_fd):
     fd = getattr(file_or_fd, "fileno", lambda: file_or_fd)()
     if not isinstance(fd, int):
-        raise ValueError(
-            "Expected a file (`.fileno()`) or a file descriptor"
-        )
+        raise ValueError("Expected a file (`.fileno()`) or a file descriptor")
     return fd
 
 
@@ -39,4 +37,6 @@ def fd_redirected(to=os.devnull, original=None, open_mode="wb"):
             # NOTE: dup2 makes original_fd inheritable unconditionally
             original.flush()
             os.dup2(copied.fileno(), original_fd)  # $ exec >&copied
+
+
 ##

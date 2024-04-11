@@ -9,7 +9,6 @@ def embed_unless_jupyter(
     *args1872782,
     locals_=None,
     **kwargs23828237,
-
 ):
     if jupyter_p():
         return
@@ -23,9 +22,7 @@ def embed_unless_jupyter(
     locals_["kwargs23828237"] = kwargs23828237
     locals_["IPython2882872827"] = IPython
 
-    return exec(
-        "IPython2882872827.embed(*args1872782, **kwargs23828237)", locals_
-    )
+    return exec("IPython2882872827.embed(*args1872782, **kwargs23828237)", locals_)
 
 
 ##
@@ -45,7 +42,7 @@ def embed_tty(
     locals_["kwargs23828237"] = kwargs23828237
     locals_["IPython2882872827"] = IPython
 
-    with open("/dev/tty", 'r+') as user_tty:
+    with open("/dev/tty", "r+") as user_tty:
         stdin_orig = sys.stdin
         stdout_orig = sys.stdout
         stderr_orig = sys.stderr

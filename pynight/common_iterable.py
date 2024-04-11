@@ -12,7 +12,9 @@ def merge_iterables(a, b):
     elif isinstance(a, torch.Tensor) and isinstance(b, torch.Tensor):
         return torch.cat((a, b), dim=0)
     else:
-        raise TypeError(f"Unsupported types for merging: '{type(a).__name__}' and '{type(b).__name__}'")
+        raise TypeError(
+            f"Unsupported types for merging: '{type(a).__name__}' and '{type(b).__name__}'"
+        )
 
 
 ##

@@ -147,7 +147,9 @@ def json_save_update(
                             f"{fn_name_current()}: Key '{key}' already exists in the JSON data. (Change 'update_mode' to ignore this error.)"
                         )
                     else:
-                        raise ValueError(f"{fn_name_current()}: Invalid update_mode: '{update_mode}'")
+                        raise ValueError(
+                            f"{fn_name_current()}: Invalid update_mode: '{update_mode}'"
+                        )
 
                 existing_data[key] = value
 

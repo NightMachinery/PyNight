@@ -3,6 +3,7 @@ from .common_telegram import log_tlg
 
 # from pydantic import BaseSettings
 from pydantic_settings import BaseSettings
+
 #: pip install pydantic-settings
 
 import traceback
@@ -22,9 +23,7 @@ def request_path_get(request: Request):
 
 ##
 class EndpointLoggingFilter1(logging.Filter):
-    def __init__(
-        self, *args, isDbg=False, logger=None, skip_paths=(), **kwargs
-    ):
+    def __init__(self, *args, isDbg=False, logger=None, skip_paths=(), **kwargs):
         self.isDbg = isDbg
         self.logger = logger
         self.skip_paths = skip_paths

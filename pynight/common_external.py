@@ -2,6 +2,7 @@ from brish import CmdResult
 import subprocess
 import os
 
+
 ##
 def html2org(html):
     cmd_array = [

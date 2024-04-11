@@ -106,6 +106,7 @@ def simple_obj_update(obj, *args, **kwargs):
     updated_obj = simple_obj(**d)
     return updated_obj
 
+
 ##
 class BatchedDict(dict):
     #: @assumes the first dimension of values is the batch dict.
@@ -155,7 +156,9 @@ class BatchedDict(dict):
         #: @untested
         ##
         if not isinstance(other, BatchedDict):
-            raise TypeError(f"Unsupported operand type for +: 'BatchedDict' and '{type(other).__name__}'")
+            raise TypeError(
+                f"Unsupported operand type for +: 'BatchedDict' and '{type(other).__name__}'"
+            )
 
         merged_dict = BatchedDict()
 

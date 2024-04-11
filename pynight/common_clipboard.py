@@ -3,7 +3,11 @@ import threading
 import time
 
 
-def clipboard_copy(obj, *, ignore_errors=True,):
+def clipboard_copy(
+    obj,
+    *,
+    ignore_errors=True,
+):
     try:
         return pyperclip.copy(obj)
     except:

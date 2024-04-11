@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors
 import numpy as np
 
-def colormap_get(cmap_name, start=0.0, end=1.0, name='viridis', reverse_p=False):
+
+def colormap_get(cmap_name, start=0.0, end=1.0, name="viridis", reverse_p=False):
     """
     Returns a new matplotlib colormap using a subset of an existing colormap
 

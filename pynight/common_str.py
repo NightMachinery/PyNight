@@ -4,7 +4,7 @@ import sys
 ##
 def print_to_file(*args, file=sys.stdout, **kwargs):
     if isinstance(file, str):
-        file_obj = open(file, 'a')
+        file_obj = open(file, "a")
     else:
         file_obj = file
 
@@ -13,6 +13,8 @@ def print_to_file(*args, file=sys.stdout, **kwargs):
     finally:
         if isinstance(file, str):
             file_obj.close()
+
+
 ##
 def try_float(value):
     try:
@@ -48,15 +50,15 @@ def whitespace_shared_rm(input_text):
         new_line = []
         start = None
         for i, char in enumerate(line):
-            if char == '\t':
-                new_line.append(' ' * 4)
+            if char == "\t":
+                new_line.append(" " * 4)
             else:
                 start = i
                 break
 
         if start is not None:
             new_line.extend(line[start:])
-        return ''.join(new_line)
+        return "".join(new_line)
 
     # Split the input text into lines
     lines = input_text.splitlines(keepends=True)
@@ -69,14 +71,19 @@ def whitespace_shared_rm(input_text):
     min_indent = None
     for line in lines:
         if line.strip():  # Skip empty lines
-            indent = len(line) - len(line.lstrip(' '))
+            indent = len(line) - len(line.lstrip(" "))
             if min_indent is None or indent < min_indent:
                 min_indent = indent
 
     # Remove minimum indentation from each line
     if min_indent is not None:
-        lines = [line[min_indent:] if line.startswith(' ' * min_indent) else line for line in lines]
+        lines = [
+            line[min_indent:] if line.startswith(" " * min_indent) else line
+            for line in lines
+        ]
 
     # Return the modified lines as a single string
-    return ''.join(lines)
+    return "".join(lines)
+
+
 ##

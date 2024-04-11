@@ -38,6 +38,8 @@ from pynight.common_dynamic import (
 
 dynamic_vars = dict()
 dynamic_obj = DynamicObject(dynamic_vars, default_to_none_p=True)
+
+
 ##
 def dataset_push_from_disk_to_hub(path, *args, **kwargs):
     """
@@ -72,11 +74,13 @@ def dataset_cache_filenames(dataset, cache_only_p=False, sort_p=True, **kwargs):
 
     return res
 
+
 ##
 class TransformResult(SimpleObject):
     """
     This class is interpreted specially by `TransformedDataset`; the transform's result will be `TransformResult.result`. This allows the transform to return extra metadata.
     """
+
     pass
 
 
@@ -85,7 +89,7 @@ def transform_result_postprocess(data):
         data = data.result
 
     if isinstance(data, Mapping):
-    # if isinstance(data, dict):
+        # if isinstance(data, dict):
         #: This copies the dict, which can be time consuming when done in a hot loop.
         data = BatchedDict(data)
     elif isinstance(data, list):
@@ -97,7 +101,7 @@ def transform_result_postprocess(data):
 ##
 @dataclass()
 class TransformedDataset:
-    dataset: datasets.Dataset #: or dict
+    dataset: datasets.Dataset  #: or dict
     transforms: List[Callable]
 
     def __init__(self, dataset: datasets.Dataset, transforms: List[Callable] = None):
@@ -132,8 +136,14 @@ class TransformedDataset:
                 dataset_new = self.dataset[indices]
             except:
                 ic(
-                    torch_shape_get(self.dataset, type_only_p=True,),
-                    torch_shape_get(indices, type_only_p=True,)
+                    torch_shape_get(
+                        self.dataset,
+                        type_only_p=True,
+                    ),
+                    torch_shape_get(
+                        indices,
+                        type_only_p=True,
+                    ),
                 )
 
                 raise
@@ -152,7 +162,6 @@ class TransformedDataset:
             return new_batch
 
         return self.transform(h_transform_columns)
-
 
     def __getitem__(self, *args, **kwargs):
         time_p = dynamic_obj.transformed_dataset_time_p
@@ -191,7 +200,9 @@ class TransformedDataset:
 
                     try:
                         batch_transformed = transform(batch_transformed)
-                        batch_transformed = transform_result_postprocess(batch_transformed)
+                        batch_transformed = transform_result_postprocess(
+                            batch_transformed
+                        )
                     except:
                         ic(
                             torch_shape_get(batch_transformed, type_only_p=True),

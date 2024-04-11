@@ -90,10 +90,13 @@ def patch_info_from_name(
         ##
 
         model_size_pattern = None
-        if any(re.search(pat, model_name) for pat in [
+        if any(
+            re.search(pat, model_name)
+            for pat in [
                 "^vit_",
                 "^eva(?:02)?_",
-        ]):
+            ]
+        ):
             #: `eva02_tiny_patch14_336.mim_in22k_ft_in1k`
             ##
             patch_pattern = r"patch(\d+)"
