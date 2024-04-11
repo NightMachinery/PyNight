@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from collections.abc import Mapping
+from collections import defaultdict
 from typing import List, Union, Any, Dict
 import uuid
 from pynight.common_iterable import (
@@ -7,6 +8,11 @@ from pynight.common_iterable import (
     list_of_dict_to_dict_of_list,
     merge_iterables,
 )
+
+
+##
+def defaultdict_defaultdict():
+    return defaultdict(defaultdict_defaultdict)
 
 
 ##
