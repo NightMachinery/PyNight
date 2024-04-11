@@ -130,10 +130,11 @@ def to_iterable(possibly_iterable):
 
 ##
 class BatchedIterable:
-    def __init__(self, data, batch_size, drop_last_batch=False):
+    def __init__(self, data, batch_size, drop_last_batch=False, skip_none_p=True,):
         self.data = data
         self.batch_size = batch_size
         self.drop_last_batch = drop_last_batch
+        self.skip_none_p = skip_none_p
 
     def __iter__(self):
         length = len(self.data)
@@ -143,7 +144,11 @@ class BatchedIterable:
             num_batches += length % self.batch_size != 0
 
         for i in range(num_batches):
-            yield self.data[i * self.batch_size : (i + 1) * self.batch_size]
+            res = self.data[i * self.batch_size : (i + 1) * self.batch_size]
+            if self.skip_none_p and res is None:
+                continue
+            
+            yield res
 
     def __len__(self):
         length = len(self.data)

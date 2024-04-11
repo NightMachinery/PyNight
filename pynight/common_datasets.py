@@ -103,7 +103,10 @@ class TransformedDataset:
         self.transforms = transforms if transforms is not None else []
 
     def preview(self, batch_size=2, type_only_p=True, **kwargs):
-        return torch_shape_get(self[:batch_size], type_only_p=type_only_p)
+        #: @duplicateCode/9558720ef0b22b46b31c3c6ef083fd1c
+        ##
+        res = next(iter(self.batched_iterator(batch_size)))
+        return torch_shape_get(res, type_only_p=type_only_p)
 
     def transform(self, new_transform: Callable):
         new_transforms = self.transforms.copy()
@@ -226,9 +229,10 @@ class ConcatenatedTransformedDataset:
         return ds
 
     def preview(self, batch_size=2, type_only_p=True, **kwargs):
-        #: @duplicateCode
+        #: @duplicateCode/9558720ef0b22b46b31c3c6ef083fd1c
         ##
-        return torch_shape_get(self[:batch_size], type_only_p=type_only_p)
+        res = next(iter(self.batched_iterator(batch_size)))
+        return torch_shape_get(res, type_only_p=type_only_p)
 
     def call_recursive(self, name, *args, **kwargs):
         datasets_new = [getattr(ds, name)(*args, **kwargs) for ds in self.datasets]
