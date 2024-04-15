@@ -184,8 +184,10 @@ class TransformedDataset:
     def __len__(self):
         return len(self.dataset)
 
-    def batched_iterator(self, batch_size, drop_last_batch=False):
-        iterable = BatchedIterable(self, batch_size, drop_last_batch)
+    def batched_iterator(self, *args, **kwargs):
+        #: @duplicateCode/ab27abbdf0c841baf5f9a3b72017e337
+        ##
+        iterable = BatchedIterable(self, *args, **kwargs)
         return iterable
 
     def fn_with_transforms(self, fn, time_p=False):
@@ -267,8 +269,10 @@ class ConcatenatedTransformedDataset:
     def __len__(self):
         return min(len(ds) for ds in self.datasets)
 
-    def batched_iterator(self, batch_size, drop_last_batch=False):
-        iterable = BatchedIterable(self, batch_size, drop_last_batch)
+    def batched_iterator(self, *args, **kwargs):
+        #: @duplicateCode/ab27abbdf0c841baf5f9a3b72017e337
+        ##
+        iterable = BatchedIterable(self, *args, **kwargs)
         return iterable
 
     def fn_with_transforms(self, fn):

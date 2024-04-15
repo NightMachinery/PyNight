@@ -14,7 +14,8 @@ class BatchedIterable:
         batch_size,
         drop_last_batch=False,
         skip_none_p=True,
-        autoadjust_batch_size_mode=True,
+        autoadjust_batch_size_mode=False,
+        # autoadjust_batch_size_mode=True,
     ):
         self.data = data
         self.batch_size = batch_size
@@ -29,26 +30,31 @@ class BatchedIterable:
         i = 0
 
         while i < length or len(self.extras) >= self.batch_size:
-            ic(type(self.extras))
+            # ic(type(self.extras))
 
             if len(self.extras) >= self.batch_size:
-                # Yield a batch from extras
+                #: Yield a batch from extras
                 res = self.extras[: self.batch_size]
                 self.extras = self.extras[self.batch_size :]
                 yield res
                 continue
 
-            res = self.data[i : i + self.batch_size]
-            ic(type(res))
+            advance_by = self.batch_size - len(self.extras)
+            res = self.data[i : i + advance_by]
+            # ic(type(res))
+            # ic(len(res), advance_by, len(self.extras))
 
-            i += self.batch_size
+            i += advance_by
 
             if self.skip_none_p and res is None:
                 continue
 
             if self.autoadjust_batch_size_mode:
                 res_size = len(res)
-                if res_size < self.batch_size:
+                if res_size < self.batch_size and self.autoadjust_batch_size_mode in [
+                    True,
+                    "grow",
+                ]:
                     #: Merge with extras
                     if len(self.extras) >= 1:
                         res = self.extras + res
@@ -59,7 +65,10 @@ class BatchedIterable:
                     else:
                         self.extras = res
                         continue
-                elif res_size > self.batch_size:
+                elif res_size > self.batch_size and self.autoadjust_batch_size_mode in [
+                    True,
+                    "shrink",
+                ]:
                     #: Keep extras for the next batch
                     if len(self.extras) >= 1:
                         self.extras += res[self.batch_size :]
@@ -68,6 +77,13 @@ class BatchedIterable:
 
                     res = res[: self.batch_size]
 
+                #: This assertion should be true, you can enable it for debugging:
+                # if self.autoadjust_batch_size_mode is True:
+                #     assert (
+                #         len(res) == self.batch_size
+                #     ), f"autoadjust_batch_size_mode has not adjusted the size: len={len(res)}, should_be={self.batch_size}"
+
+            # ic(len(res), self.batch_size, self.autoadjust_batch_size_mode)
             yield res
 
         if not self.drop_last_batch and len(self.extras) > 0:
