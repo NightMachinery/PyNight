@@ -117,19 +117,31 @@ def json_save_update(
     obj,
     *,
     file,
-    update_mode="force",
+    update_mode="update",
     **kwargs,
 ):
     kwargs["exists"] = "ignore"
 
     # Check if the file exists
     if isinstance(file, str) and os.path.exists(file):
-        # Load the existing JSON data
-        with open(file, "r", encoding="utf-8") as f:
-            existing_data = json.load(f)
+        if update_mode in [
+            "update",
+            "skip",
+            "warn",
+            "error",
+        ]:
+            with open(file, "r", encoding="utf-8") as f:
+                existing_data = json.load(f)
 
-        # Update the existing JSON data with the new object
-        if update_mode == "force":
+        if update_mode == "file_exists_error":
+            raise ValueError(
+                f"{fn_name_current()}: File '{file}' already exists. (Change 'update_mode' to ignore this error.)"
+            )
+
+        elif update_mode == "overwrite":
+            existing_data = obj
+
+        elif update_mode == "update":
             existing_data.update(obj)
 
         else:
