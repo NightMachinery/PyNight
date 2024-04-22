@@ -276,6 +276,59 @@ def writegpt_process(messages_lst):
     return out
 
 
+START_SYMBOL = "/❂\\"
+
+
+def select_backend(model_orig):
+    model_orig_normalized = model_orig.lower()
+
+    if model_orig_normalized.startswith("or:"):
+        backend = "OpenRouter"
+        model = model_orig_normalized[3:]
+    elif "claude" in model_orig_normalized:
+        backend = "Anthropic"
+        model = model_orig_normalized
+    else:
+        backend = "OpenAI"
+        if model_orig_normalized in (
+            "gpt-4-turbo-auto-vision",
+            "gpt-4-turbo",
+            "4t",
+        ):
+            model = "gpt-4-turbo"
+        else:
+            model = model_orig_normalized
+
+    return backend, model
+
+
+def get_client(backend):
+    if backend == "OpenAI":
+        return openai_client
+    elif backend == "OpenRouter":
+        return openrouter_client
+    elif backend == "Anthropic":
+        return anthropic_client
+    else:
+        raise ValueError(f"Unsupported backend: {backend}")
+
+
+def handle_ratelimit():
+    print(
+        "Ratelimit encountered, sleeping ...",
+        file=sys.stderr,
+        flush=True,
+    )
+    time.sleep(10)  #: in seconds
+
+
+def clean_message(msg):
+    if msg:
+        msg = whitespace_shared_rm(msg)
+        msg = msg.strip()
+    return msg
+
+
 def openai_chat_complete(
     *args,
     model="gpt-3.5-turbo",
@@ -284,47 +337,15 @@ def openai_chat_complete(
     interactive=False,
     copy_last_message=None,
     trim_p=True,
-    # backend="OpenAI",
     backend="auto",
     system_repeat_mode="concat",
     **kwargs,
 ):
-    print("/❂\\")  #: to detect dead kernels
+    print(START_SYMBOL)  #: to detect dead kernels
     #: The above marker needs to be excluded in [help:night/org-babel-result-get].
 
     model_orig = model
-    model_orig_normalized = model_orig.lower()
-
-    if backend == "auto":
-        # ic(model_orig_normalized)
-
-        if model_orig_normalized.startswith("or:"):
-            backend = "OpenRouter"
-
-            model = model_orig_normalized[3:]
-
-        elif "claude" in model_orig_normalized:
-            backend = "Anthropic"
-
-        else:
-            backend = "OpenAI"
-
-    if model_orig in (
-        "gpt-4-turbo-auto-vision",
-        "gpt-4-turbo",
-        "4t",
-    ):
-        # model = "gpt-4-1106-preview"
-        # model = "gpt-4-0125-preview"
-        # model = "gpt-4-turbo-preview"
-        model = "gpt-4-turbo"
-
-    def clean_message(msg):
-        if msg:
-            msg = whitespace_shared_rm(msg)
-            msg = msg.strip()
-
-        return msg
+    backend, model = select_backend(model_orig)
 
     if interactive:
         if copy_last_message is None:
@@ -344,6 +365,7 @@ def openai_chat_complete(
                         if msg["type"] == "text":
                             if trim_p:
                                 msg["text"] = clean_message(msg["text"])
+
                         elif msg["type"] == "image_url":
                             if model_orig in ["gpt-4-turbo-auto-vision"]:
                                 # model = "gpt-4-vision-preview"
@@ -375,10 +397,7 @@ def openai_chat_complete(
                     clipboard_copy(last_message)
 
             if backend in ["OpenAI", "OpenRouter"]:
-                if backend == "OpenAI":
-                    client = openai_client
-                elif backend == "OpenRouter":
-                    client = openrouter_client
+                client = get_client(backend)
 
                 try:
                     response = client.chat.completions.create(
@@ -391,12 +410,7 @@ def openai_chat_complete(
                     return response
 
                 except openai.RateLimitError:
-                    print(
-                        "OpenAI ratelimit encountered, sleeping ...",
-                        file=sys.stderr,
-                        flush=True,
-                    )
-                    time.sleep(10)  #: in seconds
+                    handle_ratelimit()
 
             elif backend == "Anthropic":
                 import anthropic
@@ -425,6 +439,53 @@ def openai_chat_complete(
                     stream=stream,
                     **kwargs,
                 )
+            else:
+                raise ValueError(f"Unsupported backend: {backend}")
+    finally:
+        pass
+
+
+def openai_text_complete(
+    *args,
+    model="text-davinci-003",
+    prompt=None,
+    stream=True,
+    echo=False,  #: Echo back the prompt in addition to the completion
+    max_tokens=100,
+    backend="auto",
+    trim_p=True,
+    **kwargs,
+):
+    print(START_SYMBOL)  #: to detect dead kernels
+    #: The above marker needs to be excluded in [help:night/org-babel-result-get].
+
+    model_orig = model
+    backend, model = select_backend(model_orig)
+
+    if trim_p:
+        prompt = clean_message(prompt)
+
+    try:
+        while True:
+            if backend in ["OpenAI", "OpenRouter"]:
+                client = get_client(backend)
+
+                try:
+                    response = client.completions.create(
+                        *args,
+                        model=model,
+                        prompt=prompt,
+                        stream=stream,
+                        echo=echo,
+                        max_tokens=max_tokens,
+                        **kwargs,
+                    )
+                    return response
+
+                except openai.RateLimitError:
+                    handle_ratelimit()
+            else:
+                raise ValueError(f"Unsupported backend: {backend}")
     finally:
         pass
 
