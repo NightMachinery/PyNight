@@ -31,7 +31,7 @@ class tqdm_telegram(tqdm_auto):
         leave_telegram=True,
         mininterval=1.0,
         ascii=True,
-        **kwargs
+        **kwargs,
     ):
         """
         Parameters
@@ -69,21 +69,25 @@ class tqdm_telegram(tqdm_auto):
 
         super(tqdm_telegram, self).__init__(*args, **kwargs)
 
+    def _formatted_meter_get(self):
+        fmt = self.format_dict
+        if fmt.get("bar_format", None):
+            fmt["bar_format"] = (
+                fmt["bar_format"]
+                .replace("<bar/>", "{bar:10u}")
+                .replace("{bar}", "{bar:10u}")
+            )
+        else:
+            fmt["bar_format"] = "{l_bar}{bar:10u}{r_bar}"
+
+        return self.format_meter(**fmt)
+
     def display(self, **kwargs):
         if self.super_enabled_p:
             super(tqdm_telegram, self).display(**kwargs)
 
         if self.tlg_enabled_p:
-            fmt = self.format_dict
-            if fmt.get("bar_format", None):
-                fmt["bar_format"] = (
-                    fmt["bar_format"]
-                    .replace("<bar/>", "{bar:10u}")
-                    .replace("{bar}", "{bar:10u}")
-                )
-            else:
-                fmt["bar_format"] = "{l_bar}{bar:10u}{r_bar}"
-            self.tgio.write(self.format_meter(**fmt))
+            self.tgio.write(self._formatted_meter_get())
 
     def clear(self, *args, **kwargs):
         super(tqdm_telegram, self).clear(*args, **kwargs)
@@ -98,8 +102,11 @@ class tqdm_telegram(tqdm_auto):
 
         super(tqdm_telegram, self).close()
 
-        if self.tlg_enabled_p and not self.leave_telegram:
-            self.tgio.delete()
+        if self.tlg_enabled_p:
+            if not self.leave_telegram:
+                self.tgio.delete()
+            else:
+                self.tgio.write(f"TERMINATED! {self._formatted_meter_get()}")
 
 
 def ttgrange(*args, **kwargs):
