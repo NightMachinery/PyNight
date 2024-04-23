@@ -285,6 +285,11 @@ def select_backend(model_orig):
     if model_orig_normalized.startswith("or:"):
         backend = "OpenRouter"
         model = model_orig_normalized[3:]
+
+    elif model_orig_normalized.startswith("gq:"):
+        backend = "Groq"
+        model = model_orig_normalized[3:]
+
     elif "claude" in model_orig_normalized:
         backend = "Anthropic"
         model = model_orig_normalized
@@ -305,9 +310,22 @@ def select_backend(model_orig):
 def get_client(backend):
     if backend == "OpenAI":
         return openai_client
+
     elif backend == "OpenRouter":
         return openrouter_client
+
+    elif backend == "Groq":
+        from pynight.common_groq import (
+            groq_client,
+        )
+
+        return groq_client
+
     elif backend == "Anthropic":
+        from pynight.common_anthropic import (
+            anthropic_client,
+        )
+
         return anthropic_client
     else:
         raise ValueError(f"Unsupported backend: {backend}")
@@ -396,7 +414,11 @@ def openai_chat_complete(
                 if isinstance(last_message, str):
                     clipboard_copy(last_message)
 
-            if backend in ["OpenAI", "OpenRouter"]:
+            if backend in [
+                "OpenAI",
+                "OpenRouter",
+                "Groq",
+            ]:
                 client = get_client(backend)
 
                 try:
@@ -413,10 +435,7 @@ def openai_chat_complete(
                     handle_ratelimit()
 
             elif backend == "Anthropic":
-                import anthropic
-                from pynight.common_anthropic import (
-                    anthropic_client,
-                )
+                client = get_client(backend)
 
                 if system_message:
                     if system_repeat_mode == "error":
@@ -432,7 +451,7 @@ def openai_chat_complete(
 
                     kwargs["system"] = system_message
 
-                return anthropic_client.messages.create(
+                return client.messages.create(
                     *args,
                     model=model,
                     messages=messages,
