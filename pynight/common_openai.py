@@ -279,6 +279,15 @@ def writegpt_process(messages_lst):
 START_SYMBOL = "/❂\\"
 
 
+openai_compatible_backends = [
+    "OpenAI",
+    "OpenRouter",
+    "Groq",
+    "DeepSeek",
+    "Together",
+]
+
+
 def select_backend(model_orig):
     model_orig_normalized = model_orig.lower()
 
@@ -289,6 +298,14 @@ def select_backend(model_orig):
     elif model_orig_normalized.startswith("gq:"):
         backend = "Groq"
         model = model_orig_normalized[3:]
+
+    elif model_orig_normalized.startswith("tg:"):
+        backend = "Together"
+        model = model_orig_normalized[3:]
+
+    elif "deepseek" in model_orig_normalized:
+        backend = "DeepSeek"
+        model = model_orig_normalized
 
     elif "claude" in model_orig_normalized:
         backend = "Anthropic"
@@ -320,6 +337,20 @@ def get_client(backend):
         )
 
         return groq_client
+
+    elif backend == "DeepSeek":
+        from pynight.common_deepseek import (
+            deepseek_client,
+        )
+
+        return deepseek_client
+
+    elif backend == "Together":
+        from pynight.common_together import (
+            together_client,
+        )
+
+        return together_client
 
     elif backend == "Anthropic":
         from pynight.common_anthropic import (
@@ -414,11 +445,7 @@ def openai_chat_complete(
                 if isinstance(last_message, str):
                     clipboard_copy(last_message)
 
-            if backend in [
-                "OpenAI",
-                "OpenRouter",
-                "Groq",
-            ]:
+            if backend in openai_compatible_backends:
                 client = get_client(backend)
 
                 try:
@@ -486,7 +513,7 @@ def openai_text_complete(
 
     try:
         while True:
-            if backend in ["OpenAI", "OpenRouter"]:
+            if backend in openai_compatible_backends:
                 client = get_client(backend)
 
                 try:
