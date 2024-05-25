@@ -949,3 +949,8 @@ def quantile_sum(
 
 
 ##
+def swap_backward(forward, backward):
+    return forward.detach() + (backward - backward.detach())
+
+
+##
