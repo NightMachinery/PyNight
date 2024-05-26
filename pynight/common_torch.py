@@ -954,3 +954,54 @@ def swap_backward(forward, backward):
 
 
 ##
+def flatten_and_move_to_last(tensor, dim):
+    #: @test
+    # tensor = torch.randn(2, 3, 4, 5)
+    # dims = [1, 2]
+    # result = flatten_and_move_to_last(tensor, dims)
+    # print(result.shape)  # Should print torch.Size([2, 5, 12])
+    ##
+    dims = dim
+
+    shape = list(tensor.shape)
+    # ic(shape, dim)
+
+    len_shape = len(shape)
+
+    dims_tmp = []
+    for dim in dims:
+        if dim < 0:
+            dim += len_shape
+
+        dims_tmp.append(dim)
+
+    dims = dims_tmp
+
+    #: Ensure dim is a list of unique dimensions
+    dims = sorted(set(dims))
+
+    #: Permute the dimensions to move the specified dims to the end
+    permute_order = [i for i in range(len_shape) if i not in dims] + dims
+    # ic(permute_order, dims)
+
+    #: Permute the tensor
+    permuted_tensor = tensor.permute(permute_order)
+
+
+    #: Calculate the new shape after flattening the specified dimensions
+    flattened_dim_size = 1
+    for dim in dims:
+        flattened_dim_size *= shape[dim]
+
+    # Create the new shape
+    new_shape = [shape[i] for i in range(len(shape)) if i not in dims]
+    new_shape.append(flattened_dim_size)
+
+    # Reshape the permuted tensor to the new shape
+    reshaped_tensor = permuted_tensor.reshape(new_shape)
+
+    # ic(shape, dims, permute_order, new_shape)
+
+    return reshaped_tensor
+
+##
