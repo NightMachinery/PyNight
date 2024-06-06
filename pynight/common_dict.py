@@ -259,3 +259,8 @@ def concatenate_batches(batches: List[Dict]) -> Dict:
 
 
 ##
+def dict_filter_out(some_dict, exclude_keys):
+    return {k: v for k, v in some_dict.items() if k not in exclude_keys}
+
+dict_rm = dict_filter_out
+##
