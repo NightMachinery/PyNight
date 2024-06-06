@@ -8,7 +8,7 @@ import itertools
 ##
 def merge_iterables(a, b):
     import torch
-    
+
     if isinstance(a, list) and isinstance(b, list):
         return a + b
     elif isinstance(a, torch.Tensor) and isinstance(b, torch.Tensor):
@@ -27,6 +27,10 @@ def iterable_chunk(lst, n):
 
 
 ##
+def list_get(lst, index, default=None):
+    return lst[index] if len(lst) > index else default
+
+
 def get_or_none(lst, n):
     try:
         return lst[n]
