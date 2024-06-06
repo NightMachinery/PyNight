@@ -1,4 +1,5 @@
 from contextvars import ContextVar
+from collections.abc import MutableMapping
 from pynight.common_icecream import ic
 import functools
 
@@ -83,7 +84,14 @@ def dynamic_get(dynamic_dict, var_name, default="MAGIC_THROW_EXCEPTION_13369831"
             return default
 
 
-class DynamicObject:
+def dynamic_to_static_copy(dynamic_dict):
+    if dynamic_object_p(dynamic_dict):
+        dynamic_dict = dynamic_dict._dynamic_dict
+
+    return {var_name: dynamic_get(dynamic_dict, var_name) for var_name in dynamic_dict}
+
+
+class DynamicObject(MutableMapping):
     """
     A class for managing dynamic variables.
 
@@ -208,6 +216,28 @@ class DynamicObject:
             raise AttributeError("_dynamic_dict is a private variable of DynamicObject")
         else:
             dynamic_set(self._dynamic_dict, name, value)
+
+    def __dir__(self):
+        return list(self._dynamic_dict.keys())  # + super().__dir__()
+
+    def __repr__(self):
+        return f"DynamicObject{self.static_copy()}"
+
+    def __str__(self):
+        return repr(self)
+
+    def __iter__(self):
+        for key in self._dynamic_dict:
+            yield key
+
+    def __delitem__(self, name):
+        del self._dynamic_dict[name]
+
+    def __len__(self):
+        return len(self._dynamic_dict)
+
+    def static_copy(self):
+        return dynamic_to_static_copy(self._dynamic_dict)
 
 
 class DynamicVariables:
