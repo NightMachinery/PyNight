@@ -7,6 +7,11 @@ float_pattern_compiled = re.compile(float_pattern)
 
 
 ##
+def re_maybe(pattern_str):
+    return f"(?:{pattern_str})?"
+
+
+##
 def rget(input, pattern):
     m = re.compile(f".*?{pattern}.*").match(input)
     if m:
