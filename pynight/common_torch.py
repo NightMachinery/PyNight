@@ -194,6 +194,22 @@ def torch_gpu_memory_stats():
     print(f"gpu allocated: {allocated}\ngpu reserved: {reserved}")
 
 
+def gpu_memory_get(unit="GB"):
+    if unit.lower() == "gb":
+        unit_divide_by = 1024**3
+    if torch.cuda.is_available():
+        device = torch.cuda.current_device()
+
+        # Get the total memory of the current GPU in bytes
+        total_memory = torch.cuda.get_device_properties(device).total_memory
+
+        total_memory_unit = total_memory / unit_divide_by
+
+        return total_memory_unit
+    else:
+        return "CUDA is not available. Please check your installation."
+
+
 def torch_memory_tensor(tensor, s=3):
     #: s=3: gigabyte
     ##
@@ -986,7 +1002,6 @@ def flatten_and_move_to_last(tensor, dim):
 
     #: Permute the tensor
     permuted_tensor = tensor.permute(permute_order)
-
 
     #: Calculate the new shape after flattening the specified dimensions
     flattened_dim_size = 1
