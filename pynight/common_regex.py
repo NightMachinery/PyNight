@@ -22,4 +22,17 @@ def rget(input, pattern):
     return None
 
 
+def rget_percent(text, pattern):
+    number_str = rget(text, pattern)
+
+    if number_str:
+        number_float = float(number_str)
+
+        result = number_float / 100
+
+        return result
+    else:
+        return None
+
+
 ##
