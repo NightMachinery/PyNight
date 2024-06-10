@@ -1019,4 +1019,11 @@ def flatten_and_move_to_last(tensor, dim):
 
     return reshaped_tensor
 
+
+##
+def nan_to_0(tensor):
+    tensor[torch.isnan(tensor)] = 0
+    return tensor
+
+
 ##
