@@ -1027,3 +1027,19 @@ def nan_to_0(tensor):
 
 
 ##
+def get_compact_gbrand(
+    gradient_mode_brand="NG",
+    patchifier_gbrand=None,
+    linear_ds_gbrand=None,
+    mlp_ds_gbrand=None,
+    mlp_mul_gbrand=None,
+    softmax_mode="S0",
+):
+    if gradient_mode_brand in ["GlobALTI"]:
+        compact_gbrand = gradient_mode_brand
+    else:
+        compact_gbrand = f"""{gradient_mode_brand},h.{softmax_mode},p.{patchifier_gbrand or ""},lin_ds.{linear_ds_gbrand},mlp_ds.{mlp_ds_gbrand or ""},mlp_x.{mlp_mul_gbrand or ""}"""
+
+    return compact_gbrand
+
+##
