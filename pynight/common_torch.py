@@ -1037,6 +1037,26 @@ def get_compact_gbrand(
 ):
     if gradient_mode_brand in ["GlobALTI"]:
         compact_gbrand = gradient_mode_brand
+
+    elif True:
+        parts = [gradient_mode_brand or ""]
+        if softmax_mode and softmax_mode not in ["S0"]:
+            parts.append(f"h.{softmax_mode}")
+
+        if patchifier_gbrand:
+            parts.append(f"p.{patchifier_gbrand}")
+
+        if linear_ds_gbrand:
+            parts.append(f"lin_ds.{linear_ds_gbrand}")
+
+        if mlp_ds_gbrand:
+            parts.append(f"mlp_ds.{mlp_ds_gbrand}")
+
+        if mlp_mul_gbrand:
+            parts.append(f"mlp_x.{mlp_mul_gbrand}")
+
+        compact_gbrand = ",".join(parts)
+
     else:
         compact_gbrand = f"""{gradient_mode_brand or ""},h.{softmax_mode or ""},p.{patchifier_gbrand or ""},lin_ds.{linear_ds_gbrand or ""},mlp_ds.{mlp_ds_gbrand or ""},mlp_x.{mlp_mul_gbrand or ""}"""
 
