@@ -1031,6 +1031,7 @@ def get_compact_gbrand(
     gradient_mode_brand="NG",
     patchifier_gbrand=None,
     linear_ds_gbrand=None,
+    qkv_ds_gbrand=None,
     mlp_ds_gbrand=None,
     mlp_mul_gbrand=None,
     softmax_mode="S0",
@@ -1048,6 +1049,9 @@ def get_compact_gbrand(
 
         if linear_ds_gbrand:
             parts.append(f"lin_ds.{linear_ds_gbrand}")
+
+        if qkv_ds_gbrand:
+            parts.append(f"qkv_ds.{qkv_ds_gbrand}")
 
         if mlp_ds_gbrand:
             parts.append(f"mlp_ds.{mlp_ds_gbrand}")
