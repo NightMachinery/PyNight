@@ -54,7 +54,7 @@ def compute_aopc_lodds(
     aopc_means, lodds_means = [], []
 
     # Perform k-fold cross-validation
-    for train_index, test_index in kf.split(aopc, refs if stratified_p else None):
+    for train_index, test_index in kf.split(aopc, refs):
         aopc_fold = aopc[test_index]
         lodds_fold = lodds[test_index]
 
@@ -129,7 +129,7 @@ def cls_metrics_get(
     results = {metric: [] for metric in metrics}
 
     # Perform k-fold cross-validation
-    for _, test_index in kf.split(preds, refs if stratified_p else None):
+    for _, test_index in kf.split(preds, refs):
         refs_fold = refs[test_index]
         preds_fold = preds[test_index]
 
