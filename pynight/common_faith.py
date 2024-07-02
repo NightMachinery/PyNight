@@ -8,6 +8,7 @@ from sklearn.model_selection import (
     StratifiedKFold,
 )
 from sklearn.metrics import (
+    accuracy_score,
     precision_score,
     recall_score,
     f1_score,
@@ -20,15 +21,17 @@ def compute_aopc_lodds(
     orig_probs,
     predicted_probs,
     kfold=10,
+    stratified_p=False,
 ):
     """
-    Compute AOPC and LOdds using stratified k-fold cross-validation.
+    Compute AOPC and LOdds using k-fold cross-validation.
 
     Parameters:
     refs (list or array): Reference labels for stratification
     orig_probs (torch.Tensor): Original probabilities (batch_size,)
     predicted_probs (torch.Tensor): Predicted probabilities (batch_size,)
     kfold (int): Number of folds for cross-validation (default: 10)
+    stratified_p (bool): Whether to use stratified k-fold (default: False)
 
     Returns:
     dict: Dictionary containing means and variances for AOPC and LOdds
@@ -41,15 +44,17 @@ def compute_aopc_lodds(
     aopc = orig_probs - predicted_probs
     lodds = torch.log(orig_probs) - torch.log(predicted_probs)
 
-    # Initialize StratifiedKFold
-    skf = StratifiedKFold(n_splits=kfold, shuffle=True, random_state=42)
-    # https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
+    # Initialize KFold or StratifiedKFold
+    if stratified_p:
+        kf = StratifiedKFold(n_splits=kfold, shuffle=True, random_state=42)
+    else:
+        kf = KFold(n_splits=kfold, shuffle=True, random_state=42)
 
     # Lists to store fold results
     aopc_means, lodds_means = [], []
 
-    # Perform stratified k-fold cross-validation
-    for train_index, test_index in skf.split(aopc, refs):
+    # Perform k-fold cross-validation
+    for train_index, test_index in kf.split(aopc, refs if stratified_p else None):
         aopc_fold = aopc[test_index]
         lodds_fold = lodds[test_index]
 
@@ -83,9 +88,10 @@ def cls_metrics_get(
     preds,
     metrics=None,
     kfold=10,
+    stratified_p=False,
 ):
     """
-    Compute multiple metrics using stratified k-fold cross-validation.
+    Compute multiple metrics using k-fold cross-validation.
     Works with both numpy arrays and PyTorch tensors.
 
     Parameters:
@@ -93,6 +99,7 @@ def cls_metrics_get(
     preds (list, array, or tensor): Predicted values
     metrics (dict): Dictionary of metric names and their corresponding functions
     kfold (int): Number of folds for cross-validation (default: 10)
+    stratified_p (bool): Whether to use stratified k-fold (default: False)
 
     Returns:
     dict: Dictionary containing means, variances, and variances of sample means for each metric
@@ -112,14 +119,17 @@ def cls_metrics_get(
     refs = np.asarray(refs)
     preds = np.asarray(preds)
 
-    # Initialize StratifiedKFold
-    skf = StratifiedKFold(n_splits=kfold, shuffle=True, random_state=42)
+    # Initialize KFold or StratifiedKFold
+    if stratified_p:
+        kf = StratifiedKFold(n_splits=kfold, shuffle=True, random_state=42)
+    else:
+        kf = KFold(n_splits=kfold, shuffle=True, random_state=42)
 
     # Dictionary to store results for each metric
     results = {metric: [] for metric in metrics}
 
-    # Perform stratified k-fold cross-validation
-    for _, test_index in skf.split(preds, refs):
+    # Perform k-fold cross-validation
+    for _, test_index in kf.split(preds, refs if stratified_p else None):
         refs_fold = refs[test_index]
         preds_fold = preds[test_index]
 
