@@ -7,6 +7,11 @@ float_pattern_compiled = re.compile(float_pattern)
 
 
 ##
+def regex_quote(s):
+    return re.escape(s)
+
+
+##
 def re_maybe(pattern_str):
     return f"(?:{pattern_str})?"
 
