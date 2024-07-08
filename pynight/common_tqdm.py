@@ -1,6 +1,7 @@
 from tqdm.contrib.telegram import TelegramIO
 from tqdm.auto import tqdm as tqdm_auto
 from os import getenv
+from pynight.common_hosts import hostname_get
 
 
 ##
@@ -31,6 +32,8 @@ class tqdm_telegram(tqdm_auto):
         leave_telegram=True,
         mininterval=1.0,
         ascii=True,
+        name="",
+        hostname_p=True,
         **kwargs,
     ):
         """
@@ -41,10 +44,14 @@ class tqdm_telegram(tqdm_auto):
         chat_id  : str, required. Telegram chat ID
             [default: ${TQDM_TELEGRAM_CHAT_ID}].
         leave_telegram : bool. Whether to leave the message be after termination. Analogous to the normal `leave` argument.
+        name : str, optional. Name to be displayed in the progress bar.
+        hostname_p : bool, optional. Whether to include the hostname in the progress bar.
 
         See `tqdm.auto.tqdm.__init__` for other parameters.
         """
         self.leave_telegram = leave_telegram
+        self.name = name
+        self.hostname = hostname_get() if hostname_p else ""
 
         kwargs["mininterval"] = mininterval
         kwargs["ascii"] = ascii
@@ -78,9 +85,22 @@ class tqdm_telegram(tqdm_auto):
                 .replace("{bar}", "{bar:10u}")
             )
         else:
+            # fmt["bar_format"] = "{desc}: {percentage:3.0f}%|{bar:10u}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]"
             fmt["bar_format"] = "{l_bar}{bar:10u}{r_bar}"
 
-        return self.format_meter(**fmt)
+        formatted_meter = self.format_meter(**fmt)
+
+        prefix_str = ""
+        if self.name:
+            prefix_str += f"{self.name}"
+
+        if self.hostname:
+            prefix_str += f"@{self.hostname}"
+
+        if prefix_str:
+            prefix_str += " "
+
+        return f"{prefix_str}{formatted_meter}"
 
     def display(self, **kwargs):
         if self.super_enabled_p:
