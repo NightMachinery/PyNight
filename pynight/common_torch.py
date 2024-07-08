@@ -1,3 +1,4 @@
+import sys
 import numpy
 import numpy as np
 import torch
@@ -197,6 +198,7 @@ def torch_gpu_memory_stats():
 def gpu_memory_get(unit="GB"):
     if unit.lower() == "gb":
         unit_divide_by = 1024**3
+
     if torch.cuda.is_available():
         device = torch.cuda.current_device()
 
@@ -206,8 +208,12 @@ def gpu_memory_get(unit="GB"):
         total_memory_unit = total_memory / unit_divide_by
 
         return total_memory_unit
+
     else:
-        return "CUDA is not available. Please check your installation."
+        msg = "CUDA is not available. Please check your installation."
+        print(msg, file=sys.stderr)
+
+        return 0
 
 
 def torch_memory_tensor(tensor, s=3):
