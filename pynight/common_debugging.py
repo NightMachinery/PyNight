@@ -5,7 +5,6 @@ import traceback
 import os
 import importlib
 from types import ModuleType
-from pynight.common_condition import jupyter_p
 
 
 debug_p = os.environ.get("DEBUGME", None)
@@ -14,24 +13,6 @@ deus_p = os.environ.get("deusvult", None)
 
 def traceback_print(file=None):
     print(traceback.format_exc(), file or sys.stderr)
-
-
-##
-def ipdb_enable(
-    disable_in_jupyter_p=True,
-):
-    if disable_in_jupyter_p:
-        if jupyter_p():
-            return
-
-    import sys
-    from IPython.core import ultratb
-
-    sys.excepthook = ultratb.FormattedTB(
-        mode="Verbose",
-        color_scheme="Linux",
-        call_pdb=1,
-    )
 
 
 ##

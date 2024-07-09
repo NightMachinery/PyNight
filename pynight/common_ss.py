@@ -10,7 +10,7 @@ import requests
 import json
 from collections import OrderedDict
 from pynight.common_json import JSONEncoderWithFallback
-from pynight.common_debugging import ipdb_enable
+from pynight.common_debugging2 import ipdb_enable
 from pynight.common_dict import simple_obj
 from pynight.common_csv import dict_to_csv
 from pynight.common_icecream import ic
