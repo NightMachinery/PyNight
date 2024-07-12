@@ -1034,6 +1034,7 @@ def nan_to_0(tensor):
 
 ##
 def get_compact_gbrand(
+    ig_steps=None,
     gradient_mode_brand="NG",
     patchifier_gbrand=None,
     linear_ds_gbrand=None,
@@ -1047,6 +1048,10 @@ def get_compact_gbrand(
 
     elif True:
         parts = [gradient_mode_brand or ""]
+
+        if ig_steps:
+            parts.append(f"ig{ig_steps}")
+
         if softmax_mode and softmax_mode not in ["S0"]:
             parts.append(f"h.{softmax_mode}")
 
@@ -1068,6 +1073,7 @@ def get_compact_gbrand(
         compact_gbrand = ",".join(parts)
 
     else:
+        #: @deprecated No longer updated
         compact_gbrand = f"""{gradient_mode_brand or ""},h.{softmax_mode or ""},p.{patchifier_gbrand or ""},lin_ds.{linear_ds_gbrand or ""},mlp_ds.{mlp_ds_gbrand or ""},mlp_x.{mlp_mul_gbrand or ""}"""
 
     return compact_gbrand
