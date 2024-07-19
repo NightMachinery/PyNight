@@ -4,6 +4,9 @@ import numpy as np
 import hashlib
 import matplotlib.pyplot as plt
 from pynight.common_files import mkdir
+from pynight.common_dict import simple_obj
+import urllib
+import io
 
 
 ##
@@ -51,6 +54,7 @@ def image_url2np(
     # Check if URL is a local file path
     if os.path.exists(url):
         image_np = plt.imread(url, format=format)
+
     else:
         # Calculate hash of the URL
         url_hash = hashlib.sha256(url.encode()).hexdigest()
@@ -92,6 +96,18 @@ def image_url2np(
         np.save(cache_file_path, image_np)
 
     return image_np
+
+
+def image_url2pil(*args, **kwargs):
+    import torchvision
+
+    image_np = image_url2np(*args, **kwargs)
+    image_pil = torchvision.transforms.ToPILImage()(image_np)
+
+    return simple_obj(
+        image_np=image_np,
+        image_pil=image_pil,
+    )
 
 
 ##

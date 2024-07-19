@@ -174,6 +174,7 @@ def patch_info_from_name(
 def image_from_url(*, model, url, device=None):
     if device is None:
         device = model_device_get(model)
+
     elif device == "NA":
         device = None
 
@@ -181,8 +182,10 @@ def image_from_url(*, model, url, device=None):
         image_np = image_url2np(url=url)
 
         image_pil = torchvision.transforms.ToPILImage()(image_np)
+
     elif isinstance(url, PIL.Image.Image):
         image_pil = url
+
     else:
         raise ValueError(f"unsupported type for: {url}")
 
