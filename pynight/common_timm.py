@@ -14,17 +14,36 @@ from pynight.common_debugging import fn_name_current
 
 ##
 def model_transform_get(model):
-    data_cfg = timm.data.resolve_data_config(model.pretrained_cfg)
-    # ic(data_cfg)
+    if hasattr(model, "pretrained_cfg"):
+        data_cfg = timm.data.resolve_data_config(model.pretrained_cfg)
+        # ic(data_cfg)
 
-    transform = timm.data.create_transform(**data_cfg)
+        transform = timm.data.create_transform(**data_cfg)
+
+    elif hasattr(model, "visual"):
+        from open_clip.transform import image_transform_v2, AugmentationCfg, PreprocessCfg, merge_preprocess_dict, merge_preprocess_kwargs
+
+        pp_cfg = PreprocessCfg(**model.visual.preprocess_cfg)
+
+        transform = image_transform_v2(
+            pp_cfg,
+            is_train=False,
+        )
+
+    else:
+        raise NotImplemenetedError(f"{fn_name_current()}: could not find the transforms needed by the model")
+
     transforms = transform.transforms
-
+    #: =transforms= is Compose and =.transforms= gives us a list of all the transforms in it.
+    
     if isinstance(transforms[-1], torchvision.transforms.Normalize):
         transform_tensor = torchvision.transforms.Compose(transforms[:-1])
         transform_normalize = transforms[-1]
+
     else:
-        transform_tensor = transform_tensor
+        print(f"{fn_name_current()}: There was no Normalize transform for the current model!", flush=True)
+
+        transform_tensor = torchvision.transforms.Compose(transforms)
         transform_normalize = torchvision.transforms.ToTensor
         #: ToTensor is effectively identity
 
