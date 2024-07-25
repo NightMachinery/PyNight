@@ -1082,4 +1082,38 @@ def get_compact_gbrand(
 
     return compact_gbrand
 
+
+##
+def torch_prefix_autoset(
+    root_mod,
+    prefix="",
+    # prefix="from_class",
+):
+    def get_prefix(module):
+        prefix = ""
+        if hasattr(module, "prefix") and not module.prefix.startswith("unset."):
+            prefix = module.prefix
+
+        return prefix
+
+    def set_prefix(module, prefix=""):
+        if prefix == "from_class":
+            prefix = f"{module.__class__.__name__}."
+
+        mod_prefix = get_prefix(module)
+        if not prefix:
+            prefix = mod_prefix
+
+        if prefix and not mod_prefix:
+            module.prefix = prefix
+
+        for name, child in module.named_children():
+            child_prefix = f"{prefix}{name}." if prefix else f"{name}."
+            set_prefix(child, child_prefix)
+
+    set_prefix(root_mod, prefix=prefix)
+
+    return root_mod
+
+
 ##
