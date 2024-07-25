@@ -1042,6 +1042,7 @@ def get_compact_gbrand(
     mlp_ds_gbrand=None,
     mlp_mul_gbrand=None,
     softmax_mode="S0",
+    normalize_to_unit_vector_gbrand=None,
 ):
     if gradient_mode_brand in ["GlobALTI"]:
         compact_gbrand = gradient_mode_brand
@@ -1069,6 +1070,9 @@ def get_compact_gbrand(
 
         if mlp_mul_gbrand:
             parts.append(f"mlp_x.{mlp_mul_gbrand}")
+
+        if normalize_to_unit_vector_gbrand:
+            parts.append(f"n2u.{normalize_to_unit_vector_gbrand}")
 
         compact_gbrand = ",".join(parts)
 
