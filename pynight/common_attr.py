@@ -1,5 +1,5 @@
 import torch
-
+import torch.nn.functional as F
 import re
 
 from pynight.common_icecream import ic
@@ -17,7 +17,8 @@ from pynight.common_torch import (
 def normalize_map(
     attributions,
     normalize,
-    outlier_quantile=0.1,
+    # outlier_quantile=0.1,
+    outlier_quantile=0,
     num_prefix_tokens=0,
     bias_token_p=False,
     clone_p=True,
@@ -120,15 +121,21 @@ def normalize_map(
 
             if normalizer == "scale_by_max_abs_attr":
                 attributions_normalized /= max_abs_attr
+
+            elif normalizer.lower() == "relu":
+                attributions_normalized = F.relu(attributions_normalized)
+
             elif normalizer == "scale_by_max_signed_attr":
                 attributions_normalized = torch.where(
                     attributions_normalized < 0,
                     attributions_normalized / torch.abs(min_attr),
                     attributions_normalized / max_attr,
                 )
+
             elif normalizer == "shift_min_to_zero":
                 attributions_normalized -= min_attr
                 attributions_normalized = torch.relu(attributions_normalized)
+            
             elif normalizer == "rank_uniform":
                 ranks_top_is_1 = rank_tensor(
                     attributions_normalized,
@@ -144,6 +151,7 @@ def normalize_map(
                 #: =ranks_top_is_1 - 1= makes the ranks_top_is_1 start from zero.
                 #: =ranks_top_is_1.shape[-1] - 1= adjusts the denominator for the above change.
                 #: =1 - ...= reverses the order of the ranking, so that the first rank becomes 1, and the last rank becomes 0.
+
             else:
                 raise ValueError(f"Unsupported normalizer: {normalizer}")
 
