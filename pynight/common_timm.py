@@ -101,6 +101,7 @@ def patch_info_from_name(
     #     ##
     #     patch_resolution = 100
     #     model_size = "NA"
+
     else:
         ##
         pat1 = re.compile(r"^(?:(?:coca_|xlm-roberta-[^-]+-)?ViT|EVA\d*)-[^-]+-(\d+)")
@@ -121,11 +122,15 @@ def patch_info_from_name(
             ##
             patch_pattern = r"patch(\d+)"
             resolution_pattern = r"_(\d{3,})"
+
         elif pat1.match(model_name):
             #: =ViT-B-32_laion400m_e31=
             patch_pattern = pat1
             model_size_pattern = pat1_model_size
-            resolution_pattern = None
+            # resolution_pattern = None
+            resolution_pattern = r"\d{2}-(\d{3,})"
+            #: EVA02-L-14-336
+
         elif model_name.startswith("mixer_"):
             #: 'mixer_b16_224.goog_in21k_ft_in1k'
             ##
