@@ -5,6 +5,7 @@ import hashlib
 import matplotlib.pyplot as plt
 from pynight.common_files import mkdir
 from pynight.common_dict import simple_obj
+from pynight.common_icecream import ic
 import urllib
 import io
 
@@ -68,8 +69,14 @@ def image_url2np(
             if os.path.exists(cache_file_path):
                 return np.load(cache_file_path)
 
-        with urllib.request.urlopen(url) as url_response:
-            image_data = url_response.read()
+        try:
+            with urllib.request.urlopen(url) as url_response:
+                image_data = url_response.read()
+
+        except:
+            ic(url)
+
+            raise
 
         # Convert the image data to a numpy array
         image_np = plt.imread(io.BytesIO(image_data), format=format)
