@@ -1117,3 +1117,36 @@ def torch_prefix_autoset(
 
 
 ##
+def grey_tensor_to_pil(some_tensor, *, colormap="viridis", normalize_p=True):
+    # Ensure the tensor is on CPU
+    some_tensor = some_tensor.detach().cpu()
+
+    # Squeeze the tensor to remove any singleton dimensions
+    some_tensor = some_tensor.squeeze()
+
+    # Check if the resulting tensor has 2 dimensions
+    if some_tensor.dim() != 2:
+        raise ValueError(
+            f"Expected a 2D tensor after squeezing, but got {some_tensor.dim()}D"
+        )
+
+    # Convert to numpy array
+    np_array = some_tensor.numpy()
+
+    # Normalize if requested
+    if normalize_p:
+        np_array = (np_array - np_array.min()) / (np_array.max() - np_array.min())
+
+    # Apply colormap
+    colored_array = plt.get_cmap(colormap)(np_array)
+
+    # Convert to uint8 and create PIL Image
+    colored_array = (colored_array * 255).astype(np.uint8)
+    image_pil = Image.fromarray(colored_array)
+
+    return simple_obj(
+        image_pil=image_pil,
+    )
+
+
+##
