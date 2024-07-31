@@ -859,6 +859,8 @@ def scale_patch_to_pixel(
     output_height = output_height or output_width
     assert output_width == output_height
 
+    # verbose = True #: for debugging
+
     if verbose:
         ic(patch_wise.shape)
 
