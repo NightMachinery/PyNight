@@ -516,19 +516,16 @@ def openai_chat_complete(
                         role = "model" if message["role"] == "assistant" else message["role"]
                         history.append({"role": role, "parts": message["content"]})
 
-                gemini_model = client.GenerativeModel(
-                    model_name=model,
-                    generation_config=generation_config,
-                    safety_settings=safety_settings,
-                )
-
+                gemini_model_args = {
+                    "model_name": model,
+                    "generation_config": generation_config,
+                    "safety_settings": safety_settings,
+                }
+                
                 if system_instruction:
-                    gemini_model = client.GenerativeModel(
-                        model_name=model,
-                        generation_config=generation_config,
-                        safety_settings=safety_settings,
-                        system_instruction=system_instruction,
-                    )
+                    gemini_model_args["system_instruction"] = system_instruction
+                
+                gemini_model = client.GenerativeModel(**gemini_model_args)
 
                 chat_session = gemini_model.start_chat(history=history)
                 
