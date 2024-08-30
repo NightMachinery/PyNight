@@ -513,11 +513,15 @@ def openai_chat_complete(
                     safety_settings=safety_settings,
                 )
                 
-                chat_session = gemini_model.start_chat(history=[])
+                history = []
+                for message in messages[:-1]:
+                    role = "model" if message["role"] == "assistant" else message["role"]
+                    history.append({"role": role, "parts": message["content"]})
                 
-                for message in messages:
-                    if message["role"] == "user":
-                        response = chat_session.send_message(message["content"])
+                chat_session = gemini_model.start_chat(history=history)
+                
+                last_message = messages[-1]
+                response = chat_session.send_message(last_message["content"])
                 
                 if stream:
                     return response
