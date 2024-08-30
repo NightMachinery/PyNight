@@ -4,6 +4,8 @@ import openai
 from openai import OpenAI
 import os
 import tempfile
+import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from brish import z, zp
 from pynight.common_base64 import (
     base64_encode_file,
@@ -74,6 +76,29 @@ def openrouter_key_get():
         setup_openrouter_key()
 
     return openrouter_key
+
+
+gemini_key = None
+gemini_client = None
+
+def setup_gemini_key():
+    global gemini_key
+    global gemini_client
+
+    gemini_key = z("var-get gemini_api_key").outrs
+    assert gemini_key, "setup_gemini_key: could not get Gemini API key!"
+
+    genai.configure(api_key=gemini_key)
+    gemini_client = genai
+    return gemini_client
+
+def gemini_key_get():
+    global gemini_key
+
+    if gemini_key is None:
+        setup_gemini_key()
+
+    return gemini_key
 
 
 ###
@@ -294,19 +319,18 @@ def select_backend(model_orig):
     if model_orig_normalized.startswith("or:"):
         backend = "OpenRouter"
         model = model_orig_normalized[3:]
-
     elif model_orig_normalized.startswith("gq:"):
         backend = "Groq"
         model = model_orig_normalized[3:]
-
     elif model_orig_normalized.startswith("tg:"):
         backend = "Together"
         model = model_orig_normalized[3:]
-
+    elif model_orig_normalized.startswith("gai:"):
+        backend = "Gemini"
+        model = model_orig_normalized[4:]
     elif "deepseek" in model_orig_normalized:
         backend = "DeepSeek"
         model = model_orig_normalized
-
     elif "claude" in model_orig_normalized:
         backend = "Anthropic"
         model = model_orig_normalized
@@ -327,37 +351,22 @@ def select_backend(model_orig):
 def get_client(backend):
     if backend == "OpenAI":
         return openai_client
-
     elif backend == "OpenRouter":
         return openrouter_client
-
     elif backend == "Groq":
-        from pynight.common_groq import (
-            groq_client,
-        )
-
+        from pynight.common_groq import groq_client
         return groq_client
-
     elif backend == "DeepSeek":
-        from pynight.common_deepseek import (
-            deepseek_client,
-        )
-
+        from pynight.common_deepseek import deepseek_client
         return deepseek_client
-
     elif backend == "Together":
-        from pynight.common_together import (
-            together_client,
-        )
-
+        from pynight.common_together import together_client
         return together_client
-
     elif backend == "Anthropic":
-        from pynight.common_anthropic import (
-            anthropic_client,
-        )
-
+        from pynight.common_anthropic import anthropic_client
         return anthropic_client
+    elif backend == "Gemini":
+        return gemini_client
     else:
         raise ValueError(f"Unsupported backend: {backend}")
 
@@ -420,14 +429,12 @@ def openai_chat_complete(
                                 # model = "gpt-4-vision-preview"
                                 model = "gpt-4-turbo"
 
-            if backend == "Anthropic":
+            if backend in ["Anthropic", "Gemini"]:
                 if "role" in message and message["role"] == "system":
                     if system_repeat_mode == "error":
-                        assert (
-                            system_message is None
-                        ), "Only one system message is allowed for Anthropic."
+                        assert system_message is None, f"Only one system message is allowed for {backend}."
 
-                    system_message += "\n" + message["content"]
+                    system_message = (system_message or "") + "\n" + message["content"]
                     message = None
 
             if message is not None:
@@ -466,9 +473,7 @@ def openai_chat_complete(
 
                 if system_message:
                     if system_repeat_mode == "error":
-                        assert (
-                            "system" not in kwargs
-                        ), "Only one system message is allowed for Anthropic."
+                        assert "system" not in kwargs, "Only one system message is allowed for Anthropic."
                     else:
                         if "system" in kwargs:
                             system_message = kwargs.system + "\n" + system_message
@@ -485,6 +490,39 @@ def openai_chat_complete(
                     stream=stream,
                     **kwargs,
                 )
+            elif backend == "Gemini":
+                client = get_client(backend)
+                
+                generation_config = {
+                    "temperature": kwargs.get("temperature", 0),
+                    "top_p": kwargs.get("top_p", 0.95),
+                    "top_k": kwargs.get("top_k", 64),
+                    "max_output_tokens": kwargs.get("max_tokens", 8192),
+                }
+                
+                safety_settings = {
+                    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+                }
+                
+                gemini_model = client.GenerativeModel(
+                    model_name=model,
+                    generation_config=generation_config,
+                    safety_settings=safety_settings,
+                )
+                
+                chat_session = gemini_model.start_chat(history=[])
+                
+                for message in messages:
+                    if message["role"] == "user":
+                        response = chat_session.send_message(message["content"])
+                
+                if stream:
+                    return response
+                else:
+                    return SimpleNamespace(text=response.text)
             else:
                 raise ValueError(f"Unsupported backend: {backend}")
     finally:
