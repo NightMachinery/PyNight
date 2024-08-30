@@ -507,12 +507,9 @@ def openai_chat_complete(
                     HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
                 }
                 
-                system_instruction = None
                 history = []
-                for message in messages[:-1]:
-                    if message["role"] == "system":
-                        system_instruction = message["content"]
-                    else:
+                for message in messages:
+                    if message["role"] != "system":
                         role = "model" if message["role"] == "assistant" else message["role"]
                         history.append({"role": role, "parts": message["content"]})
 
@@ -522,8 +519,8 @@ def openai_chat_complete(
                     "safety_settings": safety_settings,
                 }
                 
-                if system_instruction:
-                    gemini_model_args["system_instruction"] = system_instruction
+                if system_message:
+                    gemini_model_args["system_instruction"] = system_message
                 
                 gemini_model = client.GenerativeModel(**gemini_model_args)
 
