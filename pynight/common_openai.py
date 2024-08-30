@@ -507,17 +507,29 @@ def openai_chat_complete(
                     HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
                 }
                 
+                system_instruction = None
+                history = []
+                for message in messages[:-1]:
+                    if message["role"] == "system":
+                        system_instruction = message["content"]
+                    else:
+                        role = "model" if message["role"] == "assistant" else message["role"]
+                        history.append({"role": role, "parts": message["content"]})
+
                 gemini_model = client.GenerativeModel(
                     model_name=model,
                     generation_config=generation_config,
                     safety_settings=safety_settings,
                 )
-                
-                history = []
-                for message in messages[:-1]:
-                    role = "model" if message["role"] == "assistant" else message["role"]
-                    history.append({"role": role, "parts": message["content"]})
-                
+
+                if system_instruction:
+                    gemini_model = client.GenerativeModel(
+                        model_name=model,
+                        generation_config=generation_config,
+                        safety_settings=safety_settings,
+                        system_instruction=system_instruction,
+                    )
+
                 chat_session = gemini_model.start_chat(history=history)
                 
                 last_message = messages[-1]
