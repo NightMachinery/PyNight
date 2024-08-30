@@ -81,6 +81,7 @@ def openrouter_key_get():
 gemini_key = None
 gemini_client = None
 
+
 def setup_gemini_key():
     global gemini_key
     global gemini_client
@@ -91,6 +92,7 @@ def setup_gemini_key():
     genai.configure(api_key=gemini_key)
     gemini_client = genai
     return gemini_client
+
 
 def gemini_key_get():
     global gemini_key
@@ -355,15 +357,19 @@ def get_client(backend):
         return openrouter_client
     elif backend == "Groq":
         from pynight.common_groq import groq_client
+
         return groq_client
     elif backend == "DeepSeek":
         from pynight.common_deepseek import deepseek_client
+
         return deepseek_client
     elif backend == "Together":
         from pynight.common_together import together_client
+
         return together_client
     elif backend == "Anthropic":
         from pynight.common_anthropic import anthropic_client
+
         return anthropic_client
     elif backend == "Gemini":
         return gemini_client
@@ -432,7 +438,9 @@ def openai_chat_complete(
             if backend in ["Anthropic", "Gemini"]:
                 if "role" in message and message["role"] == "system":
                     if system_repeat_mode == "error":
-                        assert system_message is None, f"Only one system message is allowed for {backend}."
+                        assert (
+                            system_message is None
+                        ), f"Only one system message is allowed for {backend}."
 
                     system_message = (system_message or "") + "\n" + message["content"]
                     message = None
@@ -473,7 +481,9 @@ def openai_chat_complete(
 
                 if system_message:
                     if system_repeat_mode == "error":
-                        assert "system" not in kwargs, "Only one system message is allowed for Anthropic."
+                        assert (
+                            "system" not in kwargs
+                        ), "Only one system message is allowed for Anthropic."
                     else:
                         if "system" in kwargs:
                             system_message = kwargs.system + "\n" + system_message
@@ -492,25 +502,29 @@ def openai_chat_complete(
                 )
             elif backend == "Gemini":
                 client = get_client(backend)
-                
+
                 generation_config = {
                     "temperature": kwargs.get("temperature", 0),
                     "top_p": kwargs.get("top_p", 0.95),
                     "top_k": kwargs.get("top_k", 64),
                     "max_output_tokens": kwargs.get("max_tokens", 8192),
                 }
-                
+
                 safety_settings = {
                     HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
                     HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
                     HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
                     HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
                 }
-                
+
                 history = []
                 for message in messages:
                     if message["role"] != "system":
-                        role = "model" if message["role"] == "assistant" else message["role"]
+                        role = (
+                            "model"
+                            if message["role"] == "assistant"
+                            else message["role"]
+                        )
                         history.append({"role": role, "parts": message["content"]})
 
                 gemini_model_args = {
@@ -518,19 +532,21 @@ def openai_chat_complete(
                     "generation_config": generation_config,
                     "safety_settings": safety_settings,
                 }
-                
+
                 if system_message:
                     gemini_model_args["system_instruction"] = system_message
-                
+
                 gemini_model = client.GenerativeModel(**gemini_model_args)
 
                 chat_session = gemini_model.start_chat(history=history)
-                
+
                 last_message = messages[-1]
                 response = chat_session.send_message(last_message["content"])
-                
+
                 if stream:
+                    #: Does this work for streaming?
                     return response
+
                 else:
                     return SimpleNamespace(text=response.text)
             else:
