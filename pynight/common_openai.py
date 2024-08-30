@@ -135,6 +135,8 @@ def print_chat_streaming(
 
             if isinstance(output, anthropic.Stream):
                 backend = "Anthropic"
+            elif isinstance(output, genai.types.GenerateContentResponse):
+                backend = "Gemini"
             else:
                 backend = "OpenAI"
 
@@ -178,6 +180,9 @@ def print_chat_streaming(
                 elif r.type == "content_block_delta":
                     text_current = r.delta.text
 
+            elif backend == "Gemini":
+                text_current = r.text
+
             if text_current:
                 text += text_current
                 print(f"{text_current}", end="")
@@ -205,7 +210,8 @@ def print_chat_streaming(
         else:
             raise ValueError(f"Unsupported output_mode: {output_mode}")
     finally:
-        output.close()
+        if hasattr(output, 'close'):
+            output.close()
         #: The hope is to stop the upstream credit charges.
         #: [[id:fba91d52-7694-4894-8ab0-44d16aa96a90][Stream Cancellation]]
 
