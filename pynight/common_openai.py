@@ -210,7 +210,7 @@ def print_chat_streaming(
         else:
             raise ValueError(f"Unsupported output_mode: {output_mode}")
     finally:
-        if hasattr(output, 'close'):
+        if hasattr(output, "close"):
             output.close()
         #: The hope is to stop the upstream credit charges.
         #: [[id:fba91d52-7694-4894-8ab0-44d16aa96a90][Stream Cancellation]]
@@ -548,6 +548,9 @@ def openai_chat_complete(
 
                 last_message = messages[-1]
                 response = chat_session.send_message(last_message["content"])
+
+                # ic(type(response))
+                #: ic| type(response): <class 'google.generativeai.types.generation_types.GenerateContentResponse'>
 
                 if stream:
                     #: Does this work for streaming?
