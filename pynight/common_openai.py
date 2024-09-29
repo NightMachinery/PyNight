@@ -122,6 +122,8 @@ def print_chat_streaming(
     end="\n-------",
     backend="auto",
     # backend="OpenAI",
+    stream_p=True,
+    #: Detecting stream_p automatically might be challenging.
 ):
     """
     Process and print out chat completions from a model when the stream is set to True.
@@ -140,54 +142,75 @@ def print_chat_streaming(
             else:
                 backend = "OpenAI"
 
+        if backend == "OpenRouter":
+            backend = "OpenAI"
+            #: should be the same for our purposes here
+
         text = ""
-        r = None
-        last_role = None
-        for i, r in enumerate(output):
-            text_current = None
 
+        #: Handle non-streaming responses
+        if not stream_p:
             if backend == "OpenAI":
-                if not isinstance(r, dict):
-                    #: OpenAI v1: Response objects are now pydantic models instead of dicts.
-                    ##
-                    r = dict(r)
-                    # ic(r)
+                text = output.choices[0].message.content
 
-                choice = r["choices"][0]
-                choice = dict(choice)
-
-                if "delta" in choice:
-                    delta = choice["delta"]
-                    delta = dict(delta)
-
-                    if "role" in delta and delta["role"]:
-                        if last_role is None:
-                            last_role = delta["role"]
-                        elif last_role != delta["role"]:
-                            last_role = delta["role"]
-
-                            print("\n", end="")
-                            print(f"{delta['role']}: ", end="")
-
-                    if "content" in delta and delta["content"]:
-                        text_current = f"{delta['content']}"
-                elif "text" in choice and choice["text"]:
-                    text_current = f"{choice['text']}"
-
+            ##
+            #: Other backends not yet tested, LLM generated:
             elif backend == "Anthropic":
-                if r.type == "content_block_start":
-                    text_current = r.content_block.text
-                elif r.type == "content_block_delta":
-                    text_current = r.delta.text
-
+                text = output.content
             elif backend == "Gemini":
-                text_current = r.text
+                text = output.text
+            ##
 
-            if text_current:
-                text += text_current
-                print(f"{text_current}", end="")
+            print(text, end=end)
 
-        print(end, end="")
+        else:
+            r = None
+            last_role = None
+            for i, r in enumerate(output):
+                text_current = None
+
+                if backend == "OpenAI":
+                    if not isinstance(r, dict):
+                        #: OpenAI v1: Response objects are now pydantic models instead of dicts.
+                        ##
+                        r = dict(r)
+                        # ic(r)
+
+                    choice = r["choices"][0]
+                    choice = dict(choice)
+
+                    if "delta" in choice:
+                        delta = choice["delta"]
+                        delta = dict(delta)
+
+                        if "role" in delta and delta["role"]:
+                            if last_role is None:
+                                last_role = delta["role"]
+                            elif last_role != delta["role"]:
+                                last_role = delta["role"]
+
+                                print("\n", end="")
+                                print(f"{delta['role']}: ", end="")
+
+                        if "content" in delta and delta["content"]:
+                            text_current = f"{delta['content']}"
+                    elif "text" in choice and choice["text"]:
+                        text_current = f"{choice['text']}"
+
+                elif backend == "Anthropic":
+                    if r.type == "content_block_start":
+                        text_current = r.content_block.text
+                    elif r.type == "content_block_delta":
+                        text_current = r.delta.text
+
+                elif backend == "Gemini":
+                    text_current = r.text
+
+                if text_current:
+                    text += text_current
+                    print(f"{text_current}", end="")
+
+            print(end, end="")
 
         text = text.rstrip()
 
