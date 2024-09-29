@@ -86,9 +86,10 @@ def patch_info_from_name(
     image_resolution = None
     patch_resolution = None
     model_size_pattern = None
-    if model_name == "vit_small_patch14_dinov2":
+    if model_name == "vit_small_patch14_dinov2" or "patch14_dinov2.lvd142m" in model_name:
         patch_resolution = 14
         image_resolution = 518
+
     # elif model_name.startswith("RN") or model_name in (
     #     "blip",
     #     "ALIGN",
