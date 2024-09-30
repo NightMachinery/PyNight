@@ -90,6 +90,14 @@ def patch_info_from_name(
         patch_resolution = 14
         image_resolution = 518
 
+    elif model_name in [
+            "gmixer_24_224.ra3_in1k",
+    ]:
+        num_prefix_tokens = 0
+
+        patch_resolution = 16
+        image_resolution = 224
+
     # elif model_name.startswith("RN") or model_name in (
     #     "blip",
     #     "ALIGN",
@@ -165,6 +173,7 @@ def patch_info_from_name(
         patch_count = int(patch_count_fl)
         assert patch_count_fl == patch_count
         patch_count += num_prefix_tokens  #: for CLS
+
     else:
         patch_count = None
 
