@@ -398,6 +398,49 @@ def drop_tokens(
     return tokens
 
 
+def mask_to_zero(x, *, keep_indices):
+    """
+    Zero out all tokens in the tensor `x` except those specified in `keep_indices`.
+
+    Args:
+        x (torch.Tensor): Input tensor of shape (batch_size, num_patches, channels).
+        keep_indices (torch.Tensor): Tensor of indices to keep, shape (batch_size, num_tokens_to_keep).
+
+    Returns:
+        torch.Tensor: Tensor with unspecified tokens zeroed out.
+    """
+    #: @unused, @untested
+    batch_size, num_patches, channels = x.shape
+    num_tokens_to_keep = keep_indices.shape[1]
+
+    assert (
+        keep_indices.min() >= 0 and keep_indices.max() < num_patches
+    ), f"Indices out of bounds: min={keep_indices.min()}, max={keep_indices.max()}, num_patches={num_patches}"
+
+    # Create a mask of zeros
+    mask = torch.zeros((batch_size, num_patches), dtype=torch.bool, device=x.device)
+
+    # Create batch indices
+    batch_indices = (
+        torch.arange(batch_size, device=x.device)
+        .unsqueeze(1)
+        .expand(-1, num_tokens_to_keep)
+    )
+    #: [[https://pytorch.org/docs/stable/generated/torch.Tensor.expand.html][torch.Tensor.expand — PyTorch 2.4 documentation]]
+    #: Returns a new view of the self tensor with singleton dimensions expanded to a larger size.  Passing -1 as the size for a dimension means not changing the size of that dimension.  Tensor can be also expanded to a larger number of dimensions, and the new ones will be appended at the front. For the new dimensions, the size cannot be set to -1.
+
+    # Set mask to True at the keep_indices
+    mask[batch_indices, keep_indices] = True
+
+    # Unsqueeze mask to match x's dimensions for broadcasting
+    mask = mask.unsqueeze(-1)
+
+    # Zero out the unspecified tokens
+    x = x * mask
+
+    return x
+
+
 ##
 def torch_device_name_get(device=None):
     if torch.cuda.is_available():
