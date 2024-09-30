@@ -1,6 +1,7 @@
 .*.evilmarkers
 
 .ob-jupyter/
+.mypy_cache
 __pycache__
 pynight.egg-info
 setup.py
