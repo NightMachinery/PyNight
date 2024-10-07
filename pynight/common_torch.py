@@ -1195,3 +1195,56 @@ def grey_tensor_to_pil(some_tensor, *, colormap="viridis", normalize_p=True):
 
 
 ##
+def decomposed_inputs_p(obj):
+    return hasattr(obj, "decomposition_config") or hasattr(obj, "attributions_v")
+
+
+##
+def tensor_register_hook(
+    tensor,
+    *args,
+    **kwargs,
+):
+    if tensor.requires_grad:
+        tensor.register_hook(
+            *args,
+            **kwargs,
+        )
+    else:
+        #: We could have a flag that will optionally raise an exception here.
+        pass
+
+
+def store_tensor_with_grad(
+    tensor,
+    *,
+    store_in,
+    name_out=None,
+    name_grad_out=None,
+    enabled_out_p=True,
+    enabled_grad_out_p=True,
+):
+    if decomposed_inputs_p(tensor):
+        print("store_tensor_with_grad: skipped for decomposed input", file=sys.stderr)
+        return
+
+    if name_out is not None:
+        if enabled_out_p:
+            setattr(store_in, name_out, tensor.detach().cpu())
+
+        else:
+            delattr_force(store_in, name_out)
+
+    if name_grad_out is not None:
+        delattr_force(store_in, name_grad_out)
+
+        if enabled_grad_out_p:
+
+            def store_value_grad(grad):
+                # ic(torch_shape_get(grad))
+                setattr(store_in, name_grad_out, grad.detach().cpu())
+
+            tensor_register_hook(tensor, store_value_grad)
+
+
+##
