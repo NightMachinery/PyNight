@@ -1248,3 +1248,78 @@ def store_tensor_with_grad(
 
 
 ##
+def get_k_predicted_indices(logits, *, k):
+    """
+    Retrieves the k-th most probable indices from the logits tensor.
+
+    Args:
+        logits (torch.Tensor): The input logits tensor of shape (batch_size, num_classes).
+        k (int): The rank of the predicted index to retrieve (1 for first, 2 for second, etc.).
+
+    Returns:
+        torch.Tensor: A tensor of shape (batch_size,) containing the k-th predicted indices.
+
+    Raises:
+        ValueError: If k is not within the valid range [1, num_classes].
+                    If logits does not have shape (batch_size, num_classes).
+    """
+    # Validate logits tensor dimensions
+    if logits.ndim != 2:
+        raise ValueError(
+            f"logits must be a 2D tensor of shape (batch_size, num_classes), but got shape {logits.shape}"
+        )
+
+    num_classes = logits.size(-1)
+    if num_classes == 0:
+        raise ValueError("num_classes must be greater than zero")
+
+    # Validation to ensure k is within the valid range
+    if not (1 <= k <= num_classes):
+        raise ValueError(
+            f"k must be between 1 and the number of classes ({num_classes}), got k={k}"
+        )
+
+    # Obtain the top k indices along the last dimension
+    logits_topk_indices = torch.topk(
+        logits,
+        k,
+        dim=-1,
+        largest=True,
+        sorted=True,
+    ).indices
+    # logits_topk_indices has shape (batch_size, k)
+
+    # Select the k-th predicted index (0-based indexing)
+    kth_predicted_indices = logits_topk_indices[..., k - 1]
+    # kth_predicted_indices has shape (batch_size,)
+
+    return kth_predicted_indices
+
+
+def get_first_predicted_indices(logits):
+    """
+    Retrieves the most probable (first) indices from the logits tensor.
+
+    Args:
+        logits (torch.Tensor): The input logits tensor of shape (batch_size, num_classes).
+
+    Returns:
+        torch.Tensor: A tensor of shape (batch_size,) containing the first predicted indices.
+    """
+    return get_k_predicted_indices(logits, k=1)
+
+
+def get_second_predicted_indices(logits):
+    """
+    Retrieves the second most probable indices from the logits tensor.
+
+    Args:
+        logits (torch.Tensor): The input logits tensor of shape (batch_size, num_classes).
+
+    Returns:
+        torch.Tensor: A tensor of shape (batch_size,) containing the second predicted indices.
+    """
+    return get_k_predicted_indices(logits, k=2)
+
+
+##
