@@ -19,29 +19,32 @@ def prompt_user(question, end="\n> "):
 def ask(question, default=True):
     """Ask a yes/no question and return the answer as True or False.
 
-    If the user presses enter without providing an answer, return the default value.
+    If the user presses enter without providing an answer, return the default value unless default is None.
     """
-    # Modify the question to indicate the default
-    if default:
-        question += " [Y/n]"
+    if default is not None:
+        if default:
+            question += " [Y/n]"
+        else:
+            question += " [y/N]"
+
     else:
-        question += " [y/N]"
+        question += " [y/n]"
 
     while True:
-        # Use the previously defined prompt_user function to get the answer
         answer = prompt_user(question)
 
-        # If the user just presses enter, return the default value
-        if not answer:
+        #: If the user just presses enter, return the default value if provided
+        if not answer and default is not None:
             return default
-        # Interpret the user's answer
+
         elif answer in ["y", "yes"]:
             return True
+
         elif answer in ["n", "no"]:
             return False
-        # If we get here, the user provided an invalid answer. Prompt again.
+
         else:
-            print("Please answer with 'yes'/'no' (or 'y'/'n').")
+            print("Please answer with 'y'/'n'.")
 
 
 ##
