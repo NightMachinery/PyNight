@@ -7,6 +7,9 @@ import os
 from functools import wraps
 from pynight.common_condition import jupyter_p
 from pynight.common_hosts import hostname_get
+from pynight.common_telegram import (
+    tlg_chat_id_default,
+)
 from pynight.common_telegram import send as tlg_send
 from brish import z
 from IPython.core import ultratb
@@ -15,7 +18,7 @@ from IPython.core import ultratb
 ##
 def ipdb_enable(
     disable_in_jupyter_p=True,
-    tlg_chat_id="195391705",
+    tlg_chat_id=tlg_chat_id_default, #: Use None to disable
 ):
     if disable_in_jupyter_p:
         if jupyter_p():

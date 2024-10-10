@@ -1,3 +1,4 @@
+from os import getenv
 from typing import Iterable
 from pathlib import Path
 from matplotlib.figure import Figure
@@ -22,6 +23,13 @@ from pynight.common_benchmark import (
 import time
 
 
+##
+tlg_chat_id_default = getenv("PYNIGHT_TELEGRAM_CHAT_ID_DEFAULT", None)
+if tlg_chat_id_default is None:
+    tlg_chat_id_default = getenv("TQDM_TELEGRAM_CHAT_ID", None)
+
+if tlg_chat_id_default is None:
+    tlg_chat_id_default = "195391705"
 ##
 def log_tlg(message, chat_id=None):
     chat_id = chat_id or os.environ.get("tlogs", None)
