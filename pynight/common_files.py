@@ -201,3 +201,19 @@ class open_file:
 
 
 ##
+def hdd_free_get(unit="GB"):
+    total, used, free = shutil.disk_usage("/")
+
+    if unit == "GB":
+        free_space = free / (1024 ** 3)  # Convert to GB
+    elif unit == "MB":
+        free_space = free / (1024 ** 2)  # Convert to MB
+    elif unit == "TB":
+        free_space = free / (1024 ** 4)  # Convert to TB
+    elif unit == "B":
+        free_space = free
+    else:
+        raise ValueError(f"Invalid unit: '{unit}'")
+
+    return free_space
+##
