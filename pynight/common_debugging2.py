@@ -14,24 +14,42 @@ from pynight.common_telegram import send as tlg_send
 from brish import z
 from IPython.core import ultratb
 
+try:
+    import torch
+
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+
 
 ##
 def ipdb_enable(
     disable_in_jupyter_p=True,
-    tlg_chat_id=tlg_chat_id_default, #: Use None to disable
+    tlg_chat_id=tlg_chat_id_default,  #: Use None to disable
+    torch_oom_mode="no_pdb",
 ):
-    if disable_in_jupyter_p:
-        if jupyter_p():
-            return
+    if disable_in_jupyter_p and jupyter_p():
+        return
 
-    def telegram_notify_wrapper(original_excepthook):
-        @wraps(original_excepthook)
-        def wrapper(exc_type, exc_value, exc_traceback):
+    pdb_excepthook = ultratb.FormattedTB(
+        mode="Context",
+        color_scheme="Linux",
+        call_pdb=1,
+    )
+    non_pdb_excepthook = ultratb.FormattedTB(
+        mode="Context",
+        color_scheme="Linux",
+        call_pdb=0,
+    )
+
+    @wraps(sys.excepthook)
+    def excepthook_wrapper(exc_type, exc_value, exc_traceback):
+        if tlg_chat_id:
+
             #: Send notification to Telegram in a separate thread
             def send_telegram_notification():
                 try:
                     error_message = f"Error: {exc_type.__name__}: {str(exc_value)}"
-
                     msg = f"@{hostname_get()}\n{error_message}"
 
                     tlg_send(
@@ -46,21 +64,15 @@ def ipdb_enable(
 
             threading.Thread(target=send_telegram_notification, daemon=True).start()
 
-            return original_excepthook(exc_type, exc_value, exc_traceback)
+        if TORCH_AVAILABLE and isinstance(exc_value, torch.cuda.OutOfMemoryError):
+            print("CUDA OutOfMemoryError occurred.", file=sys.stderr)
+            if torch_oom_mode == "no_pdb":
+                print("Not entering debugger.", file=sys.stderr)
+                return non_pdb_excepthook(exc_type, exc_value, exc_traceback)
 
-        return wrapper
+        return pdb_excepthook(exc_type, exc_value, exc_traceback)
 
-    original_excepthook = ultratb.FormattedTB(
-        mode="Context",
-        color_scheme="Linux",
-        call_pdb=1,
-    )
-
-    if tlg_chat_id:
-        sys.excepthook = telegram_notify_wrapper(original_excepthook)
-
-    else:
-        sys.excepthook = original_excepthook
+    sys.excepthook = excepthook_wrapper
 
 
 ##
