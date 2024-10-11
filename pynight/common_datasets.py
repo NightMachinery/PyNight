@@ -92,6 +92,7 @@ def transform_result_postprocess(data):
         # if isinstance(data, dict):
         #: This copies the dict, which can be time consuming when done in a hot loop.
         data = BatchedDict(data)
+
     elif isinstance(data, list):
         data = IndexableList(data)
 
@@ -175,6 +176,10 @@ class TransformedDataset:
             for transform in self.transforms:
                 if time_p:
                     transform = timed(transform)
+
+                if data is None:
+                    #: The pipeline has produced an empty result, just return None.
+                    return None
 
                 data = transform(data)
                 data = transform_result_postprocess(data)
