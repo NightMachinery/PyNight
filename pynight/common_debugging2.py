@@ -27,7 +27,26 @@ def ipdb_enable(
     disable_in_jupyter_p=True,
     tlg_chat_id=tlg_chat_id_default,  #: Use None to disable
     torch_oom_mode="no_pdb",
+    non_interactive_exceptions="auto",
+    # non_interactive_exceptions=None,
+    non_interactive_base_exception_p=True,
 ):
+    if non_interactive_exceptions is None:
+        non_interactive_exceptions = []
+
+    elif non_interactive_exceptions == "auto":
+        from urllib.error import URLError, HTTPError
+        import socket
+
+        non_interactive_exceptions = [
+            URLError,
+            HTTPError,
+            socket.timeout,
+            TimeoutError,
+            ConnectionError,
+            OSError,
+        ]
+
     if disable_in_jupyter_p and jupyter_p():
         return
 
@@ -69,6 +88,12 @@ def ipdb_enable(
             if torch_oom_mode == "no_pdb":
                 print("Not entering debugger.", file=sys.stderr)
                 return non_pdb_excepthook(exc_type, exc_value, exc_traceback)
+
+        if non_interactive_base_exception_p and not issubclass(exc_type, Exception):
+            return non_pdb_excepthook(exc_type, exc_value, exc_traceback)
+
+        if any(isinstance(exc_value, exc) for exc in non_interactive_exceptions):
+            return non_pdb_excepthook(exc_type, exc_value, exc_traceback)
 
         return pdb_excepthook(exc_type, exc_value, exc_traceback)
 
