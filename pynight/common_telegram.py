@@ -24,12 +24,17 @@ import time
 
 
 ##
+tlg_chat_id_me = getenv("PYNIGHT_TELEGRAM_CHAT_ID_ME", "195391705")
+tlg_chat_id_me_notif = getenv("PYNIGHT_TELEGRAM_CHAT_ID_ME_NOTIF", "467602588")
+
 tlg_chat_id_default = getenv("PYNIGHT_TELEGRAM_CHAT_ID_DEFAULT", None)
 if tlg_chat_id_default is None:
     tlg_chat_id_default = getenv("TQDM_TELEGRAM_CHAT_ID", None)
 
 if tlg_chat_id_default is None:
-    tlg_chat_id_default = "195391705"
+    tlg_chat_id_default = tlg_chat_id_me
+
+
 ##
 def log_tlg(message, chat_id=None):
     chat_id = chat_id or os.environ.get("tlogs", None)
