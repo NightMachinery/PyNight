@@ -82,6 +82,7 @@ def ipdb_enable(
                     tlg_send(
                         chat_id=tlg_chat_id,
                         msg=msg,
+                        parse_mode="none",
                         wait_p=True,
                         #: We are running this in another thread anyway.
                     )
