@@ -535,8 +535,9 @@ def openai_chat_complete(
                 generation_config = {
                     "temperature": kwargs.get("temperature", 0),
                     "top_p": kwargs.get("top_p", 0.95),
-                    "top_k": kwargs.get("top_k", 64),
+                    "top_k": kwargs.get("top_k", 40),  #: topk
                     "max_output_tokens": kwargs.get("max_tokens", 8192),
+                    "response_mime_type": "text/plain",
                 }
 
                 safety_settings = {
