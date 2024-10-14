@@ -1,5 +1,4 @@
 import PIL
-import timm
 import re
 import torch
 import torchvision
@@ -14,6 +13,8 @@ from pynight.common_debugging import fn_name_current
 
 ##
 def model_transform_get(model):
+    import timm
+
     if hasattr(model, "pretrained_cfg"):
         data_cfg = timm.data.resolve_data_config(model.pretrained_cfg)
         # ic(data_cfg)
