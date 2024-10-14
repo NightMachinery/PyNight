@@ -25,7 +25,9 @@ import time
 
 ##
 tlg_chat_id_me = getenv("PYNIGHT_TELEGRAM_CHAT_ID_ME", "195391705")
-tlg_chat_id_me_notif = getenv("PYNIGHT_TELEGRAM_CHAT_ID_ME_NOTIF", "467602588")
+tlg_chat_id_me_notif = getenv(
+    "PYNIGHT_TELEGRAM_CHAT_ID_ME_NOTIF", "-1002368649511"
+)  #: "Logger Notif"
 
 tlg_chat_id_default = getenv("PYNIGHT_TELEGRAM_CHAT_ID_DEFAULT", None)
 if tlg_chat_id_default is None:
