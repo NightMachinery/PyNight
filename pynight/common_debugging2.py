@@ -29,9 +29,13 @@ except ImportError:
 def ipdb_enable(
     tlg_chat_id=tlg_chat_id_default,  #: Use None to disable
     torch_oom_mode="no_pdb",
+    ##
     non_interactive_exceptions="auto",
     # non_interactive_exceptions=None,
     non_interactive_base_exception_p=True,
+    non_interactive_traceback_mode="Verbose",
+    # non_interactive_traceback_mode="Context",
+    ##
     jupyter_mode=True,
     bell_name="bell-python-error",
     jupyter_bell_name="bell-jupyter-error",
@@ -58,13 +62,14 @@ def ipdb_enable(
             OSError,
         ]
 
+    #: [[https://ipython.readthedocs.io/en/8.18.0/api/generated/IPython.core.ultratb.html][Module: core.ultratb — IPython 8.18.0 documentation]]
     pdb_excepthook = ultratb.FormattedTB(
         mode="Context",
         color_scheme="Linux",
         call_pdb=1,
     )
     non_pdb_excepthook = ultratb.FormattedTB(
-        mode="Context",
+        mode=non_interactive_traceback_mode,
         color_scheme="Linux",
         call_pdb=0,
     )
