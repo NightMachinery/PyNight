@@ -12,6 +12,8 @@ def model_name_clip_p(model_name):
 
 
 def model_needs_MLP_DU_p(model_name: str) -> bool:
+    #: @todo Add MambaOut
+
     specific_models = {
         "gmixer_24_224.ra3_in1k",
         "vit_giant_patch14_dinov2",

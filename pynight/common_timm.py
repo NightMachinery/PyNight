@@ -22,7 +22,13 @@ def model_transform_get(model):
         transform = timm.data.create_transform(**data_cfg)
 
     elif hasattr(model, "visual"):
-        from open_clip.transform import image_transform_v2, AugmentationCfg, PreprocessCfg, merge_preprocess_dict, merge_preprocess_kwargs
+        from open_clip.transform import (
+            image_transform_v2,
+            AugmentationCfg,
+            PreprocessCfg,
+            merge_preprocess_dict,
+            merge_preprocess_kwargs,
+        )
 
         pp_cfg = PreprocessCfg(**model.visual.preprocess_cfg)
 
@@ -32,17 +38,22 @@ def model_transform_get(model):
         )
 
     else:
-        raise NotImplemenetedError(f"{fn_name_current()}: could not find the transforms needed by the model")
+        raise NotImplemenetedError(
+            f"{fn_name_current()}: could not find the transforms needed by the model"
+        )
 
     transforms = transform.transforms
     #: =transforms= is Compose and =.transforms= gives us a list of all the transforms in it.
-    
+
     if isinstance(transforms[-1], torchvision.transforms.Normalize):
         transform_tensor = torchvision.transforms.Compose(transforms[:-1])
         transform_normalize = transforms[-1]
 
     else:
-        print(f"{fn_name_current()}: There was no Normalize transform for the current model!", flush=True)
+        print(
+            f"{fn_name_current()}: There was no Normalize transform for the current model!",
+            flush=True,
+        )
 
         transform_tensor = torchvision.transforms.Compose(transforms)
         transform_normalize = torchvision.transforms.ToTensor
@@ -87,16 +98,28 @@ def patch_info_from_name(
     image_resolution = None
     patch_resolution = None
     model_size_pattern = None
-    if model_name == "vit_small_patch14_dinov2" or "patch14_dinov2.lvd142m" in model_name:
+    if (
+        model_name == "vit_small_patch14_dinov2"
+        or "patch14_dinov2.lvd142m" in model_name
+    ):
         patch_resolution = 14
         image_resolution = 518
 
     elif model_name in [
-            "gmixer_24_224.ra3_in1k",
+        "gmixer_24_224.ra3_in1k",
     ]:
         num_prefix_tokens = 0
 
         patch_resolution = 16
+        image_resolution = 224
+
+    elif model_name in [
+        "mambaout_small.in1k",
+        "mambaout_tiny.in1k",
+    ]:
+        num_prefix_tokens = 0
+
+        patch_resolution = 16  #: @?
         image_resolution = 224
 
     # elif model_name.startswith("RN") or model_name in (
