@@ -33,8 +33,8 @@ def ipdb_enable(
     non_interactive_exceptions="auto",
     # non_interactive_exceptions=None,
     non_interactive_base_exception_p=True,
-    non_interactive_traceback_mode="Verbose",
-    # non_interactive_traceback_mode="Context",
+    # non_interactive_traceback_mode="Verbose",
+    non_interactive_traceback_mode="Context",
     ##
     jupyter_mode=True,
     bell_name="bell-python-error",
@@ -43,8 +43,13 @@ def ipdb_enable(
     in_jupyter_p = jupyter_p()
     #: jupyter_p returns False for IPython terminal shells
 
-    if in_jupyter_p and jupyter_mode == "disabled":
-        return
+    if in_jupyter_p:
+        if jupyter_mode == "disabled":
+            return
+
+        non_interactive_traceback_mode = "Context"
+        #: Verbose can be too verbose and crash emacs
+        #: I am using `print_traceback()` instead.
 
     if non_interactive_exceptions is None:
         non_interactive_exceptions = []
@@ -76,6 +81,15 @@ def ipdb_enable(
 
     @wraps(sys.excepthook)
     def excepthook_wrapper(exc_type, exc_value, exc_traceback):
+        def print_traceback():
+            #: @duplicateCode/be81cfe1eb287b53e25e5d62d3a838a5
+            ##
+            try:
+                print(traceback.format_exc(), file=sys.stderr)
+
+            except Exception:
+                pass
+
         if tlg_chat_id:
 
             #: Send notification to Telegram in a separate thread
@@ -100,14 +114,17 @@ def ipdb_enable(
         if in_jupyter_p:
             bell_call_remote(jupyter_bell_name)
 
+            print_traceback()
+
             return non_pdb_excepthook(exc_type, exc_value, exc_traceback)
+
         else:
             bell_call_remote(bell_name)
 
             if TORCH_AVAILABLE and isinstance(exc_value, torch.cuda.OutOfMemoryError):
                 print("CUDA OutOfMemoryError occurred.", file=sys.stderr)
                 if torch_oom_mode == "no_pdb":
-                    print("Not entering debugger.", file=sys.stderr)
+                    print_traceback()
                     return non_pdb_excepthook(exc_type, exc_value, exc_traceback)
 
             elif (
@@ -115,6 +132,7 @@ def ipdb_enable(
             ) or (
                 any(isinstance(exc_value, exc) for exc in non_interactive_exceptions)
             ):
+                print_traceback()
                 return non_pdb_excepthook(exc_type, exc_value, exc_traceback)
 
             else:

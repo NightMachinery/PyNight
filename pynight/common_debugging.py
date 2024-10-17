@@ -12,6 +12,8 @@ deus_p = os.environ.get("deusvult", None)
 
 
 def traceback_print(file=None):
+    #: @duplicateCode/be81cfe1eb287b53e25e5d62d3a838a5
+    ##
     print(traceback.format_exc(), file or sys.stderr)
 
 
