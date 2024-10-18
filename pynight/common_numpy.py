@@ -43,8 +43,9 @@ def image_url2np(
     format=None,
     drop_alpha=True,
     cache_dir="/opt/decompv/cache",
-    accept_gray_p=False,
     # cache_dir=None,
+    accept_gray_p=True,
+    # accept_gray_p=False,
 ):
     if format is None:
         format = url.split(".")[-1]
@@ -86,7 +87,13 @@ def image_url2np(
 
     if image_np.ndim == 2:  #: the image is probably grayscale
         if accept_gray_p:
-            image_np = image_np[:, :, np.newaxis]
+            ##
+            # image_np = image_np[:, :, np.newaxis]
+            ##
+            #: Convert grayscale image to RGB by stacking the grayscale data into three channels
+            image_np = np.stack((image_np,) * 3, axis=-1)
+            #: [[https://numpy.org/doc/stable/reference/generated/numpy.stack.html][numpy.stack — NumPy v2.1 Manual]]
+            ##
         else:
             return None
 
