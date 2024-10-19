@@ -122,6 +122,14 @@ def patch_info_from_name(
         patch_resolution = 16  #: @?
         image_resolution = 224
 
+    elif model_name in [
+        "vit_so400m_patch14_siglip_gap_378.webli_ft_in1k",
+    ]:
+        num_prefix_tokens = 0
+
+        patch_resolution = 14
+        image_resolution = 378
+
     # elif model_name.startswith("RN") or model_name in (
     #     "blip",
     #     "ALIGN",
