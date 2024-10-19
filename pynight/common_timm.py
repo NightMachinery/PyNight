@@ -246,7 +246,10 @@ def image_from_url(*, model, url, accept_gray_p=True, device=None):
         device = None
 
     if isinstance(url, str):
-        image_np = image_url2np(url=url, accept_gray_p=accept_gray_p,)
+        image_np = image_url2np(
+            url=url,
+            accept_gray_p=accept_gray_p,
+        )
 
         image_pil = torchvision.transforms.ToPILImage()(image_np)
 
@@ -284,7 +287,15 @@ def image_batch_from_urls(*, model, urls, accept_gray_p=True, device=None):
     elif device == "NA":
         device = None
 
-    image_objects = [image_from_url(model=model, url=url, device="NA", accept_gray_p=accept_gray_p,) for url in urls]
+    image_objects = [
+        image_from_url(
+            model=model,
+            url=url,
+            device="NA",
+            accept_gray_p=accept_gray_p,
+        )
+        for url in urls
+    ]
 
     #: Assuming all images are of same dimensions
     image_batch_cpu = torch.stack(
