@@ -145,7 +145,10 @@ def to_iterable(possibly_iterable):
 
 
 ##
-def list_dup_rm(lst, keep_first_p=True):
+def list_dup_rm(
+    lst,
+    keep_first_p=True,
+):
     """
     Remove duplicates from the list while preserving order.
 
@@ -165,6 +168,7 @@ def list_dup_rm(lst, keep_first_p=True):
                 result.append(item)
 
         return result
+
     else:
         return list_dup_rm(lst[::-1], keep_first_p=True)[::-1]
 
