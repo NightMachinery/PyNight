@@ -117,7 +117,9 @@ class tqdm_telegram(tqdm_auto):
             self.tgio.write("")
 
     def close(self):
-        if self.disable:
+        if getattr(self, "disable", False):
+            #: @forgot I don't know if we are supposed to inherit this `self.disable` or what.
+
             return
 
         super(tqdm_telegram, self).close()
