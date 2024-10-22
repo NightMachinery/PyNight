@@ -130,6 +130,12 @@ def patch_info_from_name(
         patch_resolution = 14
         image_resolution = 378
 
+    elif model_name in [
+        'flexivit_large.1200ep_in1k',
+    ]:
+        patch_resolution = 16
+        image_resolution = 240
+
     # elif model_name.startswith("RN") or model_name in (
     #     "blip",
     #     "ALIGN",
