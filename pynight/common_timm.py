@@ -162,6 +162,7 @@ def patch_info_from_name(
             re.search(pat, model_name)
             for pat in [
                 "^vit_",
+                "^beit(?:v2)?_",
                 "^eva(?:02)?_",
             ]
         ):
