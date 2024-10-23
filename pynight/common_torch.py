@@ -39,6 +39,12 @@ except ImportError:
     pass
 
 
+try:
+    import nvidia_smi
+    NVIDIA_SMI_AVAILABLE = True
+except ImportError:
+    NVIDIA_SMI_AVAILABLE = False
+
 ##
 torch_shape_get_hidden = set()
 torch_shape_get_hidden_ids = set()
@@ -195,25 +201,47 @@ def torch_gpu_memory_stats():
     print(f"gpu allocated: {allocated}\ngpu reserved: {reserved}")
 
 
-def gpu_memory_get(unit="GB"):
+def gpu_memory_get(unit="GB", mode="total"):
+    """
+    Get GPU memory information. Uses PyTorch for total memory and nvidia-smi for free memory.
+
+    Args:
+        unit (str): Memory unit ('GB' for gigabytes)
+        mode (str): Memory mode ('total' for total memory, 'free' for free memory across all processes)
+
+    Returns:
+        float: Memory amount in specified unit
+    """
     if unit.lower() == "gb":
         unit_divide_by = 1024**3
 
-    if torch.cuda.is_available():
-        device = torch.cuda.current_device()
-
-        # Get the total memory of the current GPU in bytes
-        total_memory = torch.cuda.get_device_properties(device).total_memory
-
-        total_memory_unit = total_memory / unit_divide_by
-
-        return total_memory_unit
-
-    else:
+    if not torch.cuda.is_available():
         msg = "CUDA is not available. Please check your installation."
         print(msg, file=sys.stderr)
-
         return 0
+
+    device = torch.cuda.current_device()
+
+    if mode.lower() == "total":
+        # Use PyTorch for total memory
+        memory = torch.cuda.get_device_properties(device).total_memory
+    elif mode.lower() == "free":
+        # Use nvidia-smi for free memory (accounts for all processes)
+        if not NVIDIA_SMI_AVAILABLE:
+            msg = "nvidia-smi Python bindings not found. Install with: pip install nvidia-ml-py"
+            print(msg, file=sys.stderr)
+            return 0
+
+        nvidia_smi.nvmlInit()
+        handle = nvidia_smi.nvmlDeviceGetHandleByIndex(device)
+        info = nvidia_smi.nvmlDeviceGetMemoryInfo(handle)
+        memory = info.free
+        nvidia_smi.nvmlShutdown()
+    else:
+        raise ValueError("mode must be either 'total' or 'free'")
+
+    memory_in_unit = memory / unit_divide_by
+    return memory_in_unit
 
 
 def torch_memory_tensor(tensor, s=3):
