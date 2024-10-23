@@ -162,6 +162,7 @@ def patch_info_from_name(
             re.search(pat, model_name)
             for pat in [
                 "^vit_",
+                "^deit3_", #: We need to set num_prefix_tokens to 2 for DeiT1
                 "^beit(?:v2)?_",
                 "^eva(?:02)?_",
             ]
