@@ -18,7 +18,10 @@ def cat(file_path):
 
 
 ##
-def mkdir(path, do_dirname=False):
+def mkdir(
+    path,
+    do_dirname=False,
+):
     if do_dirname:
         path = os.path.dirname(path)
 
