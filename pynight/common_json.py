@@ -94,7 +94,7 @@ def json_save(
     *,
     file,
     indent=2,
-    exists="ignore",
+    exists="overwrite",
     **kwargs,
 ):
     json_data = dumps(obj, indent=indent, **kwargs)

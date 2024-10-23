@@ -176,7 +176,10 @@ class open_file:
         self.kwargs = kwargs
 
     def __enter__(self):
-        if self.exists is None or self.exists == "ignore":
+        if self.exists is None or self.exists in [
+            "ignore",
+            "overwrite",
+        ]:
             pass
         elif self.exists == "error" and os.path.exists(self.file_path):
             raise FileExistsError(f"File '{self.file_path}' already exists.")
