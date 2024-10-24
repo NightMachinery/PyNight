@@ -132,6 +132,7 @@ def patch_info_from_name(
         image_resolution = 224
 
     elif model_name in [
+        "vit_so400m_patch14_siglip_378.webli_ft_in1k",
         "vit_so400m_patch14_siglip_gap_378.webli_ft_in1k",
     ]:
         num_prefix_tokens = 0
