@@ -130,6 +130,12 @@ def patch_info_from_name(
         patch_resolution = 14
         image_resolution = 378
 
+    elif model_name.startswith("ViT-SO400M-14-SigLIP-384"):
+        num_prefix_tokens = 0
+
+        patch_resolution = 14
+        image_resolution = 384
+
     elif model_name in [
         'flexivit_large.1200ep_in1k',
     ]:
