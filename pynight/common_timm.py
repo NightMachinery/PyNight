@@ -136,7 +136,7 @@ def patch_info_from_name(
         patch_resolution = 16
         image_resolution = 240
 
-    elif model_name.startswith("EVA02-E-14-plus"):
+    elif model_name.startswith("EVA02-E-14"):
         patch_resolution = 14
         image_resolution = 224
 
