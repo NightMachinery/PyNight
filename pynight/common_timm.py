@@ -123,6 +123,15 @@ def patch_info_from_name(
         image_resolution = 224
 
     elif model_name in [
+        "ViT-SO400M-14-SigLIP",
+        "ViT-SO400M-14-SigLIP.OC.webli",
+    ] or model_name.startswith("vit_so400m_patch14_siglip_224"):
+        num_prefix_tokens = 0
+
+        patch_resolution = 14
+        image_resolution = 224
+
+    elif model_name in [
         "vit_so400m_patch14_siglip_gap_378.webli_ft_in1k",
     ]:
         num_prefix_tokens = 0
@@ -137,7 +146,7 @@ def patch_info_from_name(
         image_resolution = 384
 
     elif model_name in [
-        'flexivit_large.1200ep_in1k',
+        "flexivit_large.1200ep_in1k",
     ]:
         patch_resolution = 16
         image_resolution = 240
@@ -172,7 +181,7 @@ def patch_info_from_name(
             re.search(pat, model_name)
             for pat in [
                 "^vit_",
-                "^deit3_", #: We need to set num_prefix_tokens to 2 for DeiT1
+                "^deit3_",  #: We need to set num_prefix_tokens to 2 for DeiT1
                 "^beit(?:v2)?_",
                 "^eva(?:02)?_",
             ]
