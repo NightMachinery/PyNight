@@ -136,6 +136,10 @@ def patch_info_from_name(
         patch_resolution = 16
         image_resolution = 240
 
+    elif model_name.startswith("EVA02-E-14-plus"):
+        patch_resolution = 14
+        image_resolution = 224
+
     # elif model_name.startswith("RN") or model_name in (
     #     "blip",
     #     "ALIGN",
