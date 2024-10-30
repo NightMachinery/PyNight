@@ -14,7 +14,7 @@ def rtl_iterfzf(
     multi=True,
     **iterfzf_kwargs,
 ):
-    iterfzf_kwargs["mulit"] = multi
+    iterfzf_kwargs["multi"] = multi
 
     if reshaper_func is None:
         reshaper_func = rtl_reshaper_v1
