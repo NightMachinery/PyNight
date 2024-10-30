@@ -14,6 +14,8 @@ def version_sort_key(
     float_p=False,
     sign_pattern=r"(?:-|\+)?",
 ):
+    #: @alt [[https://github.com/SethMMorton/natsort][SethMMorton/natsort: Simple yet flexible natural sorting in Python.]]
+    ##
     """Sort strings containing numbers in a way that the numbers are considered as a whole,
     not individual characters (e.g. 10 comes after 2)"""
 

@@ -82,3 +82,32 @@ for i in tqdm(range(100)):
 
 
 
+* =rtl_iterfzf=
+#+begin_src python :eval never
+from pynight.common_fzf import rtl_iterfzf
+from pynight.common_rtl import rtl_reshaper_v1
+
+# Your iterable of items
+iterable_items = [
+    "سلام دنیا",  # Persian for "Hello World"
+    "Hello World",
+    "مرحبا بالعالم",  # Arabic for "Hello World"
+    "Bonjour le monde",
+]
+
+# Use the rtl_iterfzf function
+result = rtl_iterfzf(
+    iterable_items,
+    reshaper_func=rtl_reshaper_v1,
+    multi=True,  # Set to True if you want to select multiple items
+    # You can pass additional iterfzf options here
+)
+
+if result:
+    print("Selected Items:", result.selected)
+    print("Indices:", result.indices)
+    
+else:
+    print("No selection made.")
+#+end_src
+
