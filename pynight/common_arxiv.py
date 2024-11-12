@@ -4,7 +4,7 @@ import re
 def normalize_path_for_arxiv(
     path,
     *,
-    disallowed_regex=r"[ :&\\]",
+    disallowed_regex=r"[ :&\\\"]",
 ):
     """
     Normalize a file path by replacing spaces, slashes, colons, ampersands,
