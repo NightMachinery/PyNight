@@ -41,6 +41,7 @@ except ImportError:
 
 try:
     import nvidia_smi
+
     NVIDIA_SMI_AVAILABLE = True
 except ImportError:
     NVIDIA_SMI_AVAILABLE = False
@@ -1046,6 +1047,67 @@ def quantile_sum(
 ##
 def swap_backward(forward, backward):
     return forward.detach() + (backward - backward.detach())
+
+
+def module_mapper(
+    module,
+    module_mapping,
+    prefix_autoset_p=True,
+):
+    """
+    Recursively replace modules based on the provided module_mapping.
+
+    Args:
+    module (nn.Module): The input module to be modified.
+    module_mapping (dict): A dictionary mapping original module types to their replacements.
+
+    Returns:
+    SimpleObj: A named tuple containing the modified model and a set of module names not replaced.
+    """
+    modules_not_replaced = set()
+
+    def _mapper(
+        module,
+        prefix="",
+        recurse_on_mapped_p=True,
+    ):
+        def process_children(mod):
+            not_replaced = set()
+            for name, child in mod.named_children():
+                child_prefix = f"{prefix}.{name}" if prefix else name
+                modified_child, child_not_replaced = _mapper(
+                    child, child_prefix, recurse_on_mapped_p
+                )
+                if modified_child is not child:
+                    setattr(mod, name, modified_child)
+                not_replaced.update(child_not_replaced)
+            return not_replaced
+
+        if type(module) in module_mapping:
+            replacement_class = module_mapping[type(module)]
+            if not isinstance(module, replacement_class):
+                replacement = mod_init_from(module, replacement_class)
+
+                if recurse_on_mapped_p:
+                    process_children(replacement)
+
+                return replacement, set()
+
+        if len(list(module.children())) == 0:
+            return module, {prefix}
+
+        not_replaced = process_children(module)
+        return module, not_replaced
+
+    new_model, modules_not_replaced = _mapper(module)
+
+    if prefix_autoset_p:
+        new_model = torch_prefix_autoset(new_model)
+
+    return simple_obj(
+        new_model=new_model,
+        modules_not_replaced=modules_not_replaced,
+    )
 
 
 ##
