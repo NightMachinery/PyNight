@@ -1049,6 +1049,57 @@ def swap_backward(forward, backward):
     return forward.detach() + (backward - backward.detach())
 
 
+##
+def mod_copy_params_buffers(original, replacement):
+    for name, param in original.named_parameters():
+        if "." in name:
+            print(f"skipped submodule's param: {name}")
+            continue
+
+        try:
+            replacement.register_parameter(name, param)
+        except:
+            ic(name, torch_shape_get(param))
+            raise
+
+    for name, buffer in original.named_buffers():
+        replacement.register_buffer(name, buffer)
+
+
+def mod_init_from(original, replacement):
+    import inspect
+
+    kwargs = {}
+    sig_keys = list(inspect.signature(original.__init__).parameters.keys())
+    # sig_keys += ['prefix']
+
+    for arg in sig_keys:
+        if hasattr(original, arg):
+            kwargs[arg] = getattr(original, arg)
+
+    if hasattr(original, "bias"):
+        kwargs["bias"] = True if original.bias is not None else False
+
+    try:
+        replacement = replacement(**kwargs)
+
+        if hasattr(original, "prefix"):
+            replacement.prefix = original.prefix
+
+    except:
+        ic(sig_keys, kwargs)
+        raise
+
+    mod_copy_params_buffers(original, replacement)
+
+    #: Copy submodules
+    for name, submodule in original.named_children():
+        # if not hasattr(replacement, name):
+        setattr(replacement, name, submodule)
+
+    return replacement
+
+
 def module_mapper(
     module,
     module_mapping,
