@@ -1,3 +1,4 @@
+import os
 from os import getenv
 
 
@@ -19,6 +20,20 @@ def getenv2(injected_value, env_var, default):
         return str_falsey_to_none(getenv(env_var, default=default))
 
     return injected_value
+
+
+##
+def delenv(varname: str) -> None:
+    """
+    Safely delete an environment variable if it exists.
+
+    Args:
+        varname (str): Name of environment variable to delete
+    """
+    try:
+        del os.environ[varname]
+    except KeyError:
+        pass
 
 
 ##
