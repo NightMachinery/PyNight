@@ -1,3 +1,4 @@
+from os import getenv
 import PIL
 import re
 import torch
@@ -95,8 +96,14 @@ def patch_info_from_name(
     num_prefix_tokens = 1
 
     model_size = None
-    image_resolution = None
-    patch_resolution = None
+    image_resolution = getenv("DECOMPV_MODEL_IMAGE_SIZE", None)
+    if image_resolution:
+        image_resolution = int(image_resolution)
+
+    patch_resolution = getenv("DECOMPV_MODEL_PATCH_SIZE", None)
+    if patch_resolution:
+        patch_resolution = int(patch_resolution)
+
     model_size_pattern = None
     if (
         model_name == "vit_small_patch14_dinov2"
@@ -212,12 +219,12 @@ def patch_info_from_name(
                 f"{fn_name_current()}: unsupported model name: {model_name}"
             )
 
-        # Find patch resolution
-        patch_match = re.search(patch_pattern, model_name)
-        patch_resolution = int(patch_match.group(1)) if patch_match else None
-        assert patch_resolution is not None
+        if patch_resolution is None:
+            patch_match = re.search(patch_pattern, model_name)
+            patch_resolution = int(patch_match.group(1)) if patch_match else None
+            assert patch_resolution is not None
 
-        if resolution_pattern is not None:
+        if resolution_pattern is not None and image_resolution is None:
             # Find image resolution
             resolution_match = re.search(resolution_pattern, model_name)
             image_resolution = (
