@@ -440,6 +440,22 @@ def openai_chat_complete(
     model_orig = model
     backend, model = select_backend(model_orig)
 
+    if model_orig in [
+        "o1-preview",
+    ]:
+        #: Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.
+        ##
+        if "max_tokens" in kwargs:
+            if "max_completion_tokens" not in kwargs:
+                kwargs["max_completion_tokens"] = kwargs.pop("max_tokens")
+
+            else:
+                del kwargs["max_tokens"]
+
+        #: Unsupported value: 'temperature' does not support 0 with this model. Only the default (1) value is supported.
+        if "temperature" in kwargs:
+                del kwargs["temperature"]
+
     if interactive:
         if copy_last_message is None:
             copy_last_message = True
