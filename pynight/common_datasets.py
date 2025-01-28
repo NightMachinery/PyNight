@@ -21,9 +21,8 @@ from pynight.common_files import (
     rm,
     mkdir,
 )
-import datasets
 from collections.abc import Mapping, MutableMapping
-from datasets import concatenate_datasets
+import datasets
 import time
 from dataclasses import dataclass
 from typing import List, Callable
@@ -356,7 +355,7 @@ def mapconcat(
             format_source = dict(ds_source_columns.format)
             format_source["columns"] += ds_new.format["columns"]
 
-            ds_combined = concatenate_datasets([ds_source_columns, ds_new], axis=1)
+            ds_combined = datasets.concatenate_datasets([ds_source_columns, ds_new], axis=1)
             ds_combined.set_format(**format_source)
 
             # ic(dataset.format, ds_source_columns.format, ds_new.format, ds_combined.format, format_source)
