@@ -25,7 +25,7 @@ from collections.abc import Mapping, MutableMapping
 import datasets
 import time
 from dataclasses import dataclass
-from typing import List, Callable
+from typing import Dict, List, Callable
 from icecream import ic
 
 from pynight.common_dynamic import (
@@ -101,10 +101,10 @@ def transform_result_postprocess(data):
 ##
 @dataclass()
 class TransformedDataset:
-    dataset: datasets.Dataset  #: or dict
+    dataset: Dict  #: datasets.Dataset or dict
     transforms: List[Callable]
 
-    def __init__(self, dataset: datasets.Dataset, transforms: List[Callable] = None):
+    def __init__(self, dataset, transforms=None):
         self.dataset = dataset
         self.transforms = transforms if transforms is not None else []
 
@@ -355,7 +355,9 @@ def mapconcat(
             format_source = dict(ds_source_columns.format)
             format_source["columns"] += ds_new.format["columns"]
 
-            ds_combined = datasets.concatenate_datasets([ds_source_columns, ds_new], axis=1)
+            ds_combined = datasets.concatenate_datasets(
+                [ds_source_columns, ds_new], axis=1
+            )
             ds_combined.set_format(**format_source)
 
             # ic(dataset.format, ds_source_columns.format, ds_new.format, ds_combined.format, format_source)
