@@ -16,6 +16,7 @@ from math import prod
 from PIL import Image
 from .common_jupyter import jupyter_gc
 from .common_numpy import hash_array_np
+from .common_obj import delattr_force
 from pynight.common_hash import is_hashable
 from pynight.common_files import rm
 from pynight.common_icecream import ic
