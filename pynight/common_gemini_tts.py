@@ -1,12 +1,14 @@
 ##
 #: All Gemini voices from the API documentation
 #: [[https://ai.google.dev/gemini-api/docs/speech-generation#voices]]
+#: The order of these is used in `gemini-tts` to select voices for speakers when otherwise unspecified.
 GEMINI_VOICES = {
     "Zephyr": "Bright",
-    "Puck": "Upbeat",
     "Charon": "Informative",
-    "Kore": "Firm",
+    "Gacrux": "Mature",
+    "Puck": "Upbeat",
     "Fenrir": "Excitable",
+    "Kore": "Firm",
     "Leda": "Youthful",
     "Orus": "Firm",
     "Aoede": "Breezy",
@@ -24,7 +26,6 @@ GEMINI_VOICES = {
     "Achernar": "Soft",
     "Alnilam": "Firm",
     "Schedar": "Even",
-    "Gacrux": "Mature",
     "Pulcherrima": "Forward",
     "Achird": "Friendly",
     "Zubenelgenubi": "Casual",
