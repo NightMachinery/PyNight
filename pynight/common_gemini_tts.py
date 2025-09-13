@@ -5,14 +5,14 @@
 #: The order of these is used in `gemini-tts` to select voices for speakers when otherwise unspecified.
 GEMINI_VOICES = {
     "Zephyr": "Bright",
-    "Charon": "Informative",
+    "Orus": "Firm",
     "Gacrux": "Mature",
     "Puck": "Upbeat",
     "Fenrir": "Excitable",
     "Kore": "Firm",
     "Leda": "Youthful",
-    "Orus": "Firm",
     "Aoede": "Breezy",
+    "Charon": "Informative",
     "Callirrhoe": "Easy-going",
     "Autonoe": "Bright",
     "Enceladus": "Breathy",
