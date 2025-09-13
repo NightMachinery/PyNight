@@ -1,6 +1,7 @@
 ##
 #: All Gemini voices from the API documentation
 #: [[https://ai.google.dev/gemini-api/docs/speech-generation#voices]]
+#: [[id:61ff6301-a264-4953-afb0-6ab13162d84c][AI Studio/audio, TTS]]
 #: The order of these is used in `gemini-tts` to select voices for speakers when otherwise unspecified.
 GEMINI_VOICES = {
     "Zephyr": "Bright",
