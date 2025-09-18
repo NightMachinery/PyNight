@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pynight"
-version = "0.2.3"
+version = "0.2.4"
 description = "My Python utility library."
 authors = ["NightMachinary <rudiwillalwaysloveyou@gmail.com>"]
 license = "MIT"
@@ -12,7 +12,7 @@ dnspython = "^2.1.0"
 executing = "^1.2.0"
 pyperclip = "^1.8.2"
 openai = "^1.14.2"
-tiktoken = "^0.6"
+tiktoken = "*"
 spacy = "^3.5.1"
 matplotlib = "^3.7.1"
 aiofile = "*"
