@@ -1,3 +1,4 @@
+import mimetypes
 import os
 import re
 import io
@@ -226,6 +227,90 @@ def hdd_free_get(
         raise ValueError(f"Invalid unit: '{unit}'")
 
     return free_space
+
+
+##
+def mime_guess(
+    file_path,
+    *,
+    backend="magic",
+):
+    """
+    Guesses the MIME type of a file using different backends with lazy loading.
+
+    This function imports the required libraries only when the corresponding
+    backend is selected.
+
+    Args:
+        file_path (str): The path to the file.
+        backend (str, optional): The backend to use for guessing the MIME type.
+            Defaults to "magic".
+            Possible values are:
+            - "magic": Uses the `python-magic` library. Most accurate.
+            - "puremagic": A pure Python alternative to `python-magic`.
+            - "filetype": A small and dependency-free pure Python library.
+            - "mimetypes": Uses Python's built-in `mimetypes` module, which
+              guesses based on the file extension.
+
+    Returns:
+        str or None: The guessed MIME type as a string (e.g., 'image/jpeg'),
+                     or None if the MIME type cannot be determined.
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file '{file_path}' was not found.")
+
+    if backend == "magic":
+        try:
+            import magic
+        except ImportError:
+            raise ImportError(
+                "The 'python-magic' library is not installed. "
+                "Please install it using 'pip install python-magic-bin' (Windows) "
+                "or 'pip install python-magic' (Linux/macOS)."
+            )
+        try:
+            mime = magic.Magic(mime=True)
+            return mime.from_file(file_path)
+        except Exception:
+            return None
+
+    elif backend == "puremagic":
+        try:
+            import puremagic
+        except ImportError:
+            raise ImportError(
+                "The 'puremagic' library is not installed. "
+                "Please install it using 'pip install puremagic'."
+            )
+        try:
+            results = puremagic.magic_file(file_path)
+            return results[0].mime_type if results else None
+        except Exception:
+            return None
+
+    elif backend == "filetype":
+        try:
+            import filetype
+        except ImportError:
+            raise ImportError(
+                "The 'filetype' library is not installed. "
+                "Please install it using 'pip install filetype.py'."
+            )
+        try:
+            kind = filetype.guess(file_path)
+            return kind.mime if kind else None
+        except Exception:
+            return None
+
+    elif backend == "mimetypes":
+        mime_type, _ = mimetypes.guess_type(file_path)
+        return mime_type
+
+    else:
+        raise ValueError(
+            f"Unknown backend: '{backend}'. "
+            "Available backends are: 'magic', 'puremagic', 'filetype', 'mimetypes'."
+        )
 
 
 ##
