@@ -7,13 +7,13 @@ pip install -U pynight
 
 Or install the latest version directly from git:
 #+begin_example zsh
-pip install git+https://github.com/NightMachinery/PyNight.git
+pip install 'git+https://github.com/NightMachinery/PyNight.git'
 #+end_example
 
 To reinstall the latest version:
 #+begin_example zsh
-pip install git+https://github.com/NightMachinery/PyNight.git
-pip install --no-deps --force-reinstall git+https://github.com/NightMachinery/PyNight.git
+pip install 'git+https://github.com/NightMachinery/PyNight.git'
+pip install --no-deps --force-reinstall 'git+https://github.com/NightMachinery/PyNight.git'
 #+end_example
 
 * =pynight.common_dynamic=
