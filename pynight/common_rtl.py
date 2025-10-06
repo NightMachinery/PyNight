@@ -1,8 +1,11 @@
 ##
 #: @duplicateCode/5a0df91917ef00a5024c8918aa56b273
 
-persian_chars = "ضصثقفغعهخحجچشسیبلاتنمکگظطزرذدپو.ًٌٍَُِّْ][}{|ؤئيإأآة»«:؛كٓژٰ‌ٔء<>؟٬٫﷼٪×،)(ـ۱۲۳۴۵۶۷۸۹۰"
-en_chars = "qwertyuiop[]asdfghjkl;'zxcvbnm,.QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?@#\$%^&()_1234567890"
+persian_chars = (
+    "ضصثقفغعهخحجچشسیبلاتنمکگظطزرذدپو.ًٌٍَُِّْ][}{|ؤئيإأآة»«:؛كٓژٰ‌ٔء<>؟٬٫﷼٪×،)(ـ۱۲۳۴۵۶۷۸۹۰"
+)
+en_chars = "qwertyuiop[]asdfghjkl;'zxcvbnm,.QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?@#$%^&()_1234567890"
+#: Note that Zsh escaping is different from Python; in particular, `\$` should become `$`.
 
 # Create a translation table
 # str.maketrans maps each character in the first string to the character
