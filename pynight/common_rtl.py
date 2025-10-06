@@ -14,6 +14,7 @@ en_chars = "qwertyuiop[]asdfghjkl;'zxcvbnm,.QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?@
 per2en_translation_table = str.maketrans(persian_chars, en_chars)
 en2per_translation_table = str.maketrans(en_chars, persian_chars)
 
+
 def per2en(input_str: str) -> str:
     """
     Translates Persian characters and numerals in the input string to their
@@ -28,6 +29,7 @@ def per2en(input_str: str) -> str:
     # Apply the translation to the input string
     return input_str.translate(per2en_translation_table)
 
+
 def en2per(input_str: str) -> str:
     """
     Translates English/Latin characters and numerals in the input string to their
@@ -41,6 +43,7 @@ def en2per(input_str: str) -> str:
     """
     # Apply the translation to the input string
     return input_str.translate(en2per_translation_table)
+
 
 ##
 def rtl_reshaper_v1(text):
@@ -61,9 +64,9 @@ def contains_persian(text):
     ##
     for c in text:
         if (
-            "\u0600" <= c <= "\u06FF"
-            or "\u0750" <= c <= "\u077F"
-            or "\u08A0" <= c <= "\u08FF"
+            "\u0600" <= c <= "\u06ff"
+            or "\u0750" <= c <= "\u077f"
+            or "\u08a0" <= c <= "\u08ff"
         ):
             return True
     return False
