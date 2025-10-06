@@ -11,12 +11,18 @@ together_key = None
 def setup_together_key(
     backend="openai", #: less buggy, no need for another package
     # backend="native",
+    *,
+    raise_error_p=False,
 ):
     global together_key
     global together_client
 
     together_key = z("var-get together_api_key").outrs
-    assert together_key, "setup_together_key: could not get Together API key!"
+    if not together_key:
+        if raise_error_p:
+            assert False, "setup_together_key: could not get Together API key!"
+        else:
+            return None
 
     if backend == "native":
         from together import Together

@@ -7,12 +7,16 @@ anthropic_client = None
 anthropic_key = None
 
 
-def setup_anthropic_key():
+def setup_anthropic_key(*, raise_error_p=False):
     global anthropic_key
     global anthropic_client
 
     anthropic_key = z("var-get anthropic_api_key").outrs
-    assert anthropic_key, "setup_anthropic_key: could not get Anthropic API key!"
+    if not anthropic_key:
+        if raise_error_p:
+            assert False, "setup_anthropic_key: could not get Anthropic API key!"
+        else:
+            return None
 
     anthropic_client = anthropic.Anthropic(
         # defaults to os.environ.get("ANTHROPIC_API_KEY")

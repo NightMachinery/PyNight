@@ -8,12 +8,16 @@ deepseek_client = None
 deepseek_key = None
 
 
-def setup_deepseek_key():
+def setup_deepseek_key(*, raise_error_p=False):
     global deepseek_key
     global deepseek_client
 
     deepseek_key = z("var-get deepseek_api_key").outrs
-    assert deepseek_key, "setup_deepseek_key: could not get Deepseek API key!"
+    if not deepseek_key:
+        if raise_error_p:
+            assert False, "setup_deepseek_key: could not get Deepseek API key!"
+        else:
+            return None
 
     deepseek_client = OpenAI(
         # defaults to os.environ.get("DEEPSEEK_API_KEY")

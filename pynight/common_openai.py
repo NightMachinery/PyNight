@@ -29,12 +29,16 @@ openai_key = None
 openai_client = None
 
 
-def setup_openai_key():
+def setup_openai_key(*, raise_error_p=False):
     global openai_key
     global openai_client
 
     openai_key = z("var-get openai_api_key").outrs
-    assert openai_key, "setup_openai_key: could not get OpenAI API key!"
+    if not openai_key:
+        if raise_error_p:
+            assert False, "setup_openai_key: could not get OpenAI API key!"
+        else:
+            return None
 
     openai_client = OpenAI(api_key=openai_key)
     return openai_client
@@ -55,12 +59,16 @@ openrouter_key = None
 openrouter_client = None
 
 
-def setup_openrouter_key():
+def setup_openrouter_key(*, raise_error_p=False):
     global openrouter_key
     global openrouter_client
 
     openrouter_key = z("var-get openrouter_api_key").outrs
-    assert openrouter_key, "setup_openrouter_key: could not get OpenRouter API key!"
+    if not openrouter_key:
+        if raise_error_p:
+            assert False, "setup_openrouter_key: could not get OpenRouter API key!"
+        else:
+            return None
 
     openrouter_client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
@@ -82,12 +90,16 @@ gemini_key = None
 gemini_client = None
 
 
-def setup_gemini_key():
+def setup_gemini_key(*, raise_error_p=False):
     global gemini_key
     global gemini_client
 
     gemini_key = z("var-get gemini_api_key").outrs
-    assert gemini_key, "setup_gemini_key: could not get Gemini API key!"
+    if not gemini_key:
+        if raise_error_p:
+            assert False, "setup_gemini_key: could not get Gemini API key!"
+        else:
+            return None
 
     genai.configure(api_key=gemini_key)
     gemini_client = genai
