@@ -4,6 +4,7 @@ import re
 import sys
 import traceback
 import os
+import inspect
 from functools import wraps
 from pynight.common_condition import jupyter_p
 from pynight.common_hosts import hostname_get
@@ -68,14 +69,28 @@ def ipdb_enable(
         ]
 
     #: [[https://ipython.readthedocs.io/en/8.18.0/api/generated/IPython.core.ultratb.html][Module: core.ultratb — IPython 8.18.0 documentation]]
-    pdb_excepthook = ultratb.FormattedTB(
-        mode="Context",
-        color_scheme="Linux",
-        call_pdb=1,
-    )
-    non_pdb_excepthook = ultratb.FormattedTB(
+    def _formatted_tb(*, mode: str, call_pdb: int):
+        sig = inspect.signature(ultratb.FormattedTB)
+        if "color_scheme" in sig.parameters:
+            return ultratb.FormattedTB(
+                mode=mode,
+                color_scheme="Linux",
+                call_pdb=call_pdb,
+            )
+        if "theme_name" in sig.parameters:
+            return ultratb.FormattedTB(
+                mode=mode,
+                theme_name="linux",
+                call_pdb=call_pdb,
+            )
+        return ultratb.FormattedTB(
+            mode=mode,
+            call_pdb=call_pdb,
+        )
+
+    pdb_excepthook = _formatted_tb(mode="Context", call_pdb=1)
+    non_pdb_excepthook = _formatted_tb(
         mode=non_interactive_traceback_mode,
-        color_scheme="Linux",
         call_pdb=0,
     )
 
