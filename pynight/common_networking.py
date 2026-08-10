@@ -14,7 +14,12 @@ def my_ip_get():
         resolver = dns.resolver.Resolver()
         resolver.nameservers = ["8.8.4.4"]
         answer = resolver.resolve("o-o.myaddr.l.google.com", "TXT")
-        ip = re.match(r'"edns0-client-subnet (.*)/\d+"', str(answer.rrset[1]))[1]
+        if answer:
+            answer = answer.rrset[1]
+
+            if answer:
+                ip = re.match(r'"edns0-client-subnet (.*)/\d+"', str(answer))[1]
+
         ##
         # ip = get('https://api.ipify.org').content.decode('utf8')
 
