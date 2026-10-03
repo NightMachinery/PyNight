@@ -7,11 +7,11 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-brish = "^0.3.3"
+brish = ">=0.3.3,<0.5"
 dnspython = "^2.1.0"
 executing = "^1.2.0"
 pyperclip = "^1.8.2"
-openai = "^1.14.2"
+openai = ">=1.14.2,<3"
 tiktoken = "*"
 spacy = "^3.5.1"
 matplotlib = "^3.7.1"
