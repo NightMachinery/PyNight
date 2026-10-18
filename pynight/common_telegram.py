@@ -1,9 +1,7 @@
 from os import getenv
 from typing import Iterable
 from pathlib import Path
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
+import sys
 import tempfile
 import subprocess
 import os
@@ -35,6 +33,19 @@ if tlg_chat_id_default is None:
 
 if tlg_chat_id_default is None:
     tlg_chat_id_default = tlg_chat_id_me
+
+
+##
+def matplotlib_figure_p(obj):
+    """Whether `obj` is a matplotlib Figure.
+
+    Looks matplotlib up in `sys.modules` rather than importing it: importing
+    it costs about 50 MB of RAM, which every importer of this module paid
+    (BrishGarden imports it for `log_tlg`), and a Figure cannot exist before
+    its module has been imported.
+    """
+    figure_module = sys.modules.get("matplotlib.figure")
+    return figure_module is not None and isinstance(obj, figure_module.Figure)
 
 
 ##
@@ -104,7 +115,7 @@ def _send(
         ##
         for file in files:
             # Handle case if file is a matplotlib plot
-            if isinstance(file, Figure):
+            if matplotlib_figure_p(file):
                 with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp:
                     file.savefig(temp.name, format="png", **savefig_opts)
                     file_path = temp.name
